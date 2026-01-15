@@ -517,17 +517,42 @@ Razón:
 - **Basado en comportamiento**: Evalúa tendencias, no valores absolutos
 - **Histórico**: Analiza series completas para detectar Poder
 
+### ✅ Alineación con especificación formal (16 de enero, 2026)
+
+**Refactorización completada** - Commit: `0236efc`
+
+El motor ahora cumple con la especificación formal del dominio:
+
+1. **Jerarquía corregida**:
+   - PODER se evalúa ANTES de AFLUENCIA (estado > velocidad)
+   - Refleja la filosofía Hubbard de condiciones acumulativas vs puntuales
+
+2. **PODER con criterios estrictos**:
+   - Requiere 3+ períodos consecutivos
+   - TODOS los períodos deben estar en rango Normal (+5% < I < +50%)
+   - Última inclinación también debe ser Normal (sin AFLUENCIA reciente)
+   - Nivel actual debe ser ≥ promedio de ventana relevante
+
+3. **NORMAL estrictamente positivo**:
+   - Rango ajustado: +5% < I < +50%
+   - Ya NO incluye estancamiento (eso es EMERGENCIA)
+
+4. **EMERGENCIA clarificada**:
+   - Códigos de razón distintos para estancamiento vs descenso
+   - `STAGNATION` para [-5%, +5%]
+   - `MODERATE_DECLINE` para [-50%, -5%)
+
+5. **Validación completa**:
+   - TypeScript compilation: ✓ Sin errores
+   - Monorepo completo validado (frontend, backend, packages)
+   - Sin cambios en contratos públicos
+
 ### 🔜 Pendiente
 
-- **Refactorizar motor según especificación formal** (Prioridad ALTA)
-  - Corregir jerarquía de evaluación (PODER antes de AFLUENCIA)
-  - Refinar criterios de PODER (todos períodos +5% a +50%)
-  - Ajustar rangos de NORMAL y EMERGENCIA
-  - Documentar umbrales con justificación explícita
-  
 - Conectar con backend (endpoints REST/WebSocket)
 - Visualizar en frontend con React Flow
 - Crear dashboard histórico interactivo
 - Implementar motor de reglas declarativo
 - Versionado y simulación de reglas
 - Agregar detección de volatilidad/oscilación (análisis multi-período)
+- Calibrar umbrales con datos reales de operación
