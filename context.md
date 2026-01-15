@@ -331,3 +331,20 @@ El foco no es cobertura funcional, sino **claridad conceptual, matemática y vis
 Si hay duda durante el desarrollo:
 
 > Priorizar claridad arquitectónica, comportamiento de la estadística y demo en vivo sobre completitud funcional.
+
+## 📚 14. Material de apoyo canónico del proyecto
+
+Estos documentos complementan y extienden este context.md.
+La IA debe leerlos y respetarlos antes de diseñar o implementar el motor de análisis.
+
+Orden de prioridad semántica:
+	1.	context.md (este documento)
+	2.	Diseño de Interfaz Técnica – Motor de Análisis de Inclinación (v2).md
+	3.	Motor de análisis de inclinación y condiciones.md
+	4.	Fórmulas de las condiciones.md
+
+Reglas:
+	•	Si hay ambigüedad → preferir contratos sobre implementación
+	•	Si hay conflicto → prevalece context.md
+	•	Las fórmulas definen comportamiento, no valores fijos
+	•	Las condiciones dependen de inclinación y tendencia histórica, no de thresholds absolutos

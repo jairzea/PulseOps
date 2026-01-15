@@ -67,3 +67,67 @@ export interface AnalysisEngine {
     config?: AnalysisWindowConfig
   ): TrendAnalysisResult;
 }
+
+// ============================================================================
+// EXTENSIÓN: Condiciones Operativas Avanzadas (Basadas en Fórmulas de Hubbard)
+// ============================================================================
+
+/**
+ * Condiciones operativas extendidas basadas en las fórmulas de Hubbard
+ * Ordenadas jerárquicamente de mayor a menor nivel operativo
+ */
+export type HubbardCondition =
+  | 'PODER'                  // Normal en nivel estelar sostenido
+  | 'CAMBIO_DE_PODER'        // Asunción de puesto en Poder
+  | 'AFLUENCIA'              // Crecimiento pronunciado
+  | 'NORMAL'                 // Crecimiento gradual habitual
+  | 'EMERGENCIA'             // Sin cambio o descenso leve
+  | 'PELIGRO'                // Caída pronunciada
+  | 'INEXISTENCIA'           // Inicio o caída casi vertical
+  | 'SIN_DATOS';             // Datos insuficientes
+
+/**
+ * Razón que explica por qué se asignó una condición específica
+ */
+export interface ConditionReason {
+  code: string;              // Código único (ej: "STEEP_GROWTH", "NO_CHANGE")
+  explanation: string;       // Explicación legible para humanos
+  threshold?: number;        // Umbral aplicado (si corresponde)
+}
+
+/**
+ * Resultado del cálculo de inclinación porcentual
+ */
+export interface InclinationResult {
+  value: number | null;      // Porcentaje de inclinación (null si no calculable)
+  previousValue: number;     // E_ant
+  currentValue: number;      // E_act
+  delta: number;             // ΔE = E_act - E_ant
+  isValid: boolean;          // Si el cálculo es válido (E_ant > 0)
+}
+
+/**
+ * Evaluación completa de condición operativa para una métrica
+ * Incluye análisis histórico, inclinación y condición asignada
+ */
+export interface MetricConditionEvaluation {
+  metricId: string;
+  
+  // Análisis temporal
+  windowUsed: number;
+  periodType: 'WEEK' | 'MONTH' | 'DAY';  // Tipo de período analizado
+  
+  // Inclinación
+  inclination: InclinationResult;
+  
+  // Tendencia
+  direction: TrendDirection;
+  
+  // Condición operativa
+  condition: HubbardCondition;
+  reason: ConditionReason;
+  
+  // Metadata
+  evaluatedAt: string;
+  confidence: number;        // 0-1: confianza en la evaluación (basada en cantidad de datos)
+}
