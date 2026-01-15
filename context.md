@@ -573,32 +573,46 @@ El motor ahora incluye **detección de patrones peligrosos y volatilidad**:
 
 1. **`detectSlowDecline()`**
    - Ventana: 4 períodos
-   - Detecta: 3+ inclinaciones negativas + delta total negativo
+   - Detecta: 3+ inclinaciones negativas + suma total negativa
+   - **Refinamiento E.4.1**: Usa inclinación porcentual en lugar de delta absoluto
    - Severity: HIGH si 4/4 caídas, MEDIUM si 3/4
    - **Ejemplo**: [100, 95, 91, 87, 83] → SLOW_DECLINE (HIGH)
+   - **Qué NO detecta**: Caídas no consecutivas, picos de volatilidad
 
 2. **`detectVolatility()`**
    - Ventana: 5 puntos
-   - Detecta: 3+ cambios de signo en deltas
+   - Detecta: 3+ cambios de signo en deltas (ignora deltas = 0)
+   - **Refinamiento E.4.1**: Filtra deltas cero para evitar falsos positivos
    - Severity: HIGH si alterna constantemente, MEDIUM si 3+
    - **Ejemplo**: [10, 20, 10, 20, 10] → VOLATILE (HIGH)
+   - **Qué NO detecta**: Volatilidad de corto plazo dentro de períodos, tendencias sostenidas
 
 3. **`detectDataGaps()`**
    - Asume periodicidad semanal (7 días ± 2)
    - Detecta saltos > 9 días entre timestamps
+   - **Refinamiento E.4.1**: Calcula y reporta explícitamente el gap más grande (largestGapDays)
    - Severity basada en cantidad de gaps
-   - **Uso**: Validar completitud de datos
+   - **Qué NO detecta**: Duplicados, calidad de datos, gaps esperados (feriados)
 
 4. **`detectRecoverySpike()`**
-   - Detecta: 2+ caídas seguidas + crecimiento ≥ +50%
+   - Detecta: 2+ caídas consecutivas + crecimiento ≥ +50%
+   - **Refinamiento E.4.1**: Analiza desde penúltimo punto hacia atrás para caídas inmediatamente antes del spike
    - Severity: MEDIUM (patrón poco común)
-   - **Ejemplo**: Útil para demo "recuperación tras crisis"
+   - **Qué NO detecta**: Recuperaciones graduales, rebounds parciales
 
 5. **`detectNoise()`**
    - Ventana: 4 períodos
    - Detecta: Todos los cambios dentro de ±2%
+   - **Refinamiento E.4.1**: Fallback con delta absoluto (< 1) cuando inclinación es inválida (E_ant ≈ 0)
    - Severity: LOW (no hay acción necesaria)
-   - **Uso**: "No hay señal clara todavía"
+   - **Qué NO detecta**: Ruido estacional, ruido sistemático vs aleatorio
+
+#### Coherencia de señales (E.4.1)
+
+**Regla anti-contradicción**: 
+- Si `NOISE` está presente → NO incluir `VOLATILE`
+- Razón: Son mutuamente excluyentes (sin señal vs señal alternante)
+- Prioriza claridad sobre exhaustividad
 
 #### Integración con condición principal
 
@@ -608,20 +622,30 @@ El motor ahora incluye **detección de patrones peligrosos y volatilidad**:
   - "EMERGENCIA + SLOW_DECLINE (HIGH)" → Deterioro confirmado
   - "NORMAL + VOLATILE (MEDIUM)" → Crecimiento inestable
   - "AFLUENCIA + RECOVERY_SPIKE" → Rebote tras caída
+  - "SIN_DATOS + DATA_GAPS (HIGH)" → Problema de completitud
 
 #### Limitaciones declaradas
 
 **❌ NO es predictivo**
 - Los detectores reaccionan a patrones pasados
 - NO anticipan futuros movimientos
+- NO aprenden de datos históricos
 
 **❌ NO considera contexto externo**
 - No sabe si un gap fue feriado o problema técnico
 - No distingue ruido legítimo de falta de actividad
+- No evalúa estacionalidad
 
 **❌ NO reemplaza análisis humano**
 - Son heurísticas simples, no ML
 - Umbrales pueden requerir calibración por dominio
+- Pueden generar falsos positivos/negativos
+
+**✅ Qué SÍ hace bien**
+- Identifica patrones básicos de riesgo
+- Explicable y demo-friendly
+- Sin dependencias externas
+- Rápido y determinístico
 
 #### Próximos pasos (UI)
 
@@ -629,6 +653,24 @@ El motor ahora incluye **detección de patrones peligrosos y volatilidad**:
 - Tooltip con `explanation` + `evidence`
 - Filtrar por severity (mostrar solo MEDIUM/HIGH por defecto)
 - Color coding: 🔴 HIGH, 🟡 MEDIUM, 🟢 LOW
+
+### ✅ Refinamiento de detectores (16 de enero, 2026)
+
+**Commit**: `3b5a188`
+
+Refinamientos técnicos aplicados sin cambiar contratos públicos:
+
+1. **SLOW_DECLINE**: Usa `inclinación porcentual` en lugar de delta absoluto (evita engaño en métricas grandes)
+2. **VOLATILE**: Ignora deltas = 0 para contar solo cambios de signo reales
+3. **DATA_GAPS**: Calcula y reporta explícitamente `largestGapDays` (no solo el primero)
+4. **RECOVERY_SPIKE**: Detecta caídas consecutivas inmediatamente antes del spike (análisis desde penúltimo hacia atrás)
+5. **NOISE**: Fallback con delta absoluto cuando inclinación inválida (E_ant ≈ 0)
+6. **Coherencia**: Si NOISE presente → NO incluir VOLATILE (anti-contradicción)
+
+**Validaciones**:
+- ✅ TypeScript: Sin errores en monorepo
+- ✅ Builds: Compilación exitosa
+- ✅ Contratos: Sin breaking changes
 
 ### 🔜 Pendiente
 
