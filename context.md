@@ -403,10 +403,129 @@ El motor de análisis (`@pulseops/analysis-engine`) ahora cuenta con:
 - **Basado en comportamiento**: Evalúa tendencias, no valores absolutos
 - **Histórico**: Analiza series completas para detectar Poder
 
+### ⚠️ Auditoría realizada (15 de enero, 2026)
+
+Se realizó auditoría lógica y semántica del motor. **Hallazgos críticos**:
+
+1. **Jerarquía invertida**: PODER se evalúa después de AFLUENCIA (contradice filosofía Hubbard)
+2. **EMERGENCIA demasiado amplia**: Cubre estancamiento (-5% a +5%) y descenso moderado (-20% a -50%)
+3. **PODER con criterios débiles**: Permite -4.9% como "Normal sostenido"
+4. **Zona muerta +5% a +10%**: No hay distinción clara
+5. **CAMBIO_DE_PODER sin implementar**: Definido en tipos pero nunca asignado
+
+### 📋 Definición formal del dominio (15 de enero, 2026)
+
+**⚠️ ESTA ES LA ESPECIFICACIÓN OFICIAL - Pendiente de implementación**
+
+#### Jerarquía oficial de condiciones (orden de evaluación)
+
+1. **SIN_DATOS** - Condición técnica bloqueante
+   - Menos períodos que los requeridos
+   - Datos inválidos o no calculables
+   - NO representa bajo rendimiento ni inicio de operación
+
+2. **INEXISTENCIA** - Estado operativo bloqueante
+   - Ambos valores ≈ 0
+   - Paso de valor positivo a ≈ 0 (colapso)
+   - Inicio desde 0 hacia un valor
+   - NO representa caídas graduales
+
+3. **PODER** - Estado operativo superior sostenido
+   - Mínimo N períodos consecutivos
+   - Todos los períodos con inclinación: `+5% < I < +50%`
+   - Sin caídas, estancamientos ni Afluencia reciente
+   - Nivel actual ≥ promedio de ventana relevante
+   - NO coexiste con AFLUENCIA
+
+4. **AFLUENCIA** - Expansión acelerada
+   - Inclinación positiva pronunciada (`I ≥ +50%`)
+   - NO requiere sostenibilidad
+   - Puede existir en un solo período
+   - NO representa estabilidad
+
+5. **NORMAL** - Funcionamiento esperado
+   - Crecimiento positivo real: `+5% < I < +50%`
+   - Sin señales de colapso ni estancamiento
+   - NO incluye estancamiento (eso es EMERGENCIA)
+
+6. **EMERGENCIA** - Pérdida de control incipiente
+   - Estancamiento: `-5% ≤ I ≤ +5%`
+   - Descenso leve/moderado: `-50% < I < -5%`
+   - NO representa caídas abruptas (eso es PELIGRO)
+
+7. **PELIGRO** - Deterioro pronunciado
+   - Descenso fuerte: `-80% < I ≤ -50%`
+   - NO representa crisis técnica (eso es INEXISTENCIA)
+
+#### Reglas formales de inclinación
+
+1. **La inclinación manda, pero no gobierna sola**
+   - Inclinación define velocidad
+   - Condición define estado
+   - Una sola inclinación NO puede definir PODER
+
+2. **AFLUENCIA puede existir en un solo período**
+   - No requiere histórico
+   - Un solo crecimiento pronunciado genera AFLUENCIA
+
+3. **NORMAL requiere crecimiento positivo real**
+   - Crecimientos ≤ +5% NO son NORMAL
+   - Rango: `+5% < I < +50%`
+
+4. **Estancamiento es EMERGENCIA**
+   - Rango: `-5% ≤ I ≤ +5%`
+   - Nunca es NORMAL
+
+5. **Caídas leves no son normales**
+   - Inclinaciones negativas (aunque pequeñas) rompen NORMAL
+   - Requieren atención (EMERGENCIA)
+
+#### CAMBIO_DE_PODER (decisión final)
+
+**NO ES DETECTABLE por este motor**
+
+Razón:
+- Requiere contexto externo (cambio de responsable, cambio estructural)
+- No puede inferirse solo con series numéricas
+- Queda reservado para capas superiores (backend/negocio)
+- Documentado como fuera del alcance del motor
+
+#### Decisiones arbitrarias declaradas
+
+**Umbrales numéricos**:
+- Son valores iniciales basados en criterio experto
+- NO representan verdad estadística
+- Sujetos a calibración futura con datos reales
+
+**Ventana de análisis**:
+- El motor es reactivo (responde a último cambio)
+- NO es predictivo
+- NO suaviza oscilaciones
+- NO detecta volatilidad (pendiente)
+
+**Confianza**:
+- Heurística, no probabilística
+- Basada solo en cantidad de datos
+- NO considera calidad ni variabilidad
+- Puede cambiar en futuras versiones
+
+### 🔜 Pendiente
+- **Parametrizable**: Umbrales configurables (no hardcoded)
+- **Explicable**: Cada condición incluye código y explicación legible
+- **Basado en comportamiento**: Evalúa tendencias, no valores absolutos
+- **Histórico**: Analiza series completas para detectar Poder
+
 ### 🔜 Pendiente
 
+- **Refactorizar motor según especificación formal** (Prioridad ALTA)
+  - Corregir jerarquía de evaluación (PODER antes de AFLUENCIA)
+  - Refinar criterios de PODER (todos períodos +5% a +50%)
+  - Ajustar rangos de NORMAL y EMERGENCIA
+  - Documentar umbrales con justificación explícita
+  
 - Conectar con backend (endpoints REST/WebSocket)
 - Visualizar en frontend con React Flow
 - Crear dashboard histórico interactivo
 - Implementar motor de reglas declarativo
 - Versionado y simulación de reglas
+- Agregar detección de volatilidad/oscilación (análisis multi-período)
