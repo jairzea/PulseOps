@@ -203,14 +203,13 @@ function isPowerCondition(
 /**
  * Resuelve la condición operativa basada en inclinación e histórico
  * 
- * Jerarquía de evaluación (de mayor a menor):
- * 1. SIN_DATOS - Datos insuficientes o inválidos
- * 2. INEXISTENCIA - Caída casi vertical o inicio desde cero
- * 3. PELIGRO - Descenso pronunciado
- * 4. EMERGENCIA - Sin cambio o descenso moderado
- * 5. PODER - Normal sostenido en nivel alto
- * 6. AFLUENCIA - Crecimiento pronunciado
- * 7. NORMAL - Crecimiento gradual
+ * Jerarquía de evaluación (orden oficial según especificación formal):
+ * 1. SIN_DATOS / INEXISTENCIA - Datos insuficientes o colapso
+ * 2. PODER - Normal sostenido en nivel alto
+ * 3. AFLUENCIA - Crecimiento pronunciado
+ * 4. NORMAL - Crecimiento gradual esperado
+ * 5. EMERGENCIA - Estancamiento o descenso leve/moderado
+ * 6. PELIGRO - Descenso pronunciado
  * 
  * @param inclination - Resultado del cálculo de inclinación
  * @param allPoints - Serie completa para análisis histórico
@@ -220,7 +219,11 @@ function resolveCondition(
   inclination: InclinationResult,
   allPoints: Array<{ timestamp: string; value: number }>
 ): { condition: HubbardCondition; reason: ConditionReason } {
-  // 1. SIN_DATOS: Inclinación no válida por datos insuficientes
+  // =========================================================================
+  // 1. SIN_DATOS / INEXISTENCIA: Casos bloqueantes técnicos
+  // =========================================================================
+  
+  // 1a. SIN_DATOS: Inclinación no válida por datos insuficientes
   if (!inclination.isValid && inclination.value === null) {
     // Caso especial: ambos valores ≈ 0
     if (
@@ -261,7 +264,7 @@ function resolveCondition(
 
   const inclinationValue = inclination.value!;
 
-  // 2. INEXISTENCIA: Caída casi vertical (>80% de descenso)
+  // 1b. INEXISTENCIA: Caída casi vertical (>80% de descenso)
   if (inclinationValue <= INCLINATION_THRESHOLDS.CRITICAL_NEGATIVE) {
     return {
       condition: 'INEXISTENCIA',
@@ -273,31 +276,74 @@ function resolveCondition(
     };
   }
 
-  // 3. PELIGRO: Descenso pronunciado (entre -50% y -80%)
-  if (inclinationValue <= INCLINATION_THRESHOLDS.STEEP_NEGATIVE) {
+  // =========================================================================
+  // 2. PODER: Estado operativo superior (acumulativo, no puntual)
+  // =========================================================================
+  
+  // PODER se evalúa ANTES que AFLUENCIA
+  // Un crecimiento fuerte puntual (AFLUENCIA) NO anula PODER sostenido
+  if (isPowerCondition(allPoints)) {
     return {
-      condition: 'PELIGRO',
+      condition: 'PODER',
       reason: {
-        code: 'STEEP_DECLINE',
-        explanation: `Descenso pronunciado de ${Math.abs(inclinationValue).toFixed(1)}%. Requiere intervención inmediata.`,
-        threshold: INCLINATION_THRESHOLDS.STEEP_NEGATIVE,
+        code: 'SUSTAINED_HIGH_NORMAL',
+        explanation: `Funcionamiento Normal sostenido en nivel alto durante ${POWER_MIN_PERIODS}+ períodos. Condición de Poder.`,
       },
     };
   }
 
-  // 4. EMERGENCIA: Descenso moderado o sin cambio significativo (entre -20% y -50%)
-  if (inclinationValue <= INCLINATION_THRESHOLDS.MODERATE_NEGATIVE) {
+  // =========================================================================
+  // 3. AFLUENCIA: Expansión acelerada (puntual, no sostenible)
+  // =========================================================================
+  
+  if (inclinationValue >= INCLINATION_THRESHOLDS.STEEP_POSITIVE) {
     return {
-      condition: 'EMERGENCIA',
+      condition: 'AFLUENCIA',
       reason: {
-        code: 'MODERATE_DECLINE',
-        explanation: `Descenso de ${Math.abs(inclinationValue).toFixed(1)}%. Se requiere acción correctiva.`,
-        threshold: INCLINATION_THRESHOLDS.MODERATE_NEGATIVE,
+        code: 'STEEP_GROWTH',
+        explanation: `Crecimiento pronunciado de ${inclinationValue.toFixed(1)}%. Condición de expansión.`,
+        threshold: INCLINATION_THRESHOLDS.STEEP_POSITIVE,
       },
     };
   }
 
-  // 5. EMERGENCIA: Estancamiento (entre -5% y +5%)
+  // =========================================================================
+  // 4. NORMAL: Funcionamiento esperado y saludable
+  // =========================================================================
+  
+  // NORMAL requiere crecimiento REAL: +5% < I < +50%
+  // NO incluye estancamiento (≤ +5%)
+  if (
+    inclinationValue > INCLINATION_THRESHOLDS.FLAT_UPPER &&
+    inclinationValue < INCLINATION_THRESHOLDS.STEEP_POSITIVE
+  ) {
+    // Distinguir entre crecimiento gradual y leve
+    if (inclinationValue >= INCLINATION_THRESHOLDS.MODERATE_POSITIVE) {
+      return {
+        condition: 'NORMAL',
+        reason: {
+          code: 'GRADUAL_GROWTH',
+          explanation: `Crecimiento gradual de ${inclinationValue.toFixed(1)}%. Funcionamiento Normal.`,
+          threshold: INCLINATION_THRESHOLDS.MODERATE_POSITIVE,
+        },
+      };
+    }
+    
+    return {
+      condition: 'NORMAL',
+      reason: {
+        code: 'SLIGHT_GROWTH',
+        explanation: `Crecimiento leve de ${inclinationValue.toFixed(1)}%. Funcionamiento Normal estable.`,
+        threshold: INCLINATION_THRESHOLDS.FLAT_UPPER,
+      },
+    };
+  }
+
+  // =========================================================================
+  // 5. EMERGENCIA: Pérdida de control incipiente
+  // =========================================================================
+  
+  // 5a. EMERGENCIA por estancamiento (entre -5% y +5%)
   if (
     inclinationValue >= INCLINATION_THRESHOLDS.FLAT_LOWER &&
     inclinationValue <= INCLINATION_THRESHOLDS.FLAT_UPPER
@@ -312,48 +358,30 @@ function resolveCondition(
     };
   }
 
-  // 6. AFLUENCIA: Crecimiento pronunciado (>50%)
-  if (inclinationValue >= INCLINATION_THRESHOLDS.STEEP_POSITIVE) {
+  // 5b. EMERGENCIA por descenso leve/moderado (entre -50% y -5%)
+  if (inclinationValue > INCLINATION_THRESHOLDS.STEEP_NEGATIVE) {
     return {
-      condition: 'AFLUENCIA',
+      condition: 'EMERGENCIA',
       reason: {
-        code: 'STEEP_GROWTH',
-        explanation: `Crecimiento pronunciado de ${inclinationValue.toFixed(1)}%. Condición de expansión.`,
-        threshold: INCLINATION_THRESHOLDS.STEEP_POSITIVE,
+        code: 'MODERATE_DECLINE',
+        explanation: `Descenso de ${Math.abs(inclinationValue).toFixed(1)}%. Se requiere acción correctiva.`,
+        threshold: INCLINATION_THRESHOLDS.MODERATE_NEGATIVE,
       },
     };
   }
 
-  // 7. PODER: Normal sostenido en nivel alto (verificar histórico)
-  if (isPowerCondition(allPoints)) {
-    return {
-      condition: 'PODER',
-      reason: {
-        code: 'SUSTAINED_HIGH_NORMAL',
-        explanation: `Funcionamiento Normal sostenido en nivel alto durante ${POWER_MIN_PERIODS}+ períodos. Condición de Poder.`,
-      },
-    };
-  }
-
-  // 8. NORMAL: Crecimiento gradual (entre 10% y 50%)
-  if (inclinationValue >= INCLINATION_THRESHOLDS.MODERATE_POSITIVE) {
-    return {
-      condition: 'NORMAL',
-      reason: {
-        code: 'GRADUAL_GROWTH',
-        explanation: `Crecimiento gradual de ${inclinationValue.toFixed(1)}%. Funcionamiento Normal.`,
-        threshold: INCLINATION_THRESHOLDS.MODERATE_POSITIVE,
-      },
-    };
-  }
-
-  // 9. NORMAL: Crecimiento leve (entre 5% y 10%)
+  // =========================================================================
+  // 6. PELIGRO: Deterioro pronunciado (última condición posible)
+  // =========================================================================
+  
+  // PELIGRO es la última condición evaluable cuando nada más aplica
+  // Descenso pronunciado (entre -80% y -50%)
   return {
-    condition: 'NORMAL',
+    condition: 'PELIGRO',
     reason: {
-      code: 'SLIGHT_GROWTH',
-      explanation: `Crecimiento leve de ${inclinationValue.toFixed(1)}%. Funcionamiento Normal estable.`,
-      threshold: INCLINATION_THRESHOLDS.MODERATE_POSITIVE,
+      code: 'STEEP_DECLINE',
+      explanation: `Descenso pronunciado de ${Math.abs(inclinationValue).toFixed(1)}%. Requiere intervención inmediata.`,
+      threshold: INCLINATION_THRESHOLDS.STEEP_NEGATIVE,
     },
   };
 }
