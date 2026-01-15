@@ -14,11 +14,13 @@
 
 import type {
   AnalysisEngine,
+  AnalysisSignal,
   AnalysisWindowConfig,
   ConditionReason,
   HubbardCondition,
   InclinationResult,
   MetricConditionEvaluation,
+  MetricPoint,
   MetricSeries,
   OperationalCondition,
   TrendAnalysisResult,
@@ -54,6 +56,302 @@ const INCLINATION_THRESHOLDS = {
   STEEP_NEGATIVE: -50,     // Descenso pronunciado (Peligro)
   CRITICAL_NEGATIVE: -80,  // Caída casi vertical (Inexistencia)
 };
+
+// ============================================================================
+// META-ANÁLISIS: Detectores de patrones peligrosos y volatilidad
+// ============================================================================
+
+/**
+ * Detecta deterioro lento pero persistente
+ * 
+ * Algoritmo:
+ * - Analiza últimos N=4 períodos
+ * - Cuenta inclinaciones negativas consecutivas
+ * - Si hay 3+ caídas (aunque pequeñas) → SLOW_DECLINE
+ * - Severity basada en cantidad de caídas y magnitud acumulada
+ * 
+ * @param points - Serie temporal completa
+ * @returns Señal de deterioro lento o null
+ */
+function detectSlowDecline(points: MetricPoint[]): AnalysisSignal | null {
+  const WINDOW = 4;
+  if (points.length < WINDOW + 1) return null;
+
+  const recentPoints = points.slice(-(WINDOW + 1));
+  let negativeCount = 0;
+  let totalDelta = 0;
+
+  for (let i = 1; i < recentPoints.length; i++) {
+    const prev = recentPoints[i - 1].value;
+    const curr = recentPoints[i].value;
+    const delta = curr - prev;
+    
+    totalDelta += delta;
+    
+    if (delta < 0) {
+      negativeCount++;
+    }
+  }
+
+  // Criterio: 3+ caídas y delta total negativo
+  if (negativeCount >= 3 && totalDelta < 0) {
+    const severity: 'LOW' | 'MEDIUM' | 'HIGH' = 
+      negativeCount === 4 ? 'HIGH' :
+      negativeCount === 3 ? 'MEDIUM' : 'LOW';
+
+    return {
+      type: 'SLOW_DECLINE',
+      severity,
+      explanation: `Deterioro persistente detectado: ${negativeCount} de ${WINDOW} períodos con caídas`,
+      windowUsed: WINDOW,
+      evidence: {
+        negativePeriodsCount: negativeCount,
+        totalDelta: Math.round(totalDelta * 100) / 100,
+      },
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Detecta volatilidad / patrón de serrucho
+ * 
+ * Algoritmo:
+ * - Analiza últimos N=5 puntos
+ * - Cuenta cambios de signo en delta (sube/baja alternado)
+ * - Si alterna 3+ veces → VOLATILE
+ * 
+ * @param points - Serie temporal completa
+ * @returns Señal de volatilidad o null
+ */
+function detectVolatility(points: MetricPoint[]): AnalysisSignal | null {
+  const WINDOW = 5;
+  if (points.length < WINDOW) return null;
+
+  const recentPoints = points.slice(-WINDOW);
+  const deltas: number[] = [];
+
+  for (let i = 1; i < recentPoints.length; i++) {
+    const delta = recentPoints[i].value - recentPoints[i - 1].value;
+    deltas.push(delta);
+  }
+
+  // Contar cambios de signo
+  let signChanges = 0;
+  for (let i = 1; i < deltas.length; i++) {
+    if ((deltas[i] > 0 && deltas[i - 1] < 0) || 
+        (deltas[i] < 0 && deltas[i - 1] > 0)) {
+      signChanges++;
+    }
+  }
+
+  // Criterio: 3+ cambios de signo
+  if (signChanges >= 3) {
+    const severity: 'LOW' | 'MEDIUM' | 'HIGH' = 
+      signChanges === deltas.length - 1 ? 'HIGH' : // Todos cambian
+      signChanges >= 3 ? 'MEDIUM' : 'LOW';
+
+    return {
+      type: 'VOLATILE',
+      severity,
+      explanation: `Patrón de serrucho detectado: ${signChanges} cambios de dirección en ${WINDOW - 1} transiciones`,
+      windowUsed: WINDOW,
+      evidence: {
+        signChangesCount: signChanges,
+        transitionsAnalyzed: deltas.length,
+      },
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Detecta gaps/saltos en la serie temporal
+ * 
+ * Algoritmo:
+ * - Asume periodicidad semanal (7 días ± 2 días de tolerancia)
+ * - Detecta saltos mayores a 9 días entre timestamps consecutivos
+ * 
+ * @param points - Serie temporal completa
+ * @returns Señal de gaps o null
+ */
+function detectDataGaps(points: MetricPoint[]): AnalysisSignal | null {
+  if (points.length < 2) return null;
+
+  const EXPECTED_DAYS = 7;
+  const TOLERANCE_DAYS = 2;
+  const MAX_GAP_MS = (EXPECTED_DAYS + TOLERANCE_DAYS) * 24 * 60 * 60 * 1000;
+
+  let gapCount = 0;
+  const gaps: string[] = [];
+
+  for (let i = 1; i < points.length; i++) {
+    const prevTime = new Date(points[i - 1].timestamp).getTime();
+    const currTime = new Date(points[i].timestamp).getTime();
+    const diffMs = currTime - prevTime;
+
+    if (diffMs > MAX_GAP_MS) {
+      gapCount++;
+      const daysDiff = Math.round(diffMs / (24 * 60 * 60 * 1000));
+      gaps.push(`${daysDiff} días`);
+    }
+  }
+
+  if (gapCount > 0) {
+    const severity: 'LOW' | 'MEDIUM' | 'HIGH' = 
+      gapCount >= 3 ? 'HIGH' :
+      gapCount === 2 ? 'MEDIUM' : 'LOW';
+
+    return {
+      type: 'DATA_GAPS',
+      severity,
+      explanation: `${gapCount} gap(s) detectado(s) en la serie temporal`,
+      windowUsed: points.length,
+      evidence: {
+        gapCount,
+        largestGap: gaps[0] || 'N/A',
+      },
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Detecta recuperación brusca tras deterioro
+ * 
+ * Algoritmo:
+ * - Busca 2+ caídas consecutivas
+ * - Seguidas de un crecimiento >= +50% (Afluencia)
+ * 
+ * @param points - Serie temporal completa
+ * @returns Señal de recuperación o null
+ */
+function detectRecoverySpike(points: MetricPoint[]): AnalysisSignal | null {
+  const WINDOW = 5;
+  if (points.length < WINDOW) return null;
+
+  const recentPoints = points.slice(-WINDOW);
+  
+  // Buscar patrón: caídas consecutivas + spike
+  let consecutiveDeclines = 0;
+  let lastWasDecline = false;
+
+  for (let i = 1; i < recentPoints.length - 1; i++) {
+    const delta = recentPoints[i].value - recentPoints[i - 1].value;
+    if (delta < 0) {
+      consecutiveDeclines++;
+      lastWasDecline = true;
+    } else {
+      if (lastWasDecline) break;
+    }
+  }
+
+  // Verificar último movimiento (debe ser spike)
+  const lastIdx = recentPoints.length - 1;
+  const lastInclination = calculateInclination(
+    recentPoints[lastIdx - 1].value,
+    recentPoints[lastIdx].value
+  );
+
+  if (
+    consecutiveDeclines >= 2 &&
+    lastInclination.isValid &&
+    lastInclination.value !== null &&
+    lastInclination.value >= INCLINATION_THRESHOLDS.STEEP_POSITIVE
+  ) {
+    return {
+      type: 'RECOVERY_SPIKE',
+      severity: 'MEDIUM',
+      explanation: `Recuperación brusca (+${Math.round(lastInclination.value)}%) tras ${consecutiveDeclines} caídas consecutivas`,
+      windowUsed: WINDOW,
+      evidence: {
+        declinesBeforeSpike: consecutiveDeclines,
+        recoveryInclination: Math.round(lastInclination.value),
+      },
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Detecta ruido (cambios insignificantes)
+ * 
+ * Algoritmo:
+ * - Analiza últimos N=4 períodos
+ * - Si todos los cambios están dentro de ±2% → NOISE
+ * 
+ * @param points - Serie temporal completa
+ * @returns Señal de ruido o null
+ */
+function detectNoise(points: MetricPoint[]): AnalysisSignal | null {
+  const WINDOW = 4;
+  const NOISE_THRESHOLD = 2; // ±2%
+
+  if (points.length < WINDOW + 1) return null;
+
+  const recentPoints = points.slice(-(WINDOW + 1));
+  let allWithinNoise = true;
+
+  for (let i = 1; i < recentPoints.length; i++) {
+    const inclination = calculateInclination(
+      recentPoints[i - 1].value,
+      recentPoints[i].value
+    );
+
+    if (
+      !inclination.isValid ||
+      inclination.value === null ||
+      Math.abs(inclination.value) > NOISE_THRESHOLD
+    ) {
+      allWithinNoise = false;
+      break;
+    }
+  }
+
+  if (allWithinNoise) {
+    return {
+      type: 'NOISE',
+      severity: 'LOW',
+      explanation: `Sin señal clara: todos los cambios están dentro de ±${NOISE_THRESHOLD}%`,
+      windowUsed: WINDOW,
+      evidence: {
+        noiseThreshold: NOISE_THRESHOLD,
+      },
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Ejecuta todos los detectores de patrones y retorna señales encontradas
+ * 
+ * @param points - Serie temporal completa
+ * @returns Array de señales detectadas (puede estar vacío)
+ */
+function detectPatterns(points: MetricPoint[]): AnalysisSignal[] {
+  const signals: AnalysisSignal[] = [];
+
+  // Ejecutar todos los detectores
+  const slowDecline = detectSlowDecline(points);
+  const volatility = detectVolatility(points);
+  const dataGaps = detectDataGaps(points);
+  const recoverySpike = detectRecoverySpike(points);
+  const noise = detectNoise(points);
+
+  // Agregar señales detectadas
+  if (slowDecline) signals.push(slowDecline);
+  if (volatility) signals.push(volatility);
+  if (dataGaps) signals.push(dataGaps);
+  if (recoverySpike) signals.push(recoverySpike);
+  if (noise) signals.push(noise);
+
+  return signals;
+}
 
 /**
  * Determina la dirección de la tendencia basada en el delta
@@ -482,6 +780,7 @@ class TrendAnalysisEngine implements AnalysisEngine {
           code: 'INSUFFICIENT_DATA',
           explanation: `Se requieren al menos ${windowSize} períodos para el análisis. Datos disponibles: ${series.points?.length ?? 0}`,
         },
+        signals: [], // Sin señales por falta de datos
         evaluatedAt,
         confidence: 0,
       };
@@ -510,6 +809,9 @@ class TrendAnalysisEngine implements AnalysisEngine {
       series.points
     );
 
+    // Detectar patrones adicionales (meta-análisis)
+    const signals = detectPatterns(series.points);
+
     // Calcular confianza basada en cantidad de datos
     // Más datos históricos = mayor confianza
     const confidence = Math.min(series.points.length / 10, 1);
@@ -522,6 +824,7 @@ class TrendAnalysisEngine implements AnalysisEngine {
       direction,
       condition,
       reason,
+      signals,
       evaluatedAt,
       confidence,
     };

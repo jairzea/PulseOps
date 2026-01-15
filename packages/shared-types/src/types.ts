@@ -127,7 +127,38 @@ export interface MetricConditionEvaluation {
   condition: HubbardCondition;
   reason: ConditionReason;
   
+  // Señales de análisis de patrones (meta-análisis)
+  signals: AnalysisSignal[];
+  
   // Metadata
   evaluatedAt: string;
   confidence: number;        // 0-1: confianza en la evaluación (basada en cantidad de datos)
 }
+
+// ============================================================================
+// META-ANÁLISIS: Detección de patrones peligrosos y volatilidad
+// ============================================================================
+
+/**
+ * Tipos de señales que pueden detectarse en el análisis histórico
+ * Complementan la condición principal con insights adicionales
+ */
+export type SignalType =
+  | 'VOLATILE'           // Serrucho: alternancia frecuente entre subidas y bajadas
+  | 'SLOW_DECLINE'       // Deterioro lento: múltiples caídas pequeñas consecutivas
+  | 'DATA_GAPS'          // Gaps: faltan períodos esperados en la serie
+  | 'RECOVERY_SPIKE'     // Recuperación brusca tras deterioro
+  | 'NOISE';             // Ruido: cambios insignificantes sin señal real
+
+/**
+ * Señal de análisis que complementa la condición principal
+ * Proporciona contexto adicional sobre patrones detectados
+ */
+export interface AnalysisSignal {
+  type: SignalType;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH';
+  explanation: string;
+  windowUsed: number;          // cuántos puntos analizó el detector
+  evidence?: Record<string, number | string>;  // datos que justifican la señal
+}
+
