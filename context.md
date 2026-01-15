@@ -503,19 +503,13 @@ Razón:
 - El motor es reactivo (responde a último cambio)
 - NO es predictivo
 - NO suaviza oscilaciones
-- NO detecta volatilidad (pendiente)
+- ~~NO detecta volatilidad (pendiente)~~ ✅ **Implementado en E.4**
 
 **Confianza**:
 - Heurística, no probabilística
 - Basada solo en cantidad de datos
 - NO considera calidad ni variabilidad
 - Puede cambiar en futuras versiones
-
-### 🔜 Pendiente
-- **Parametrizable**: Umbrales configurables (no hardcoded)
-- **Explicable**: Cada condición incluye código y explicación legible
-- **Basado en comportamiento**: Evalúa tendencias, no valores absolutos
-- **Histórico**: Analiza series completas para detectar Poder
 
 ### ✅ Alineación con especificación formal (16 de enero, 2026)
 
@@ -547,12 +541,102 @@ El motor ahora cumple con la especificación formal del dominio:
    - Monorepo completo validado (frontend, backend, packages)
    - Sin cambios en contratos públicos
 
+### ✅ Meta-análisis y detección de patrones (16 de enero, 2026)
+
+**Extensión completada** - Commit: `d69cdb3`
+
+El motor ahora incluye **detección de patrones peligrosos y volatilidad**:
+
+#### Nuevos tipos exportados
+
+**`SignalType`**: 5 tipos de señales complementarias
+- `VOLATILE`: Patrón de serrucho (alternancia frecuente)
+- `SLOW_DECLINE`: Deterioro persistente (múltiples caídas pequeñas)
+- `DATA_GAPS`: Faltan períodos esperados en la serie
+- `RECOVERY_SPIKE`: Recuperación brusca tras deterioro
+- `NOISE`: Cambios insignificantes sin señal real
+
+**`AnalysisSignal`**: Estructura de señal
+```typescript
+{
+  type: SignalType;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH';
+  explanation: string;
+  windowUsed: number;
+  evidence?: Record<string, number | string>;
+}
+```
+
+**`MetricConditionEvaluation`**: Ahora incluye campo `signals: AnalysisSignal[]`
+
+#### Algoritmos implementados
+
+1. **`detectSlowDecline()`**
+   - Ventana: 4 períodos
+   - Detecta: 3+ inclinaciones negativas + delta total negativo
+   - Severity: HIGH si 4/4 caídas, MEDIUM si 3/4
+   - **Ejemplo**: [100, 95, 91, 87, 83] → SLOW_DECLINE (HIGH)
+
+2. **`detectVolatility()`**
+   - Ventana: 5 puntos
+   - Detecta: 3+ cambios de signo en deltas
+   - Severity: HIGH si alterna constantemente, MEDIUM si 3+
+   - **Ejemplo**: [10, 20, 10, 20, 10] → VOLATILE (HIGH)
+
+3. **`detectDataGaps()`**
+   - Asume periodicidad semanal (7 días ± 2)
+   - Detecta saltos > 9 días entre timestamps
+   - Severity basada en cantidad de gaps
+   - **Uso**: Validar completitud de datos
+
+4. **`detectRecoverySpike()`**
+   - Detecta: 2+ caídas seguidas + crecimiento ≥ +50%
+   - Severity: MEDIUM (patrón poco común)
+   - **Ejemplo**: Útil para demo "recuperación tras crisis"
+
+5. **`detectNoise()`**
+   - Ventana: 4 períodos
+   - Detecta: Todos los cambios dentro de ±2%
+   - Severity: LOW (no hay acción necesaria)
+   - **Uso**: "No hay señal clara todavía"
+
+#### Integración con condición principal
+
+- La **condición Hubbard** sigue siendo la salida principal
+- Las **señales NO cambian la condición**, solo añaden contexto
+- Permite evaluaciones tipo:
+  - "EMERGENCIA + SLOW_DECLINE (HIGH)" → Deterioro confirmado
+  - "NORMAL + VOLATILE (MEDIUM)" → Crecimiento inestable
+  - "AFLUENCIA + RECOVERY_SPIKE" → Rebote tras caída
+
+#### Limitaciones declaradas
+
+**❌ NO es predictivo**
+- Los detectores reaccionan a patrones pasados
+- NO anticipan futuros movimientos
+
+**❌ NO considera contexto externo**
+- No sabe si un gap fue feriado o problema técnico
+- No distingue ruido legítimo de falta de actividad
+
+**❌ NO reemplaza análisis humano**
+- Son heurísticas simples, no ML
+- Umbrales pueden requerir calibración por dominio
+
+#### Próximos pasos (UI)
+
+- Mostrar `signals` como **badges** junto a condición principal
+- Tooltip con `explanation` + `evidence`
+- Filtrar por severity (mostrar solo MEDIUM/HIGH por defecto)
+- Color coding: 🔴 HIGH, 🟡 MEDIUM, 🟢 LOW
+
 ### 🔜 Pendiente
 
 - Conectar con backend (endpoints REST/WebSocket)
 - Visualizar en frontend con React Flow
+  - Mostrar `signals` como badges junto a condición
+  - Tooltip con explanation + evidence
 - Crear dashboard histórico interactivo
 - Implementar motor de reglas declarativo
 - Versionado y simulación de reglas
-- Agregar detección de volatilidad/oscilación (análisis multi-período)
 - Calibrar umbrales con datos reales de operación
