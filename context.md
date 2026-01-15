@@ -339,15 +339,17 @@ La IA debe leerlos y respetarlos antes de diseñar o implementar el motor de an�
 
 Orden de prioridad semántica:
 	1.	context.md (este documento)
-	2.	Diseño de Interfaz Técnica – Motor de Análisis de Inclinación (v2).md
-	3.	Motor de análisis de inclinación y condiciones.md
-	4.	Fórmulas de las condiciones.md
+	2.	**ESPECIFICACIÓN FORMAL DEL DOMINIO.md** (especificación oficial del motor)
+	3.	Diseño de Interfaz Técnica – Motor de Análisis de Inclinación (v2).md
+	4.	Motor de análisis de inclinación y condiciones.md
+	5.	Fórmulas de las condiciones.md
 
 Reglas:
-	•	Si hay ambigüedad → preferir contratos sobre implementación
-	•	Si hay conflicto → prevalece context.md
+	•	Si hay ambigüedad → preferir especificación formal sobre implementación
+	•	Si hay conflicto → prevalece ESPECIFICACIÓN FORMAL DEL DOMINIO.md
 	•	Las fórmulas definen comportamiento, no valores fijos
 	•	Las condiciones dependen de inclinación y tendencia histórica, no de thresholds absolutos
+	•	La especificación formal define la jerarquía oficial de condiciones
 
 ---
 
