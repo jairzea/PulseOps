@@ -1,0 +1,23 @@
+{
+  "name": "pulseops",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PulseOps - Sistema de evaluación operativa basado en comportamiento",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "dev": "npm run dev --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
