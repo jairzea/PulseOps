@@ -672,13 +672,153 @@ Refinamientos técnicos aplicados sin cambiar contratos públicos:
 - ✅ Builds: Compilación exitosa
 - ✅ Contratos: Sin breaking changes
 
+### ✅ FASE F: Integración Visual - React Flow (16 de enero, 2026)
+
+**Commit**: `19876e0`
+
+**Objetivo cumplido**: Visualizar el análisis del motor en un grafo React Flow interactivo con UI profesional.
+
+#### Arquitectura implementada
+
+**Estructura de módulos**:
+```
+apps/frontend/src/
+  modules/
+    live-demo/
+      LiveDemoPage.tsx       # Componente principal
+      demoData.ts            # Series temporales mock
+      flow/
+        buildGraph.ts        # Construye nodos/edges desde resultado
+        nodeTypes.tsx        # Componentes personalizados de nodos
+  App.tsx                    # Entry point actualizado
+```
+
+#### Componentes creados
+
+**1. LiveDemoPage** (Principal):
+- Selector de métrica (3 series mock diferentes)
+- Panel lateral con resultados:
+  - Condición operativa (badge con color)
+  - Inclinación porcentual
+  - Razón explicativa
+  - Señales detectadas (SLOW_DECLINE, VOLATILE, etc.)
+  - Metadata (ventana, confianza, timestamp)
+- Grafo React Flow semántico del pipeline de análisis
+- Botón "Reanalizar" para forzar re-ejecución
+
+**2. Nodos personalizados** (nodeTypes.tsx):
+- `SourceNode`: Fuente de datos (mock)
+- `MetricSeriesNode`: Serie temporal
+- `InclinationNode`: Inclinación % (verde/rojo según signo)
+- `ConditionNode`: Condición Hubbard (colores por tipo)
+- `SignalsNode`: Lista de señales con severity badges
+
+**3. buildGraph()**: 
+- Convierte `MetricConditionEvaluation` → Nodos y Edges
+- Pipeline visual: Source → MetricSeries → Inclination → Condition → Signals
+- Edges animados con colores diferenciados
+
+#### Datos mock (demoData.ts)
+
+**3 series temporales** con patrones específicos:
+
+1. **Story Points** (Desarrollador)
+   - Patrón: SLOW_DECLINE
+   - 8 semanas de deterioro gradual: 100 → 76
+
+2. **Integraciones** (Líder Técnico)
+   - Patrón: VOLATILE
+   - 7 semanas alternando: 10 ↔ 25 ↔ 12...
+
+3. **Performance Score** (Desarrollador)
+   - Patrón: RECOVERY_SPIKE
+   - 6 semanas: caídas seguidas de spike (60 → 110)
+
+#### Integración con analysis-engine
+
+✅ **Motor ejecutándose en frontend**:
+```typescript
+const result = analysisEngine.analyzeWithConditions(series);
+// Retorna: MetricConditionEvaluation con:
+// - condition (HUBBARD)
+// - inclination (%)
+// - signals (VOLATILE, SLOW_DECLINE, etc.)
+// - reason (explicación)
+```
+
+✅ **Sin backend**: Funciona standalone con datos mock
+
+#### UI/UX implementado
+
+**Dark mode profesional**:
+- Gradientes en nodos (blue → purple → green)
+- Borders con glow sutil
+- Animaciones suaves en edges
+- Badges con color coding:
+  - 🔴 HIGH (rojo)
+  - 🟡 MEDIUM (amarillo)
+  - 🔵 LOW (azul)
+
+**Condiciones con colores semánticos**:
+- PODER: Amarillo dorado
+- AFLUENCIA: Verde brillante
+- NORMAL: Azul
+- EMERGENCIA: Naranja
+- PELIGRO: Rojo intenso
+- INEXISTENCIA/SIN_DATOS: Gris
+
+**Interactividad**:
+- Cambio de métrica dinámico (sin reload)
+- Botón "Reanalizar" (simula actualización)
+- React Flow controls (zoom, pan, minimap)
+- Hover en nodos muestra detalles
+
+#### Demo-ready statement
+
+**Ahora se puede decir en demo**:
+
+> "Aquí está la serie histórica de Story Points. El motor calcula inclinación porcentual, 
+> detecta que es un deterioro lento persistente (SLOW_DECLINE HIGH), y asigna condición 
+> de EMERGENCIA. Todo se explica visualmente en un grafo que representa el pipeline 
+> del dominio: desde la fuente de datos hasta las señales de meta-análisis."
+
+#### Qué es mock (temporalmente)
+
+- ❌ Fuente de datos: Mock hardcoded (3 series)
+- ❌ Timestamps: Generados algorítmicamente
+- ❌ Backend: No conectado todavía
+
+#### Qué es real (funcionando ahora)
+
+- ✅ Motor de análisis: @pulseops/analysis-engine ejecutándose
+- ✅ Cálculo de inclinación: Fórmula oficial
+- ✅ Resolución de condiciones: Jerarquía Hubbard correcta
+- ✅ Detección de señales: 5 detectores funcionando
+- ✅ Explicaciones: Generadas automáticamente
+- ✅ Visualización: Grafo React Flow con pipeline completo
+
+#### Próximos pasos
+
+**Sustituir mock por backend**:
+1. Crear endpoints REST/WebSocket en backend
+2. Conectar con Jira/GitHub APIs
+3. Persistir series temporales en MongoDB
+4. Eliminar demoData.ts
+
+**Mejorar visualización**:
+5. Dashboard con múltiples métricas simultáneas
+6. Histórico interactivo (slider temporal)
+7. Comparación entre recursos/equipos
+8. Exportar reportes (PDF/Excel)
+
 ### 🔜 Pendiente
 
 - Conectar con backend (endpoints REST/WebSocket)
-- Visualizar en frontend con React Flow
-  - Mostrar `signals` como badges junto a condición
-  - Tooltip con explanation + evidence
+- ~~Visualizar en frontend con React Flow~~ ✅ **Completado en F**
+  - ~~Mostrar `signals` como badges junto a condición~~ ✅
+  - ~~Tooltip con explanation + evidence~~ ✅
 - Crear dashboard histórico interactivo
 - Implementar motor de reglas declarativo
 - Versionado y simulación de reglas
 - Calibrar umbrales con datos reales de operación
+- Sustituir datos mock por integración con Jira/GitHub
