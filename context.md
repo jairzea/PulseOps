@@ -780,7 +780,56 @@ const result = analysisEngine.analyzeWithConditions(series);
 > "Aquí está la serie histórica de Story Points. El motor calcula inclinación porcentual, 
 > detecta que es un deterioro lento persistente (SLOW_DECLINE HIGH), y asigna condición 
 > de EMERGENCIA. Todo se explica visualmente en un grafo que representa el pipeline 
-> del dominio: desde la fuente de datos hasta las señales de meta-análisis."
+> del dominio: desde la fuente de datos hasta las señales de meta-análisis. Además, 
+> tenemos un gráfico histórico tradicional con línea de tendencia (regresión lineal) 
+> que muestra la trayectoria de los valores en el tiempo."
+
+#### Gráfico Histórico con Trendline
+
+**✅ Implementado en PROMPT F**:
+
+**1. Utilidades matemáticas** (`src/utils/chartUtils.ts`):
+- `calculateLinearRegression()`: Regresión lineal por mínimos cuadrados
+  - Calcula pendiente (m) e intersección (b) para y = mx + b
+  - Maneja casos edge (n=0)
+- `buildChartData()`: Transforma `MetricPoint[]` → datos para Recharts
+  - Genera labels de semana (S1, S2, S3...)
+  - Incluye valores reales + valores de tendencia calculados
+
+**2. Componente HistoricalChart** (`src/components/HistoricalChart.tsx`):
+- Props: `points: MetricPoint[]`, `metricName: string`
+- Visualización con Recharts:
+  - LineChart con 2 líneas:
+    - **Valor Real**: Línea sólida azul con dots
+    - **Línea de Tendencia**: Línea punteada verde (dasharray)
+  - Ejes X (semanas) e Y (valores numéricos)
+  - Tooltip con detalles de cada punto
+  - Legend para identificar las líneas
+  - Tema dark mode (bg-gray-800, borders gray-700)
+  - Altura fija: 300px responsiva
+
+**3. Integración en LiveDemoPage**:
+- Layout reorganizado:
+  - Panel lateral izquierdo (w-80): Resultados (condición, inclinación, señales, metadata)
+  - Columna principal derecha (flex-1): 
+    - **Gráfico Histórico** (arriba, 300px)
+    - **Grafo React Flow** (abajo, 550px)
+- Ambas visualizaciones se actualizan al cambiar métrica
+- Mismo flujo de datos: `getSeriesById()` → componentes
+
+**Características técnicas**:
+- ✅ Regresión lineal pura (least squares)
+- ✅ TypeScript strict mode
+- ✅ Zero dependencias extra (Recharts ya era común para este caso)
+- ✅ Responsive container
+- ✅ Integración fluida con UI existente
+- ✅ Dark mode consistente
+
+**Qué se puede mostrar en demo**:
+> "Esta es la visualización tradicional: un gráfico de línea con los valores históricos 
+> y la línea de tendencia calculada por regresión lineal. Los ejecutivos que prefieren 
+> gráficos convencionales tienen esta vista. Los técnicos pueden usar el grafo React Flow 
+> para entender el pipeline del análisis."
 
 #### Qué es mock (temporalmente)
 
