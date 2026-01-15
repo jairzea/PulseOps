@@ -79,22 +79,27 @@ function detectSlowDecline(points: MetricPoint[]): AnalysisSignal | null {
 
   const recentPoints = points.slice(-(WINDOW + 1));
   let negativeCount = 0;
-  let totalDelta = 0;
+  let totalInclinationSum = 0;
 
   for (let i = 1; i < recentPoints.length; i++) {
     const prev = recentPoints[i - 1].value;
     const curr = recentPoints[i].value;
-    const delta = curr - prev;
+    const inclination = calculateInclination(prev, curr);
     
-    totalDelta += delta;
+    // Solo considerar inclinaciones válidas
+    if (!inclination.isValid || inclination.value === null) {
+      continue;
+    }
     
-    if (delta < 0) {
+    totalInclinationSum += inclination.value;
+    
+    if (inclination.value < 0) {
       negativeCount++;
     }
   }
 
-  // Criterio: 3+ caídas y delta total negativo
-  if (negativeCount >= 3 && totalDelta < 0) {
+  // Criterio: 3+ caídas y suma de inclinaciones negativa
+  if (negativeCount >= 3 && totalInclinationSum < 0) {
     const severity: 'LOW' | 'MEDIUM' | 'HIGH' = 
       negativeCount === 4 ? 'HIGH' :
       negativeCount === 3 ? 'MEDIUM' : 'LOW';
@@ -106,7 +111,7 @@ function detectSlowDecline(points: MetricPoint[]): AnalysisSignal | null {
       windowUsed: WINDOW,
       evidence: {
         negativePeriodsCount: negativeCount,
-        totalDelta: Math.round(totalDelta * 100) / 100,
+        totalInclinationSum: Math.round(totalInclinationSum * 100) / 100,
       },
     };
   }
@@ -134,10 +139,16 @@ function detectVolatility(points: MetricPoint[]): AnalysisSignal | null {
 
   for (let i = 1; i < recentPoints.length; i++) {
     const delta = recentPoints[i].value - recentPoints[i - 1].value;
-    deltas.push(delta);
+    // Filtrar deltas cero para evitar diluir el conteo de cambios de signo
+    if (delta !== 0) {
+      deltas.push(delta);
+    }
   }
 
-  // Contar cambios de signo
+  // Se necesitan al menos 2 deltas no cero para detectar cambios de signo
+  if (deltas.length < 2) return null;
+
+  // Contar cambios de signo (solo entre positivos y negativos reales)
   let signChanges = 0;
   for (let i = 1; i < deltas.length; i++) {
     if ((deltas[i] > 0 && deltas[i - 1] < 0) || 
@@ -155,7 +166,7 @@ function detectVolatility(points: MetricPoint[]): AnalysisSignal | null {
     return {
       type: 'VOLATILE',
       severity,
-      explanation: `Patrón de serrucho detectado: ${signChanges} cambios de dirección en ${WINDOW - 1} transiciones`,
+      explanation: `Patrón de serrucho detectado: ${signChanges} cambios de dirección en ${deltas.length - 1} transiciones`,
       windowUsed: WINDOW,
       evidence: {
         signChangesCount: signChanges,
@@ -185,7 +196,7 @@ function detectDataGaps(points: MetricPoint[]): AnalysisSignal | null {
   const MAX_GAP_MS = (EXPECTED_DAYS + TOLERANCE_DAYS) * 24 * 60 * 60 * 1000;
 
   let gapCount = 0;
-  const gaps: string[] = [];
+  let largestGapDays = 0;
 
   for (let i = 1; i < points.length; i++) {
     const prevTime = new Date(points[i - 1].timestamp).getTime();
@@ -195,7 +206,10 @@ function detectDataGaps(points: MetricPoint[]): AnalysisSignal | null {
     if (diffMs > MAX_GAP_MS) {
       gapCount++;
       const daysDiff = Math.round(diffMs / (24 * 60 * 60 * 1000));
-      gaps.push(`${daysDiff} días`);
+      // Calcular explícitamente el mayor salto
+      if (daysDiff > largestGapDays) {
+        largestGapDays = daysDiff;
+      }
     }
   }
 
@@ -211,7 +225,7 @@ function detectDataGaps(points: MetricPoint[]): AnalysisSignal | null {
       windowUsed: points.length,
       evidence: {
         gapCount,
-        largestGap: gaps[0] || 'N/A',
+        largestGapDays,
       },
     };
   }
@@ -235,21 +249,7 @@ function detectRecoverySpike(points: MetricPoint[]): AnalysisSignal | null {
 
   const recentPoints = points.slice(-WINDOW);
   
-  // Buscar patrón: caídas consecutivas + spike
-  let consecutiveDeclines = 0;
-  let lastWasDecline = false;
-
-  for (let i = 1; i < recentPoints.length - 1; i++) {
-    const delta = recentPoints[i].value - recentPoints[i - 1].value;
-    if (delta < 0) {
-      consecutiveDeclines++;
-      lastWasDecline = true;
-    } else {
-      if (lastWasDecline) break;
-    }
-  }
-
-  // Verificar último movimiento (debe ser spike)
+  // Verificar último movimiento primero (debe ser spike)
   const lastIdx = recentPoints.length - 1;
   const lastInclination = calculateInclination(
     recentPoints[lastIdx - 1].value,
@@ -257,11 +257,28 @@ function detectRecoverySpike(points: MetricPoint[]): AnalysisSignal | null {
   );
 
   if (
-    consecutiveDeclines >= 2 &&
-    lastInclination.isValid &&
-    lastInclination.value !== null &&
-    lastInclination.value >= INCLINATION_THRESHOLDS.STEEP_POSITIVE
+    !lastInclination.isValid ||
+    lastInclination.value === null ||
+    lastInclination.value < INCLINATION_THRESHOLDS.STEEP_POSITIVE
   ) {
+    return null; // No hay spike, no puede haber recovery
+  }
+
+  // Analizar desde el penúltimo punto hacia atrás
+  // Contar caídas consecutivas inmediatamente antes del spike
+  let consecutiveDeclines = 0;
+  
+  for (let i = lastIdx - 1; i > 0; i--) {
+    const delta = recentPoints[i].value - recentPoints[i - 1].value;
+    if (delta < 0) {
+      consecutiveDeclines++;
+    } else {
+      break; // Detenerse al primer período no negativo
+    }
+  }
+
+  // Criterio: mínimo 2 caídas consecutivas antes del spike
+  if (consecutiveDeclines >= 2) {
     return {
       type: 'RECOVERY_SPIKE',
       severity: 'MEDIUM',
@@ -290,6 +307,7 @@ function detectRecoverySpike(points: MetricPoint[]): AnalysisSignal | null {
 function detectNoise(points: MetricPoint[]): AnalysisSignal | null {
   const WINDOW = 4;
   const NOISE_THRESHOLD = 2; // ±2%
+  const ABSOLUTE_NOISE_THRESHOLD = 1; // Umbral absoluto para valores cercanos a 0
 
   if (points.length < WINDOW + 1) return null;
 
@@ -302,13 +320,19 @@ function detectNoise(points: MetricPoint[]): AnalysisSignal | null {
       recentPoints[i].value
     );
 
-    if (
-      !inclination.isValid ||
-      inclination.value === null ||
-      Math.abs(inclination.value) > NOISE_THRESHOLD
-    ) {
-      allWithinNoise = false;
-      break;
+    // Si la inclinación es válida, usar porcentaje
+    if (inclination.isValid && inclination.value !== null) {
+      if (Math.abs(inclination.value) > NOISE_THRESHOLD) {
+        allWithinNoise = false;
+        break;
+      }
+    } else {
+      // Fallback: usar delta absoluto cuando E_ant ≈ 0
+      const delta = Math.abs(inclination.delta);
+      if (delta > ABSOLUTE_NOISE_THRESHOLD) {
+        allWithinNoise = false;
+        break;
+      }
     }
   }
 
@@ -345,10 +369,15 @@ function detectPatterns(points: MetricPoint[]): AnalysisSignal[] {
 
   // Agregar señales detectadas
   if (slowDecline) signals.push(slowDecline);
-  if (volatility) signals.push(volatility);
   if (dataGaps) signals.push(dataGaps);
   if (recoverySpike) signals.push(recoverySpike);
-  if (noise) signals.push(noise);
+  
+  // Evitar contradicciones: si NOISE está presente, no incluir VOLATILE
+  if (noise) {
+    signals.push(noise);
+  } else if (volatility) {
+    signals.push(volatility);
+  }
 
   return signals;
 }
