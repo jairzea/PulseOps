@@ -348,3 +348,65 @@ Reglas:
 	•	Si hay conflicto → prevalece context.md
 	•	Las fórmulas definen comportamiento, no valores fijos
 	•	Las condiciones dependen de inclinación y tendencia histórica, no de thresholds absolutos
+
+---
+
+## 📈 15. Motor de Análisis de Inclinación y Condiciones (Estado actual)
+
+### ✅ Implementado (15 de enero, 2026)
+
+El motor de análisis (`@pulseops/analysis-engine`) ahora cuenta con:
+
+#### Arquitectura por capas
+
+1. **Trend Layer** (Básica)
+   - Análisis de dirección: UP, DOWN, FLAT, INSUFFICIENT_DATA
+   - Cálculo de delta absoluto
+   - Función: `analyze(series, config?)` → `TrendAnalysisResult`
+
+2. **Inclination Layer** (Avanzada)
+   - Cálculo de inclinación porcentual: `I = ((E_act - E_ant) / E_ant) × 100`
+   - Manejo de casos especiales:
+     - E_ant ≈ 0 (división por cero)
+     - E_act ≈ 0 (caída crítica)
+     - Ambos ≈ 0 (inexistencia/confusión)
+
+3. **Condition Resolver Layer** (Jerarquía de condiciones Hubbard)
+   - Evaluación jerárquica de condiciones operativas:
+     1. INEXISTENCIA - Caída casi vertical o inicio desde cero
+     2. PELIGRO - Descenso pronunciado
+     3. EMERGENCIA - Sin cambio o descenso moderado
+     4. PODER - Normal sostenido en nivel alto (≥3 períodos)
+     5. AFLUENCIA - Crecimiento pronunciado
+     6. NORMAL - Crecimiento gradual
+     7. SIN_DATOS - Datos insuficientes
+
+#### Funcionalidad disponible
+
+- `analysisEngine.analyze()` - Análisis básico (compatible con versión inicial)
+- `analysisEngine.analyzeWithConditions()` - Análisis completo con condiciones Hubbard
+- `calculateInclination()` - Función standalone para cálculo de inclinación
+
+#### Tipos extendidos (`@pulseops/shared-types`)
+
+- `HubbardCondition` - Condiciones operativas jerárquicas
+- `ConditionReason` - Explicación detallada de por qué se asignó una condición
+- `InclinationResult` - Resultado del cálculo de inclinación porcentual
+- `MetricConditionEvaluation` - Evaluación completa de una métrica
+
+#### Características clave
+
+- **Determinístico**: Mismos datos → mismo resultado
+- **Puro**: Sin efectos secundarios, sin estado mutable
+- **Parametrizable**: Umbrales configurables (no hardcoded)
+- **Explicable**: Cada condición incluye código y explicación legible
+- **Basado en comportamiento**: Evalúa tendencias, no valores absolutos
+- **Histórico**: Analiza series completas para detectar Poder
+
+### 🔜 Pendiente
+
+- Conectar con backend (endpoints REST/WebSocket)
+- Visualizar en frontend con React Flow
+- Crear dashboard histórico interactivo
+- Implementar motor de reglas declarativo
+- Versionado y simulación de reglas
