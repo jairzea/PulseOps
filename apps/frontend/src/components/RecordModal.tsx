@@ -1,43 +1,36 @@
 /**
- * RecordModal - Modal para agregar/editar registros
+ * RecordModal - Modal con integración a Zustand store
  */
-import React, { useEffect } from 'react';
-import { Resource, Metric, Record as MetricRecord } from '../services/apiClient';
-import { RecordForm, RecordFormData } from './RecordForm';
+import { useEffect, useState } from 'react';
+import { Resource, Metric } from '../services/apiClient';
+import { RecordForm } from './RecordForm';
+import { RecordFormData } from '../schemas/recordFormSchema';
+import { useRecordsStore } from '../stores/recordsStore';
 
 interface RecordModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: RecordFormData) => Promise<void>;
   resources: Resource[];
   metrics: Metric[];
-  initialRecord?: MetricRecord | null;
   title?: string;
 }
 
 export const RecordModal: React.FC<RecordModalProps> = ({
-  isOpen,
-  onClose,
-  onSubmit,
   resources,
   metrics,
-  initialRecord,
   title,
 }) => {
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-
-  // Reset state al cerrar/abrir
-  useEffect(() => {
-    if (!isOpen) {
-      setIsSubmitting(false);
-      setError(null);
-    }
-  }, [isOpen]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { 
+    isModalOpen, 
+    editingRecord, 
+    error: storeError,
+    setModalOpen, 
+    createRecord 
+  } = useRecordsStore();
 
   // Prevenir scroll del body cuando modal está abierto
   useEffect(() => {
-    if (isOpen) {
+    if (isModalOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -45,44 +38,48 @@ export const RecordModal: React.FC<RecordModalProps> = ({
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen]);
+  }, [isModalOpen]);
 
   const handleSubmit = async (data: RecordFormData) => {
     setIsSubmitting(true);
-    setError(null);
     try {
-      await onSubmit(data);
-      onClose();
+      await createRecord(data);
+      setModalOpen(false);
     } catch (err) {
       console.error('Error submitting record:', err);
-      setError(err instanceof Error ? err.message : 'Error al guardar el registro');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleClose = () => {
+    if (!isSubmitting) {
+      setModalOpen(false);
+    }
+  };
+
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget && !isSubmitting) {
-      onClose();
+      handleClose();
     }
   };
 
   const handleEscapeKey = (e: KeyboardEvent) => {
     if (e.key === 'Escape' && !isSubmitting) {
-      onClose();
+      handleClose();
     }
   };
 
   useEffect(() => {
-    if (isOpen) {
+    if (isModalOpen) {
       document.addEventListener('keydown', handleEscapeKey);
       return () => {
         document.removeEventListener('keydown', handleEscapeKey);
       };
     }
-  }, [isOpen, isSubmitting]);
+  }, [isModalOpen, isSubmitting]);
 
-  if (!isOpen) return null;
+  if (!isModalOpen) return null;
 
   return (
     <div
@@ -96,10 +93,10 @@ export const RecordModal: React.FC<RecordModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700">
           <h2 className="text-xl font-bold text-white">
-            {title || (initialRecord ? 'Editar Registro' : 'Nuevo Registro Manual')}
+            {title || (editingRecord ? 'Editar Registro' : 'Nuevo Registro Manual')}
           </h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isSubmitting}
             className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
             aria-label="Cerrar"
@@ -122,18 +119,18 @@ export const RecordModal: React.FC<RecordModalProps> = ({
 
         {/* Body */}
         <div className="p-6">
-          {error && (
+          {storeError && (
             <div className="mb-4 p-4 bg-red-900 bg-opacity-20 border border-red-500 rounded-lg">
-              <p className="text-sm text-red-400">{error}</p>
+              <p className="text-sm text-red-400">{storeError}</p>
             </div>
           )}
 
           <RecordForm
             resources={resources}
             metrics={metrics}
-            initialRecord={initialRecord}
+            initialRecord={editingRecord}
             onSubmit={handleSubmit}
-            onCancel={onClose}
+            onCancel={handleClose}
             isSubmitting={isSubmitting}
           />
         </div>

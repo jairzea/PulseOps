@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useResources } from '../hooks/useResources';
 import { useMetrics } from '../hooks/useMetrics';
-import { useRecords } from '../hooks/useRecords';
 import { useAnalysis } from '../hooks/useAnalysis';
 import { useConditionsMetadata } from '../hooks/useConditionsMetadata';
 import { ResourceSelector } from '../components/ResourceSelector';
@@ -10,30 +9,37 @@ import { HistoricalChart } from '../components/HistoricalChart';
 import { ConditionFormula } from '../components/ConditionFormula';
 import { ConditionCard } from '../components/ConditionCard';
 import { RecordModal } from '../components/RecordModal';
-import { RecordFormData } from '../components/RecordForm';
-import { apiClient } from '../services/apiClient';
+import { useRecordsStore } from '../stores/recordsStore';
 
 export function ResourceDashboard() {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const [selectedMetricKey, setSelectedMetricKey] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const conditionsContainerRef = useRef<HTMLDivElement>(null);
   const conditionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const { resources, loading: loadingResources } = useResources();
   const { metrics, loading: loadingMetrics } = useMetrics({ resourceId: selectedResourceId });
   const { conditions, loading: loadingConditions } = useConditionsMetadata();
-  const {
-    records,
+  
+  // Usar Zustand store en lugar de hook local
+  const { 
+    records, 
     loading: loadingRecords,
-    refetch: refetchRecords,
-  } = useRecords({
-    resourceId: selectedResourceId || undefined,
-    metricKey: selectedMetricKey || undefined,
-    enabled: !!selectedResourceId && !!selectedMetricKey,
-  });
+    fetchRecords,
+    setModalOpen 
+  } = useRecordsStore();
 
   const { result: analysis, loading: loadingAnalysis, evaluate } = useAnalysis();
+
+  // Fetch records cuando cambian resource/metric
+  useEffect(() => {
+    if (selectedResourceId && selectedMetricKey) {
+      fetchRecords({
+        resourceId: selectedResourceId,
+        metricKey: selectedMetricKey,
+      });
+    }
+  }, [selectedResourceId, selectedMetricKey, fetchRecords]);
 
   // Auto-select first resource and metric when loaded
   useEffect(() => {
@@ -77,19 +83,6 @@ export function ResourceDashboard() {
     () => metrics.find((m) => m.key === selectedMetricKey),
     [metrics, selectedMetricKey]
   );
-
-  const handleCreateRecord = async (data: RecordFormData) => {
-    await apiClient.upsertRecord(data);
-    // Refetch records to update chart
-    await refetchRecords();
-    // Re-evaluate analysis
-    if (selectedResourceId && selectedMetricKey) {
-      evaluate({
-        resourceId: selectedResourceId,
-        metricKey: selectedMetricKey,
-      });
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -137,7 +130,7 @@ export function ResourceDashboard() {
             <div className="flex items-center gap-4">
               {/* Add Record Button */}
               <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => setModalOpen(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors font-medium"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -322,9 +315,6 @@ export function ResourceDashboard() {
 
       {/* Record Modal */}
       <RecordModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleCreateRecord}
         resources={resources}
         metrics={metrics}
       />

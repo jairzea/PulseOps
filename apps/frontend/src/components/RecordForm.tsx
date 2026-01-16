@@ -1,8 +1,11 @@
 /**
- * RecordForm - Formulario para crear/editar registros manuales
+ * RecordForm - Formulario con React Hook Form + Yup
  */
-import React, { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { Resource, Metric, Record as MetricRecord } from '../services/apiClient';
+import { RecordFormData, recordFormSchema, getCurrentWeek } from '../schemas/recordFormSchema';
 
 interface RecordFormProps {
   resources: Resource[];
@@ -13,25 +16,6 @@ interface RecordFormProps {
   isSubmitting?: boolean;
 }
 
-export interface RecordFormData {
-  resourceId: string;
-  metricKey: string;
-  week: string;
-  timestamp: string;
-  value: number;
-  source?: string;
-}
-
-// Generar formato de semana ISO (YYYY-Www)
-const getCurrentWeek = (): string => {
-  const now = new Date();
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const diff = now.getTime() - startOfYear.getTime();
-  const oneWeek = 1000 * 60 * 60 * 24 * 7;
-  const weekNumber = Math.ceil(diff / oneWeek);
-  return `${now.getFullYear()}-W${String(weekNumber).padStart(2, '0')}`;
-};
-
 export const RecordForm: React.FC<RecordFormProps> = ({
   resources,
   metrics,
@@ -40,25 +24,27 @@ export const RecordForm: React.FC<RecordFormProps> = ({
   onCancel,
   isSubmitting = false,
 }) => {
-  const [formData, setFormData] = useState<RecordFormData>({
-    resourceId: initialRecord?.resourceId || '',
-    metricKey: initialRecord?.metricKey || '',
-    week: initialRecord?.week || getCurrentWeek(),
-    timestamp: initialRecord?.timestamp || new Date().toISOString(),
-    value: initialRecord?.value || 0,
-    source: initialRecord?.source || 'MANUAL',
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<RecordFormData>({
+    resolver: yupResolver(recordFormSchema) as any,
+    defaultValues: {
+      resourceId: initialRecord?.resourceId || '',
+      metricKey: initialRecord?.metricKey || '',
+      week: initialRecord?.week || getCurrentWeek(),
+      timestamp: initialRecord?.timestamp || new Date().toISOString(),
+      value: initialRecord?.value || 0,
+      source: initialRecord?.source || 'MANUAL',
+    },
   });
 
-  type FormErrors = {
-    [K in keyof RecordFormData]?: string;
-  };
-
-  const [errors, setErrors] = useState<FormErrors>({});
-
-  // Si cambia initialRecord, actualizar formulario
+  // Reset form cuando cambia initialRecord
   useEffect(() => {
     if (initialRecord) {
-      setFormData({
+      reset({
         resourceId: initialRecord.resourceId,
         metricKey: initialRecord.metricKey,
         week: initialRecord.week,
@@ -67,45 +53,10 @@ export const RecordForm: React.FC<RecordFormProps> = ({
         source: initialRecord.source || 'MANUAL',
       });
     }
-  }, [initialRecord]);
-
-  const handleChange = (field: keyof RecordFormData, value: string | number) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    // Limpiar error al editar
-    if (errors[field]) {
-      setErrors((prev: FormErrors) => ({ ...prev, [field]: undefined }));
-    }
-  };
-
-  const validate = (): boolean => {
-    const newErrors: FormErrors = {};
-
-    if (!formData.resourceId) {
-      newErrors.resourceId = 'Debes seleccionar un recurso';
-    }
-    if (!formData.metricKey) {
-      newErrors.metricKey = 'Debes seleccionar una métrica';
-    }
-    if (!formData.week) {
-      newErrors.week = 'Debes especificar una semana';
-    }
-    if (formData.value === null || formData.value === undefined || isNaN(Number(formData.value))) {
-      newErrors.value = 'Debes especificar un valor numérico válido';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (validate()) {
-      onSubmit(formData);
-    }
-  };
+  }, [initialRecord, reset]);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Recurso */}
       <div>
         <label htmlFor="resourceId" className="block text-sm font-medium text-gray-300 mb-2">
@@ -113,8 +64,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
         </label>
         <select
           id="resourceId"
-          value={formData.resourceId}
-          onChange={(e) => handleChange('resourceId', e.target.value)}
+          {...register('resourceId')}
           disabled={isSubmitting || !!initialRecord}
           className={`w-full px-4 py-2 bg-gray-800 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.resourceId ? 'border-red-500' : 'border-gray-700'
@@ -128,7 +78,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
           ))}
         </select>
         {errors.resourceId && (
-          <p className="mt-1 text-sm text-red-500">{errors.resourceId}</p>
+          <p className="mt-1 text-sm text-red-500">{errors.resourceId.message}</p>
         )}
       </div>
 
@@ -139,8 +89,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
         </label>
         <select
           id="metricKey"
-          value={formData.metricKey}
-          onChange={(e) => handleChange('metricKey', e.target.value)}
+          {...register('metricKey')}
           disabled={isSubmitting || !!initialRecord}
           className={`w-full px-4 py-2 bg-gray-800 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.metricKey ? 'border-red-500' : 'border-gray-700'
@@ -154,7 +103,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
           ))}
         </select>
         {errors.metricKey && (
-          <p className="mt-1 text-sm text-red-500">{errors.metricKey}</p>
+          <p className="mt-1 text-sm text-red-500">{errors.metricKey.message}</p>
         )}
       </div>
 
@@ -166,8 +115,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
         <input
           type="text"
           id="week"
-          value={formData.week}
-          onChange={(e) => handleChange('week', e.target.value)}
+          {...register('week')}
           disabled={isSubmitting}
           placeholder="2026-W02"
           className={`w-full px-4 py-2 bg-gray-800 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -175,7 +123,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
           }`}
         />
         {errors.week && (
-          <p className="mt-1 text-sm text-red-500">{errors.week}</p>
+          <p className="mt-1 text-sm text-red-500">{errors.week.message}</p>
         )}
         <p className="mt-1 text-xs text-gray-500">Formato: YYYY-Www (ej: 2026-W02)</p>
       </div>
@@ -188,8 +136,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
         <input
           type="number"
           id="value"
-          value={formData.value}
-          onChange={(e) => handleChange('value', Number(e.target.value))}
+          {...register('value', { valueAsNumber: true })}
           disabled={isSubmitting}
           step="any"
           className={`w-full px-4 py-2 bg-gray-800 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -197,7 +144,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
           }`}
         />
         {errors.value && (
-          <p className="mt-1 text-sm text-red-500">{errors.value}</p>
+          <p className="mt-1 text-sm text-red-500">{errors.value.message}</p>
         )}
       </div>
 
@@ -209,8 +156,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
         <input
           type="text"
           id="source"
-          value={formData.source || ''}
-          onChange={(e) => handleChange('source', e.target.value)}
+          {...register('source')}
           disabled={isSubmitting}
           placeholder="MANUAL"
           className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"

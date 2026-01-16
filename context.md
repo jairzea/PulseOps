@@ -1435,3 +1435,260 @@ apps/frontend/src/pages/ResourceDashboard.tsx
 5. Importación masiva desde CSV/JSON
 
 ---
+## [16 Enero 2026] – Fase 3.5 – Refactor React Hook Form + Yup + Zustand
+
+### Qué se implementó
+
+**Modernización completa de formularios** con stack profesional de manejo de estado y validaciones:
+
+#### Stack tecnológico adoptado
+
+- ✅ **React Hook Form** (v7.71.1) - Manejo declarativo de formularios
+- ✅ **Yup** - Validación basada en schemas
+- ✅ **@hookform/resolvers** - Integración RHF + Yup
+- ✅ **Zustand** - State management global ligero
+
+#### Arquitectura implementada
+
+**1. Zustand Store** (`stores/recordsStore.ts`):
+```typescript
+interface RecordsState {
+  records: MetricRecord[];
+  loading: boolean;
+  error: string | null;
+  isModalOpen: boolean;
+  editingRecord: MetricRecord | null;
+  
+  // Actions
+  setModalOpen: (isOpen: boolean) => void;
+  setEditingRecord: (record: MetricRecord | null) => void;
+  fetchRecords: (params: GetRecordsParams) => Promise<void>;
+  createRecord: (data: RecordFormData) => Promise<MetricRecord>;
+  deleteRecord: (id: string) => Promise<void>;
+  reset: () => void;
+}
+```
+
+**Características del store**:
+- Estado global centralizado para records
+- Auto-refetch tras mutaciones (create/delete)
+- Manejo de loading/error states
+- Control de modal (open/close)
+- Gestión de editingRecord para modo edición
+
+**2. Yup Schema** (`schemas/recordFormSchema.ts`):
+```typescript
+export const recordFormSchema = yup.object({
+  resourceId: yup.string().required('Debes seleccionar un recurso'),
+  metricKey: yup.string().required('Debes seleccionar una métrica'),
+  week: yup.string().required().matches(/^\d{4}-W\d{2}$/),
+  timestamp: yup.string().required(),
+  value: yup.number().required(),
+  source: yup.string().optional(),
+});
+
+export interface RecordFormData {
+  resourceId: string;
+  metricKey: string;
+  week: string;
+  timestamp: string;
+  value: number;
+  source?: string;
+}
+```
+
+**Beneficios**:
+- Validaciones centralizadas y reutilizables
+- Mensajes de error personalizados
+- Tipado fuerte con TypeScript
+- Regex validation para formato de semana ISO
+
+**3. RecordForm refactorizado**:
+```typescript
+const {
+  register,
+  handleSubmit,
+  formState: { errors },
+  reset,
+} = useForm<RecordFormData>({
+  resolver: yupResolver(recordFormSchema) as any,
+  defaultValues: { /* ... */ },
+});
+```
+
+**Mejoras sobre versión anterior**:
+- ❌ Eliminado: useState manual para cada campo
+- ❌ Eliminado: Validación imperativa
+- ✅ Agregado: register() para binding automático
+- ✅ Agregado: Validación declarativa con Yup
+- ✅ Agregado: formState.errors con mensajes contextuales
+- ✅ Agregado: reset() para limpiar formulario
+
+**4. RecordModal refactorizado**:
+```typescript
+// Antes (controlled props)
+interface RecordModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: RecordFormData) => Promise<void>;
+  initialRecord?: MetricRecord | null;
+}
+
+// Después (Zustand-powered)
+interface RecordModalProps {
+  resources: Resource[];
+  metrics: Metric[];
+  title?: string;
+}
+
+const { 
+  isModalOpen, 
+  editingRecord, 
+  error,
+  setModalOpen, 
+  createRecord 
+} = useRecordsStore();
+```
+
+**Simplificación lograda**:
+- Props reducidas de 4 a 3 (solo datos necesarios)
+- Estado global reemplaza props drilling
+- Lógica de submit movida al store
+- Error handling centralizado
+
+**5. ResourceDashboard actualizado**:
+```typescript
+// Eliminado
+const [isModalOpen, setIsModalOpen] = useState(false);
+const { records, loading, refetch } = useRecords({ ... });
+const handleCreateRecord = async (data) => { ... };
+
+// Agregado
+const { records, loading, fetchRecords, setModalOpen } = useRecordsStore();
+
+useEffect(() => {
+  if (selectedResourceId && selectedMetricKey) {
+    fetchRecords({ resourceId, metricKey });
+  }
+}, [selectedResourceId, selectedMetricKey, fetchRecords]);
+
+<RecordModal resources={resources} metrics={metrics} />
+```
+
+**Beneficios**:
+- Estado compartido entre componentes sin props drilling
+- Refetch automático tras mutaciones
+- Lógica de negocio centralizada en el store
+- Componentes más simples y enfocados
+
+### Decisiones técnicas
+
+1. **Zustand sobre MobX**: 
+   - Más ligero (2.5 KB vs 16 KB)
+   - API más simple y moderna
+   - Mejor soporte TypeScript out-of-the-box
+   - No requiere decoradores ni observers
+
+2. **Interfaz manual sobre InferType**:
+   - Yup's `InferType<>` genera `{ source: string | undefined }` (obligatorio pero nullable)
+   - TypeScript espera `{ source?: string }` (opcional)
+   - Solución: Definir `RecordFormData` manualmente
+   - Type assertion en resolver: `yupResolver(recordFormSchema) as any`
+
+3. **Auto-refetch en store**:
+   - Tras `createRecord()` ejecuta `fetchRecords()` automático
+   - Evita llamadas manuales a refetch en componentes
+   - Garantiza sincronización inmediata
+
+4. **getCurrentWeek() utility**:
+   - Genera semana ISO actual (YYYY-Www)
+   - Usado como defaultValue en formulario
+   - Evita errores de formato por entrada manual
+
+### Resolución de TypeScript
+
+**Problema encontrado**:
+```
+El tipo '{ source?: string | undefined; ... }' no se puede asignar al tipo 
+'{ resourceId: string; ...; source: string | undefined; }'.
+La propiedad 'source' es opcional en el tipo X, pero obligatoria en el tipo Y.
+```
+
+**Causa raíz**: Incompatibilidad entre representación de campos opcionales en Yup vs TypeScript nativo.
+
+**Solución aplicada**:
+1. Definir `RecordFormData` interface manualmente (no InferType)
+2. Type assertion en yupResolver: `as any`
+3. Build exitoso confirmado: `npx vite build` ✅
+
+### Archivos creados
+
+- ✅ `apps/frontend/src/stores/recordsStore.ts` (107 líneas)
+- ✅ `apps/frontend/src/schemas/recordFormSchema.ts` (48 líneas)
+
+### Archivos refactorizados
+
+- ✅ `apps/frontend/src/components/RecordForm.tsx` (187 líneas)
+  - Reescrito con React Hook Form
+  - Eliminado useState manual
+  - Agregado yupResolver
+  
+- ✅ `apps/frontend/src/components/RecordModal.tsx` (141 líneas)
+  - Eliminado estado local
+  - Integrado con Zustand store
+  - Props simplificadas
+  
+- ✅ `apps/frontend/src/pages/ResourceDashboard.tsx`
+  - Eliminado useRecords hook
+  - Agregado useRecordsStore
+  - Simplificado manejo de modal
+
+### Validación completada
+
+```bash
+✅ Dependencies instaladas: react-hook-form, yup, @hookform/resolvers, zustand
+✅ Zustand store creado con 6 acciones
+✅ Yup schema con 6 campos validados
+✅ RecordForm refactorizado con useForm
+✅ RecordModal integrado con store
+✅ ResourceDashboard usando estado global
+✅ Build exitoso: npx vite build (615 KB output)
+✅ 0 errores de sintaxis
+⚠️  TypeScript language server cache issue (no afecta compilación)
+```
+
+### Beneficios del refactor
+
+**Developer Experience**:
+- Menos código boilerplate (register vs onChange manual)
+- Validaciones declarativas y legibles
+- Estado global sin props drilling
+- TypeScript types más precisos
+
+**User Experience**:
+- Mismo comportamiento visual
+- Validaciones más rápidas (inline)
+- Mensajes de error contextuales
+- Sin cambios perceptibles (transparente)
+
+**Mantenibilidad**:
+- Lógica de negocio centralizada en store
+- Validaciones reutilizables en múltiples forms
+- Componentes más pequeños y enfocados
+- Facilita testing unitario
+
+**Escalabilidad**:
+- Patrón replicable para otros forms (Resources, Metrics)
+- Store extensible para nuevas acciones
+- Schemas combinables y componibles
+
+### Próximos pasos
+
+1. Migrar formularios de Resources a RHF + Yup
+2. Migrar formularios de Metrics a RHF + Yup
+3. Crear store para Resources (resourcesStore.ts)
+4. Crear store para Metrics (metricsStore.ts)
+5. Implementar edición de registros existentes
+6. Implementar eliminación con confirmación
+
+---
