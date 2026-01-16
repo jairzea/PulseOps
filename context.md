@@ -261,25 +261,41 @@ Ejemplo conceptual:
 
 ### Backend
 
-* Node.js
-* NestJS
-* TypeScript
+* Node.js **v20.19.0** (requerido)
+* NestJS 10.3.0
+* TypeScript 5.3.3
 * Arquitectura orientada a dominio
 * WebSockets para eventos
+* **Puerto**: `http://localhost:3000`
 
 ### Base de datos
 
-* MongoDB local
+* MongoDB 7.0 (Docker)
+* **Puerto**: `27017`
 * Persistencia de:
-
   * series temporales
   * evaluaciones
   * reglas versionadas
+
+### Packages internos
+
+* `@pulseops/analysis-engine`: Motor de análisis (CommonJS)
+* `@pulseops/shared-types`: Tipos compartidos (CommonJS)
 
 ### Infraestructura (conceptual)
 
 * AWS (ECS, S3, EventBridge)
 * Docker / Docker Compose
+
+### Herramientas de desarrollo
+
+* **API Testing**:
+  - `API_TESTING.md` - Guía con ejemplos curl de todos los endpoints
+  - `PulseOps.postman_collection.json` - Colección Postman con 22 endpoints
+  - Payloads corregidos y validados contra DTOs reales
+* **Gestión de dependencias**:
+  - npm workspaces (monorepo)
+  - uuid v9.0.1 (compatibilidad CommonJS)
 
 ---
 

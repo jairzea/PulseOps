@@ -3,24 +3,46 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  console.log('[DEBUG] Starting bootstrap...');
+  console.log('[DEBUG] Environment:', {
+    PORT: process.env.PORT,
+    MONGODB_URI: process.env.MONGODB_URI,
+    AUTH_MODE: process.env.AUTH_MODE,
+    NODE_ENV: process.env.NODE_ENV,
+  });
 
-  // Global validation pipe
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+  try {
+    console.log('[DEBUG] Creating NestJS application...');
+    const app = await NestFactory.create(AppModule);
+    console.log('[DEBUG] NestJS application created');
 
-  // CORS configuration
-  app.enableCors();
+    // Global validation pipe
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
+    console.log('[DEBUG] Validation pipe configured');
 
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
+    // CORS configuration
+    app.enableCors();
+    console.log('[DEBUG] CORS enabled');
 
-  console.log(`🚀 PulseOps Backend running on: http://localhost:${port}`);
+    const port = process.env.PORT || 3000;
+    console.log(`[DEBUG] Listening on port ${port}...`);
+    await app.listen(port);
+
+    console.log(`🚀 PulseOps Backend running on: http://localhost:${port}`);
+  } catch (error) {
+    console.error('[ERROR] Bootstrap failed:', error);
+    throw error;
+  }
 }
 
-bootstrap();
+console.log('[DEBUG] Calling bootstrap()...');
+bootstrap().catch((err) => {
+  console.error('[ERROR] Bootstrap crashed:', err);
+  process.exit(1);
+});

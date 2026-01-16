@@ -8,6 +8,19 @@ dist/
 build/
 *.tsbuildinfo
 
+# TypeScript compiled files (should not be in source control)
+# Only ignore compiled files in src directories
+**/src/**/*.js
+**/src/**/*.js.map
+**/src/**/*.d.ts
+**/src/**/*.d.ts.map
+
+# Vite compiled config
+apps/frontend/vite.config.js
+apps/frontend/vite.config.js.map
+apps/frontend/vite.config.d.ts
+apps/frontend/vite.config.d.ts.map
+
 # Environment
 .env
 .env.local
@@ -32,3 +45,10 @@ coverage/
 # Temporary
 tmp/
 temp/
+*.pid
+
+# Scripts temporales de testing
+test-run.js
+test-server.js
+run-backend.sh
+start.sh
