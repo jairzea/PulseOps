@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useResources } from '../hooks/useResources';
 import { useMetrics } from '../hooks/useMetrics';
 import { useRecords } from '../hooks/useRecords';
@@ -50,6 +50,7 @@ export function ResourceDashboard() {
         resourceId: selectedResourceId,
         metricKey: selectedMetricKey,
       });
+      console.log("select", selectedMetricKey)
     }
   }, [selectedResourceId, selectedMetricKey, evaluate]);
 
@@ -67,7 +68,10 @@ export function ResourceDashboard() {
     }
   }, [analysis?.evaluation?.condition]);
 
-  const selectedMetric = metrics.find((m) => m.key === selectedMetricKey);
+  const selectedMetric = useMemo(
+    () => metrics.find((m) => m.key === selectedMetricKey),
+    [metrics, selectedMetricKey]
+  );
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -83,9 +87,15 @@ export function ResourceDashboard() {
                   <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold text-white">PulseOps</span>
+                  <div className="flex flex-col items-end leading-none">
+                    <span className="text-xl font-bold text-white">PulseOps</span>
+                    <small className="text-[9px] text-gray-400/60">
+                      By Unlimitech
+                    </small>
+                  </div>
                   <span className="text-xs text-gray-400 uppercase tracking-wider">Live</span>
                 </div>
+
               </div>
 
               {/* Selectors */}
@@ -134,7 +144,9 @@ export function ResourceDashboard() {
               </div>
             </div>
           </div>
+
         </div>
+
       </header>
 
       {/* Main Content */}

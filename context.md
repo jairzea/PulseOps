@@ -1168,9 +1168,147 @@ Esta separación permite:
 
 ### Próximos pasos sugeridos
 
-1. Poblar backend con datos de prueba (seed scripts)
+1. ~~Poblar backend con datos de prueba (seed scripts)~~ ✅ **Completado (16 enero 2026)**
+   - Script `npm run seed:demo` con 8 recursos diversos
+   - 5 métricas con ~80 records
+   - Patrones que demuestran todas las condiciones Hubbard
 2. Implementar formularios de ingreso manual
 3. Activar Auth0 para demo
 4. Agregar WebSockets para updates en tiempo real
+
+---
+
+## [16 Enero 2026] – Fase 3.2 – Sistema de Condiciones Parametrizables + Slider Horizontal
+
+### Qué se implementó
+
+**Sistema completo de metadata de condiciones** con renderizado dinámico:
+
+#### Backend - ConditionsModule
+- ✅ `ConditionsService` - Metadata estática de 8 condiciones Hubbard
+- ✅ `ConditionsController` - Endpoint `GET /conditions/metadata`
+- ✅ Estructura completa por condición:
+  - `order`: Jerarquía (1-8)
+  - `displayName`: Nombre legible
+  - `description`: Explicación del estado
+  - `color`: 4 variantes Tailwind (bg, badge, text, border)
+  - `icon`: Emoji representativo
+  - `category`: Clasificación (superior, normal, crisis, technical)
+
+#### Frontend - Renderizado dinámico
+- ✅ `useConditionsMetadata` hook - Fetch y cache con auto-sort
+- ✅ `ConditionCard` componente genérico - Renderiza desde metadata
+- ✅ ResourceDashboard refactorizado:
+  - **Slider horizontal** con `flex` y `overflow-x-auto`
+  - **Auto-scroll animado** a condición activa con `scrollIntoView()`
+  - Tarjetas con `w-64` fijo para consistencia
+  - Transiciones suaves (`transition-transform duration-300`)
+  - Hover effect (`hover:scale-105`)
+  - Scrollbar estilizada dark mode
+  - Referencias dinámicas con `Map<string, HTMLDivElement>`
+
+#### Script de seed con datos diversos
+- ✅ `seed-demo-data.ts` - Comando: `npm run seed:demo`
+- ✅ 8 recursos (6 DEV + 2 TL) con nombres reales
+- ✅ 5 métricas diferentes
+- ✅ ~80 records con patrones que demuestran:
+  - **PODER**: Ana García (Story Points), Helena Vargas (Integraciones)
+  - **AFLUENCIA**: Carlos Mendoza, Ana García (Performance)
+  - **NORMAL**: Diana López (Performance), Carlos (Code Reviews)
+  - **EMERGENCIA**: Eduardo Ruiz, Ignacio Morales (Bugs)
+  - **PELIGRO**: Fernanda Torres (Performance)
+  - **INEXISTENCIA**: Gabriel Santos (Code Reviews)
+
+### Beneficios arquitectónicos
+
+1. **Configuración sobre código**: Condiciones gestionadas desde backend
+2. **Escalabilidad**: Sin rebuild para cambiar orden, colores o iconos
+3. **Frontend agnóstico**: Solo renderiza lo que backend provee
+4. **Todas las condiciones visibles**: 8 cards en lugar de 4 hardcoded
+5. **UX mejorada**: Auto-scroll a condición activa con animaciones fluidas
+6. **Demo-ready**: Datos diversos evidencian claramente el comportamiento dinámico
+
+### Validación completada
+
+```bash
+# TypeScript
+✅ Backend: 0 errores
+✅ Frontend: 0 errores
+
+# Funcionalidad
+✅ Endpoint /conditions/metadata retorna 8 condiciones ordenadas
+✅ Slider horizontal con scroll suave
+✅ Auto-focus en condición activa al cambiar métrica
+✅ Seed ejecuta sin errores y puebla MongoDB
+✅ Git commits: fc582f5 (parametrización), c78957c (seed data)
+```
+
+---
+
+## [16 Enero 2026] – Fase 3.3 – Optimización de Animaciones del Chart
+
+### Problema identificado
+
+El gráfico de series temporales presentaba **saltos bruscos** al cambiar de recurso o métrica, en lugar de transiciones suaves como en el demo original con datos mockeados.
+
+**Causa raíz**: El estado de `loading` causaba que el componente se desmontara completamente y mostrara el skeleton, luego se volvía a montar con datos nuevos, rompiendo las animaciones de Recharts.
+
+### Solución implementada
+
+**1. Optimización del loading state** en `HistoricalChart`:
+```tsx
+// Antes: Skeleton bloqueaba siempre que loading=true
+if (loading) return <Skeleton />
+
+// Después: Solo skeleton en carga inicial
+if (loading && records.length === 0) return <Skeleton />
+```
+
+**Resultado**: El gráfico permanece visible mientras carga nuevos datos, permitiendo que Recharts haga transiciones suaves.
+
+**2. Memoización estratégica**:
+- ✅ `React.memo()` en `HistoricalChart` - Solo re-renderiza si props cambian
+- ✅ `useMemo()` para `selectedMetric` - Evita recalculaciones innecesarias
+- ✅ `useCallback()` en `fetchRecords` - Estabiliza función fetch
+
+**3. Simplificación del código**:
+- ❌ Eliminadas animaciones explícitas innecesarias (Recharts las maneja por defecto)
+- ❌ Eliminada key prop dinámica que causaba remounting
+- ✅ Componente equivalente al demo original con datos mockeados
+
+### Archivos modificados
+
+```
+apps/frontend/src/components/HistoricalChart.tsx
+  - Agregado React.memo()
+  - Mejorado loading condicional (solo skeleton inicial)
+  - Simplificado código de animaciones
+
+apps/frontend/src/hooks/useRecords.ts
+  - Agregado useCallback para fetchRecords
+  - Corregidas dependencias de useEffect
+
+apps/frontend/src/pages/ResourceDashboard.tsx
+  - Agregado useMemo para selectedMetric
+  - Ajuste de branding (By Unlimitech)
+```
+
+### Validación completada
+
+```bash
+✅ Transiciones suaves al cambiar recursos
+✅ Transiciones suaves al cambiar métricas
+✅ Gráfico permanece visible durante carga
+✅ Sin re-renders innecesarios (React.memo activo)
+✅ Sin saltos bruscos
+✅ 0 errores TypeScript
+```
+
+### Beneficios UX
+
+1. **Experiencia refinada**: Igual al demo original con datos mockeados
+2. **Performance optimizada**: Menos re-renders, menos trabajo DOM
+3. **Feedback visual claro**: Usuario ve evolución de datos en tiempo real
+4. **Profesional**: Animaciones fluidas mejoran percepción de calidad
 
 ---

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { apiClient, Record } from '../services/apiClient';
 
 interface UseRecordsParams {
@@ -21,7 +21,7 @@ export function useRecords(params: UseRecordsParams = {}): UseRecordsState {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchRecords = async () => {
+  const fetchRecords = useCallback(async () => {
     if (!enabled) {
       setLoading(false);
       return;
@@ -37,11 +37,11 @@ export function useRecords(params: UseRecordsParams = {}): UseRecordsState {
     } finally {
       setLoading(false);
     }
-  };
+  }, [resourceId, metricKey, enabled]);
 
   useEffect(() => {
     fetchRecords();
-  }, [resourceId, metricKey, enabled]);
+  }, [fetchRecords]);
 
   return {
     records,

@@ -26,7 +26,7 @@ export function LiveDemoPage() {
         const series = getSeriesById(selectedMetricId);
         if (!series) return null;
 
-        return analysisEngine.analyzeWithConditions(series);
+        return analysisEngine?.analyzeWithConditions(series);
     }, [selectedMetricId, analysisKey]);
 
     // Construir grafo

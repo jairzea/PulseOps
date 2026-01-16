@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Record } from '../services/apiClient';
 
@@ -10,11 +11,13 @@ interface HistoricalChartProps {
 interface ChartDataPoint {
   week: string;
   value: number;
-  displayWeek: string;
+  trend: number;
 }
 
-export function HistoricalChart({ records, metricName, loading = false }: HistoricalChartProps) {
-  if (loading) {
+export const HistoricalChart = memo(function HistoricalChart({ records, metricName, loading = false }: HistoricalChartProps) {
+  // Solo mostrar skeleton si está loading Y no hay datos
+  // Esto permite que el gráfico permanezca visible mientras carga nuevos datos
+  if (loading && records.length === 0) {
     return (
       <div className="w-full h-96 bg-gray-800 rounded-lg animate-pulse flex items-center justify-center">
         <div className="text-gray-500">Loading chart data...</div>
@@ -46,48 +49,43 @@ export function HistoricalChart({ records, metricName, loading = false }: Histor
     );
   }
 
-  // Ordenar y transformar datos
+  // Ordenar y construir datos del gráfico
   const sortedRecords = [...records].sort((a, b) => a.week.localeCompare(b.week));
 
-  const chartData: ChartDataPoint[] = sortedRecords.map((record) => ({
-    week: record.week,
-    value: record.value,
-    displayWeek: formatWeek(record.week),
-  }));
+  // Calcular regresión lineal
+  const { slope, intercept } = calculateLinearRegression(sortedRecords);
 
-  // Calcular tendencia lineal simple
-  const trendData = calculateTrendLine(chartData);
+  const chartData: ChartDataPoint[] = sortedRecords.map((record, index) => {
+    const trendValue = slope * index + intercept;
+    return {
+      week: formatWeek(record.week),
+      value: record.value,
+      trend: Number(trendValue.toFixed(2)),
+    };
+  });
 
   return (
-    <div className="w-full h-96 bg-gray-800 rounded-lg p-6 border border-gray-700 transition-all duration-300">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-white">{metricName} - Historical Trend</h3>
-        <p className="text-sm text-gray-400">Time series analysis with trend line</p>
-      </div>
-
-      <ResponsiveContainer width="100%" height="85%">
-        <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+    <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+      <h3 className="text-lg font-semibold text-white mb-4">
+        Histórico de {metricName}
+      </h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
           <XAxis
-            dataKey="displayWeek"
+            dataKey="week"
             stroke="#9CA3AF"
             tick={{ fill: '#9CA3AF' }}
-            tickLine={{ stroke: '#4B5563' }}
           />
-          <YAxis
-            stroke="#9CA3AF"
-            tick={{ fill: '#9CA3AF' }}
-            tickLine={{ stroke: '#4B5563' }}
-          />
+          <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
           <Tooltip
             contentStyle={{
               backgroundColor: '#1F2937',
               border: '1px solid #374151',
-              borderRadius: '0.5rem',
-              color: '#F3F4F6',
+              borderRadius: '0.375rem',
+              color: '#F9FAFB',
             }}
-            formatter={(value: number) => [value.toFixed(2), metricName]}
-            labelFormatter={(label) => `Week: ${label}`}
+            labelStyle={{ color: '#9CA3AF' }}
           />
           <Legend
             wrapperStyle={{ color: '#9CA3AF' }}
@@ -97,28 +95,25 @@ export function HistoricalChart({ records, metricName, loading = false }: Histor
             type="monotone"
             dataKey="value"
             stroke="#3B82F6"
-            strokeWidth={3}
-            dot={{ fill: '#3B82F6', r: 5 }}
-            activeDot={{ r: 7, fill: '#60A5FA' }}
-            name="Actual Value"
-            animationDuration={500}
+            strokeWidth={2}
+            name="Valor Real"
+            dot={{ fill: '#3B82F6', r: 4 }}
+            activeDot={{ r: 6 }}
           />
           <Line
-            data={trendData}
             type="monotone"
             dataKey="trend"
-            stroke="#A855F7"
+            stroke="#10B981"
             strokeWidth={2}
             strokeDasharray="5 5"
+            name="Línea de Tendencia"
             dot={false}
-            name="Trend Line"
-            animationDuration={500}
           />
         </LineChart>
       </ResponsiveContainer>
     </div>
   );
-}
+});
 
 // ============================================================================
 // Helper Functions
@@ -130,24 +125,32 @@ function formatWeek(week: string): string {
   return parts.length === 2 ? parts[1] : week;
 }
 
-function calculateTrendLine(data: ChartDataPoint[]): Array<{ displayWeek: string; trend: number }> {
-  if (data.length < 2) return [];
+function calculateLinearRegression(records: Array<{ value: number }>): {
+  slope: number;
+  intercept: number;
+} {
+  const n = records.length;
 
-  const n = data.length;
-  const xValues = data.map((_, i) => i);
-  const yValues = data.map((d) => d.value);
+  if (n === 0) {
+    return { slope: 0, intercept: 0 };
+  }
 
-  // Calcular regresión lineal: y = mx + b
-  const xSum = xValues.reduce((a, b) => a + b, 0);
-  const ySum = yValues.reduce((a, b) => a + b, 0);
-  const xxSum = xValues.reduce((a, x) => a + x * x, 0);
-  const xySum = xValues.reduce((a, x, i) => a + x * yValues[i], 0);
+  let sumX = 0;
+  let sumY = 0;
+  let sumXY = 0;
+  let sumX2 = 0;
 
-  const m = (n * xySum - xSum * ySum) / (n * xxSum - xSum * xSum);
-  const b = (ySum - m * xSum) / n;
+  records.forEach((record, index) => {
+    const x = index;
+    const y = record.value;
+    sumX += x;
+    sumY += y;
+    sumXY += x * y;
+    sumX2 += x * x;
+  });
 
-  return data.map((point, i) => ({
-    displayWeek: point.displayWeek,
-    trend: m * i + b,
-  }));
+  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+
+  return { slope, intercept };
 }

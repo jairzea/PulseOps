@@ -21,7 +21,7 @@ async function bootstrap() {
   // 1. Crear recursos (6 desarrolladores + 2 líderes técnicos)
   // ============================================================================
   console.log('📋 Creando recursos...');
-  
+
   const resources = [
     { name: 'Ana García', roleType: 'DEV' as const },
     { name: 'Carlos Mendoza', roleType: 'DEV' as const },
@@ -113,7 +113,7 @@ async function bootstrap() {
   };
 
   // Patrones para demostrar diferentes condiciones:
-  
+
   // Ana García - PODER (crecimiento sostenido)
   console.log('  Ana García - Story Points (PODER):');
   const anaStoryPoints = [45, 48, 50, 52, 54, 56, 58, 60];
@@ -124,7 +124,9 @@ async function bootstrap() {
         metricKey: 'story_points',
         week: getWeek(7 - i),
         value: anaStoryPoints[i],
-        timestamp: new Date(now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        timestamp: new Date(
+          now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
       },
       'system-seed',
     );
@@ -141,7 +143,9 @@ async function bootstrap() {
         metricKey: 'story_points',
         week: getWeek(7 - i),
         value: carlosStoryPoints[i],
-        timestamp: new Date(now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        timestamp: new Date(
+          now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
       },
       'system-seed',
     );
@@ -158,7 +162,9 @@ async function bootstrap() {
         metricKey: 'performance',
         week: getWeek(7 - i),
         value: dianaPerformance[i],
-        timestamp: new Date(now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        timestamp: new Date(
+          now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
       },
       'system-seed',
     );
@@ -175,7 +181,9 @@ async function bootstrap() {
         metricKey: 'story_points',
         week: getWeek(7 - i),
         value: eduardoStoryPoints[i],
-        timestamp: new Date(now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        timestamp: new Date(
+          now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
       },
       'system-seed',
     );
@@ -192,7 +200,9 @@ async function bootstrap() {
         metricKey: 'performance',
         week: getWeek(7 - i),
         value: fernandaPerformance[i],
-        timestamp: new Date(now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        timestamp: new Date(
+          now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
       },
       'system-seed',
     );
@@ -209,7 +219,9 @@ async function bootstrap() {
         metricKey: 'code_reviews',
         week: getWeek(7 - i),
         value: gabrielCodeReviews[i],
-        timestamp: new Date(now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        timestamp: new Date(
+          now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
       },
       'system-seed',
     );
@@ -226,7 +238,9 @@ async function bootstrap() {
         metricKey: 'integrations',
         week: getWeek(7 - i),
         value: helenaIntegrations[i],
-        timestamp: new Date(now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        timestamp: new Date(
+          now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
       },
       'system-seed',
     );
@@ -243,7 +257,9 @@ async function bootstrap() {
         metricKey: 'bugs_fixed',
         week: getWeek(7 - i),
         value: ignacioBugs[i],
-        timestamp: new Date(now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        timestamp: new Date(
+          now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
       },
       'system-seed',
     );
@@ -252,7 +268,7 @@ async function bootstrap() {
 
   // Agregar más métricas a algunos recursos para mayor diversidad
   console.log('\n  Agregando métricas adicionales...');
-  
+
   // Ana también tiene performance en AFLUENCIA
   const anaPerformance = [60, 62, 65, 68, 72, 78, 86, 95];
   for (let i = 0; i < 8; i++) {
@@ -262,7 +278,9 @@ async function bootstrap() {
         metricKey: 'performance',
         week: getWeek(7 - i),
         value: anaPerformance[i],
-        timestamp: new Date(now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        timestamp: new Date(
+          now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
       },
       'system-seed',
     );
@@ -277,7 +295,9 @@ async function bootstrap() {
         metricKey: 'code_reviews',
         week: getWeek(7 - i),
         value: carlosCodeReviews[i],
-        timestamp: new Date(now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        timestamp: new Date(
+          now.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
       },
       'system-seed',
     );
@@ -289,10 +309,16 @@ async function bootstrap() {
   console.log(`  • ${createdMetrics.length} métricas`);
   console.log('  • ~80 records con patrones diversos\n');
   console.log('🎯 Condiciones representadas:');
-  console.log('  • PODER: Ana García (Story Points), Helena Vargas (Integraciones)');
-  console.log('  • AFLUENCIA: Carlos Mendoza (Story Points), Ana García (Performance)');
+  console.log(
+    '  • PODER: Ana García (Story Points), Helena Vargas (Integraciones)',
+  );
+  console.log(
+    '  • AFLUENCIA: Carlos Mendoza (Story Points), Ana García (Performance)',
+  );
   console.log('  • NORMAL: Diana López (Performance), Carlos (Code Reviews)');
-  console.log('  • EMERGENCIA: Eduardo Ruiz (Story Points), Ignacio Morales (Bugs)');
+  console.log(
+    '  • EMERGENCIA: Eduardo Ruiz (Story Points), Ignacio Morales (Bugs)',
+  );
   console.log('  • PELIGRO: Fernanda Torres (Performance)');
   console.log('  • INEXISTENCIA: Gabriel Santos (Code Reviews)\n');
 
