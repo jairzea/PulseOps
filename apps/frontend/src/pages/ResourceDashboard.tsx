@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useResources } from '../hooks/useResources';
 import { useMetrics } from '../hooks/useMetrics';
 import { useRecords } from '../hooks/useRecords';
@@ -13,6 +13,8 @@ import { ConditionCard } from '../components/ConditionCard';
 export function ResourceDashboard() {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const [selectedMetricKey, setSelectedMetricKey] = useState<string | null>(null);
+  const conditionsContainerRef = useRef<HTMLDivElement>(null);
+  const conditionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const { resources, loading: loadingResources } = useResources();
   const { metrics, loading: loadingMetrics } = useMetrics();
@@ -50,6 +52,20 @@ export function ResourceDashboard() {
       });
     }
   }, [selectedResourceId, selectedMetricKey, evaluate]);
+
+  // Auto-scroll to active condition
+  useEffect(() => {
+    if (analysis?.evaluation?.condition) {
+      const activeConditionElement = conditionRefs.current.get(analysis.evaluation.condition);
+      if (activeConditionElement) {
+        activeConditionElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center',
+        });
+      }
+    }
+  }, [analysis?.evaluation?.condition]);
 
   const selectedMetric = metrics.find((m) => m.key === selectedMetricKey);
 
@@ -123,30 +139,50 @@ export function ResourceDashboard() {
 
       {/* Main Content */}
       <main className="max-w-[1800px] mx-auto px-6 py-6">
-        {/* Condition Cards - Horizontal Row */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          {loadingConditions ? (
-            // Loading skeleton
-            Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-gray-800 border-2 border-gray-700 rounded-lg p-6 animate-pulse">
-                <div className="h-6 bg-gray-700 rounded w-3/4 mb-4"></div>
-                <div className="h-10 bg-gray-700 rounded w-1/2"></div>
-              </div>
-            ))
-          ) : (
-            conditions.map((conditionMeta) => (
-              <ConditionCard
-                key={conditionMeta.condition}
-                metadata={conditionMeta}
-                isActive={analysis?.evaluation?.condition === conditionMeta.condition}
-                confidence={
-                  analysis?.evaluation?.condition === conditionMeta.condition
-                    ? analysis.evaluation.confidence
-                    : undefined
-                }
-              />
-            ))
-          )}
+        {/* Condition Cards - Horizontal Slider */}
+        <div className="mb-6 relative">
+          <div
+            ref={conditionsContainerRef}
+            className="flex gap-4 overflow-x-auto pb-4 scroll-smooth scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800"
+            style={{ scrollbarWidth: 'thin' }}
+          >
+            {loadingConditions ? (
+              // Loading skeleton
+              Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex-shrink-0 w-64 bg-gray-800 border-2 border-gray-700 rounded-lg p-6 animate-pulse"
+                >
+                  <div className="h-6 bg-gray-700 rounded w-3/4 mb-4"></div>
+                  <div className="h-10 bg-gray-700 rounded w-1/2"></div>
+                </div>
+              ))
+            ) : (
+              conditions.map((conditionMeta) => (
+                <div
+                  key={conditionMeta.condition}
+                  ref={(el) => {
+                    if (el) {
+                      conditionRefs.current.set(conditionMeta.condition, el);
+                    } else {
+                      conditionRefs.current.delete(conditionMeta.condition);
+                    }
+                  }}
+                  className="flex-shrink-0 w-64 transition-transform duration-300 ease-out hover:scale-105"
+                >
+                  <ConditionCard
+                    metadata={conditionMeta}
+                    isActive={analysis?.evaluation?.condition === conditionMeta.condition}
+                    confidence={
+                      analysis?.evaluation?.condition === conditionMeta.condition
+                        ? analysis.evaluation.confidence
+                        : undefined
+                    }
+                  />
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
         {/* Chart + Analysis Panel */}

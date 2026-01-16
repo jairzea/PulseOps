@@ -44,4 +44,5 @@ export class ConditionMetadata {
   isActive: boolean;
 }
 
-export const ConditionMetadataSchema = SchemaFactory.createForClass(ConditionMetadata);
+export const ConditionMetadataSchema =
+  SchemaFactory.createForClass(ConditionMetadata);

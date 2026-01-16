@@ -28,7 +28,8 @@ export class ConditionsService {
         condition: 'PODER' as HubbardCondition,
         order: 1,
         displayName: 'Poder',
-        description: 'Estado operativo superior sostenido con estabilidad y alto rendimiento',
+        description:
+          'Estado operativo superior sostenido con estabilidad y alto rendimiento',
         color: {
           bg: 'bg-yellow-900/50',
           badge: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/50',
@@ -42,7 +43,8 @@ export class ConditionsService {
         condition: 'CAMBIO_DE_PODER' as HubbardCondition,
         order: 2,
         displayName: 'Cambio de Poder',
-        description: 'Transición de responsabilidad o estructura organizacional',
+        description:
+          'Transición de responsabilidad o estructura organizacional',
         color: {
           bg: 'bg-purple-900/50',
           badge: 'bg-purple-500/20 text-purple-300 border-purple-500/50',
@@ -70,7 +72,8 @@ export class ConditionsService {
         condition: 'NORMAL' as HubbardCondition,
         order: 4,
         displayName: 'Normal',
-        description: 'Funcionamiento esperado con crecimiento positivo sostenido',
+        description:
+          'Funcionamiento esperado con crecimiento positivo sostenido',
         color: {
           bg: 'bg-blue-900/50',
           badge: 'bg-blue-500/20 text-blue-300 border-blue-500/50',
@@ -142,7 +145,9 @@ export class ConditionsService {
   /**
    * Obtiene metadata de una condición específica.
    */
-  getConditionMetadata(condition: HubbardCondition): ConditionMetadataDto | undefined {
+  getConditionMetadata(
+    condition: HubbardCondition,
+  ): ConditionMetadataDto | undefined {
     return this.getConditionsMetadata().find((c) => c.condition === condition);
   }
 }
