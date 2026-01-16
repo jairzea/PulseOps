@@ -1119,7 +1119,7 @@ Esta separación permite:
 ### Qué se pospone
 
 - ❌ Autenticación Auth0 (preparado pero no activo)
-- ❌ Formularios CRUD completos
+- ~~❌ Formularios CRUD completos~~ ✅ **Completado: Formularios de registros manuales (16 enero 2026)**
 - ❌ Importaciones externas (CSV/Jira)
 - ❌ Editor visual de reglas
 - ❌ Sistema de alertas
@@ -1172,9 +1172,14 @@ Esta separación permite:
    - Script `npm run seed:demo` con 8 recursos diversos
    - 5 métricas con ~80 records
    - Patrones que demuestran todas las condiciones Hubbard
-2. Implementar formularios de ingreso manual
-3. Activar Auth0 para demo
-4. Agregar WebSockets para updates en tiempo real
+2. ~~Implementar formularios de ingreso manual~~ ✅ **Completado (16 enero 2026)**
+   - RecordForm con validaciones completas
+   - RecordModal con animaciones y manejo de errores
+   - Integración en ResourceDashboard
+   - Auto-actualización de gráficos tras crear registro
+3. Implementar formularios para Resources y Metrics
+4. Activar Auth0 para demo
+5. Agregar WebSockets para updates en tiempo real
 
 ---
 
@@ -1310,5 +1315,123 @@ apps/frontend/src/pages/ResourceDashboard.tsx
 2. **Performance optimizada**: Menos re-renders, menos trabajo DOM
 3. **Feedback visual claro**: Usuario ve evolución de datos en tiempo real
 4. **Profesional**: Animaciones fluidas mejoran percepción de calidad
+
+---
+
+## [16 Enero 2026] – Fase 3.4 – Formularios de Registros Manuales
+
+### Qué se implementó
+
+**Sistema completo de formularios** para crear registros manuales en el dashboard:
+
+#### Componentes creados
+
+- ✅ **RecordForm.tsx** - Formulario controlado con validaciones:
+  - Campos: resourceId, metricKey, week, timestamp, value, source
+  - Validación completa de campos requeridos
+  - Auto-generación de semana actual (formato ISO: YYYY-Www)
+  - Manejo de errores por campo
+  - Deshabilitado de resource/metric al editar (previene cambios accidentales)
+  - Estados: submitting, disabled, error
+  
+- ✅ **RecordModal.tsx** - Modal profesional con:
+  - Overlay con blur y animaciones
+  - Cierre por ESC key o backdrop click
+  - Prevención de scroll del body
+  - Manejo de errores con feedback visual
+  - Reset automático de estado al cerrar
+  - Estados de carga durante submit
+
+#### Integración en dashboard
+
+- ✅ Botón "Agregar Registro" en header (junto a search/notifications)
+- ✅ Auto-refetch de records tras crear registro
+- ✅ Re-evaluación automática de análisis
+- ✅ Actualización en tiempo real del gráfico
+- ✅ Actualización de condición operativa
+
+#### Mejoras al API Client
+
+- ✅ Método `upsertRecord()` agregado
+- ✅ Tipado completo con timestamp y source
+- ✅ Alias `MetricRecord` para evitar conflicto con tipo nativo Record
+
+### Decisiones técnicas
+
+1. **Upsert sobre Create**: Backend usa upsert (crea o actualiza por resourceId + metricKey + week)
+2. **Auto-timestamp**: Formulario genera timestamp automáticamente (ISO 8601)
+3. **Formato de semana**: ISO Week Date (YYYY-Www, ej: 2026-W02)
+4. **Source por defecto**: "MANUAL" para distinguir de datos importados
+5. **Tipo alias**: `Record as MetricRecord` para evitar conflicto con TypeScript Record<K,V>
+
+### Flujo de usuario
+
+1. Usuario hace clic en "Agregar Registro"
+2. Modal se abre con formulario vacío
+3. Selecciona recurso y métrica (listas pobladas desde backend)
+4. Especifica semana (pre-llenada con semana actual)
+5. Ingresa valor numérico
+6. Opcionalmente modifica source
+7. Click en "Crear"
+8. Modal muestra "Guardando..."
+9. Request POST a `/records`
+10. Backend ejecuta upsert (crea o actualiza)
+11. Frontend refetch records
+12. Gráfico se actualiza con nuevo punto
+13. Análisis se re-ejecuta automáticamente
+14. Condición operativa se recalcula
+15. Modal se cierra
+16. Usuario ve cambios inmediatamente
+
+### Validaciones implementadas
+
+**Campos requeridos**:
+- ✅ resourceId (debe existir)
+- ✅ metricKey (debe existir)
+- ✅ week (formato YYYY-Www)
+- ✅ value (numérico válido, acepta decimales)
+
+**Campos opcionales**:
+- source (default: "MANUAL")
+- timestamp (auto-generado si no se provee)
+
+**Reglas de negocio**:
+- No se permite cambiar resource/metric al editar (fields disabled)
+- Week sigue formato ISO estricto
+- Value acepta negativos y decimales (step="any")
+
+### Archivos creados/modificados
+
+**Nuevos**:
+- `apps/frontend/src/components/RecordForm.tsx` (240 líneas)
+- `apps/frontend/src/components/RecordModal.tsx` (143 líneas)
+
+**Modificados**:
+- `apps/frontend/src/services/apiClient.ts` - Agregado upsertRecord()
+- `apps/frontend/src/pages/ResourceDashboard.tsx` - Integrado modal y lógica
+- `apps/frontend/src/hooks/useRecords.ts` - Ya tenía refetch (sin cambios)
+
+### Validación completada
+
+```bash
+✅ TypeScript: 0 errores
+✅ Formulario renderiza correctamente
+✅ Validaciones funcionan
+✅ Modal abre/cierra con animaciones
+✅ Submit ejecuta upsert
+✅ Gráfico se actualiza automáticamente
+✅ Análisis se recalcula tras crear
+✅ ESC key cierra modal
+✅ Backdrop click cierra modal
+✅ Body scroll bloqueado cuando modal abierto
+```
+
+### Próximos pasos
+
+1. Formularios CRUD para Resources
+2. Formularios CRUD para Metrics
+3. Edición de registros existentes (pasar initialRecord al modal)
+4. Eliminación de registros con confirmación
+5. Importación masiva desde CSV/JSON
 
 ---
