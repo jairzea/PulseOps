@@ -8,7 +8,6 @@ import { MetricSelector } from '../components/MetricSelector';
 import { HistoricalChart } from '../components/HistoricalChart';
 import { ConditionFormula } from '../components/ConditionFormula';
 import { ConditionCard } from '../components/ConditionCard';
-import { RecordModal } from '../components/RecordModal';
 import { useRecordsStore } from '../stores/recordsStore';
 
 export function ResourceDashboard() {
@@ -21,12 +20,11 @@ export function ResourceDashboard() {
   const { metrics, loading: loadingMetrics } = useMetrics({ resourceId: selectedResourceId });
   const { conditions, loading: loadingConditions } = useConditionsMetadata();
   
-  // Usar Zustand store en lugar de hook local
+  // Usar Zustand store para fetch de records
   const { 
     records, 
     loading: loadingRecords,
-    fetchRecords,
-    setModalOpen 
+    fetchRecords
   } = useRecordsStore();
 
   const { result: analysis, loading: loadingAnalysis, evaluate } = useAnalysis();
@@ -85,94 +83,24 @@ export function ResourceDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700">
-        <div className="max-w-[1800px] mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Left side: Logo + Selectors */}
-            <div className="flex items-center gap-6">
-              {/* Logo with ECG icon */}
-              <div className="flex items-center gap-2">
-                <svg className="w-8 h-8 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <div className="flex items-center gap-2">
-                  <div className="flex flex-col items-end leading-none">
-                    <span className="text-xl font-bold text-white">PulseOps</span>
-                    <small className="text-[9px] text-gray-400/60">
-                      By Unlimitech
-                    </small>
-                  </div>
-                  <span className="text-xs text-gray-400 uppercase tracking-wider">Live</span>
-                </div>
-
-              </div>
-
-              {/* Selectors */}
-              <div className="flex items-center gap-3">
-                <ResourceSelector
-                  resources={resources}
-                  selectedId={selectedResourceId}
-                  onSelect={setSelectedResourceId}
-                  loading={loadingResources}
-                />
-                <MetricSelector
-                  metrics={metrics}
-                  selectedKey={selectedMetricKey}
-                  onSelect={setSelectedMetricKey}
-                  loading={loadingMetrics}
-                />
-              </div>
-            </div>
-
-            {/* Right side: Add Record button, Search, Notifications, Menu, Avatar */}
-            <div className="flex items-center gap-4">
-              {/* Add Record Button */}
-              <button
-                onClick={() => setModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors font-medium"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                <span>Agregar Registro</span>
-              </button>
-
-              {/* Search Icon */}
-              <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
-                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
-
-              {/* Notifications Icon */}
-              <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
-                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-              </button>
-
-              {/* Menu Icon (3 dots) */}
-              <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
-                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                </svg>
-              </button>
-
-              {/* Avatar */}
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center font-semibold text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
-                JZ
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-      </header>
-
+    <div className="min-h-screen bg-gray-950 text-white">
       {/* Main Content */}
       <main className="max-w-[1800px] mx-auto px-6 py-6">
+        {/* Selectors Header */}
+        <div className="mb-6 flex items-center gap-4 bg-gray-900 rounded-lg p-4 border border-gray-800">
+          <ResourceSelector
+            resources={resources}
+            selectedId={selectedResourceId}
+            onSelect={setSelectedResourceId}
+            loading={loadingResources}
+          />
+          <MetricSelector
+            metrics={metrics}
+            selectedKey={selectedMetricKey}
+            onSelect={setSelectedMetricKey}
+            loading={loadingMetrics}
+          />
+        </div>
         {/* Condition Cards - Horizontal Slider */}
         <div className="mb-6 relative">
           <div
@@ -312,12 +240,6 @@ export function ResourceDashboard() {
         {/* Formula */}
         <ConditionFormula analysis={analysis} loading={loadingAnalysis} />
       </main>
-
-      {/* Record Modal */}
-      <RecordModal
-        resources={resources}
-        metrics={metrics}
-      />
     </div>
   );
 }
