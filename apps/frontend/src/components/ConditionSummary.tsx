@@ -36,7 +36,7 @@ export function ConditionSummary({ analysis, loading = false }: ConditionSummary
         );
     }
 
-    const theme = conditionColors[analysis.condition] || conditionColors.SIN_DATOS;
+    const theme = conditionColors[analysis.evaluation.condition] || conditionColors.SIN_DATOS;
 
     return (
         <div className="space-y-4 transition-all duration-300">
@@ -44,43 +44,43 @@ export function ConditionSummary({ analysis, loading = false }: ConditionSummary
             <div className={`${theme.bg} rounded-lg p-6 border-2 ${theme.badge} border-opacity-50 transition-all duration-300`}>
                 <div className="flex items-center justify-between mb-4">
                     <div>
-                        <p className="text-sm text-gray-400 uppercase tracking-wide mb-1">Operational Condition</p>
+                        <p className="text-sm text-gray-400 uppercase tracking-wide mb-1">Condición Operativa</p>
                         <div className="flex items-center gap-3">
                             <span className="text-4xl">{theme.icon}</span>
-                            <h2 className={`text-3xl font-bold ${theme.text}`}>{analysis.condition}</h2>
+                            <h2 className={`text-3xl font-bold ${theme.text}`}>{analysis.evaluation.condition}</h2>
                         </div>
                     </div>
                     <div className={`px-4 py-2 ${theme.badge} rounded-full`}>
-                        <p className="text-white font-semibold">{Math.round(analysis.confidence * 100)}% Confidence</p>
+                        <p className="text-white font-semibold">{Math.round(analysis.evaluation.confidence * 100)}% Confianza</p>
                     </div>
                 </div>
-                <p className="text-gray-300 text-lg">{analysis.reason}</p>
+                <p className="text-gray-300 text-lg">{analysis.evaluation.reason.explanation}</p>
             </div>
 
             {/* Métricas Clave */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Inclinación */}
                 <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 transition-all duration-300 hover:border-gray-600">
-                    <p className="text-sm text-gray-400 uppercase tracking-wide mb-2">Inclination</p>
+                    <p className="text-sm text-gray-400 uppercase tracking-wide mb-2">Inclinación</p>
                     <div className="flex items-baseline gap-2">
-                        <p className={`text-3xl font-bold ${getInclinationColor(analysis.inclination)}`}>
-                            {analysis.inclination > 0 ? '+' : ''}{analysis.inclination.toFixed(1)}%
+                        <p className={`text-3xl font-bold ${getInclinationColor(analysis.evaluation.inclination.value)}`}>
+                            {analysis.evaluation.inclination.value > 0 ? '+' : ''}{analysis.evaluation.inclination.value.toFixed(1)}%
                         </p>
-                        <span className="text-2xl">{analysis.inclination > 0 ? '↗' : analysis.inclination < 0 ? '↘' : '→'}</span>
+                        <span className="text-2xl">{analysis.evaluation.inclination.value > 0 ? '↗' : analysis.evaluation.inclination.value < 0 ? '↘' : '→'}</span>
                     </div>
                 </div>
 
                 {/* Señales Detectadas */}
                 <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 transition-all duration-300 hover:border-gray-600">
-                    <p className="text-sm text-gray-400 uppercase tracking-wide mb-2">Signals Detected</p>
-                    <p className="text-3xl font-bold text-blue-400">{analysis.signals.length}</p>
+                    <p className="text-sm text-gray-400 uppercase tracking-wide mb-2">Señales Detectadas</p>
+                    <p className="text-3xl font-bold text-blue-400">{analysis.evaluation.signals.length}</p>
                     <div className="mt-2 flex flex-wrap gap-1">
-                        {analysis.signals.slice(0, 3).map((signal, i) => (
+                        {analysis.evaluation.signals.slice(0, 3).map((signal, i) => (
                             <span
                                 key={i}
                                 className="px-2 py-1 text-xs bg-blue-900/30 text-blue-300 rounded-full"
                             >
-                                {signal.length > 15 ? signal.substring(0, 15) + '...' : signal}
+                                {signal.type}
                             </span>
                         ))}
                     </div>
@@ -88,9 +88,9 @@ export function ConditionSummary({ analysis, loading = false }: ConditionSummary
 
                 {/* Timestamp */}
                 <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 transition-all duration-300 hover:border-gray-600">
-                    <p className="text-sm text-gray-400 uppercase tracking-wide mb-2">Last Evaluated</p>
+                    <p className="text-sm text-gray-400 uppercase tracking-wide mb-2">Última Evaluación</p>
                     <p className="text-lg font-semibold text-gray-300">
-                        {new Date(analysis.evaluatedAt).toLocaleString()}
+                        {new Date(analysis.evaluation.evaluatedAt).toLocaleString()}
                     </p>
                 </div>
             </div>

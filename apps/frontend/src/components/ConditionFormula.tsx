@@ -19,7 +19,7 @@ export function ConditionFormula({ analysis, loading = false }: ConditionFormula
         );
     }
 
-    if (!analysis || !analysis.formulaSteps || analysis.formulaSteps.length === 0) {
+    if (!analysis || !analysis.playbook || !analysis.playbook.steps || analysis.playbook.steps.length === 0) {
         return null;
     }
 
@@ -28,15 +28,15 @@ export function ConditionFormula({ analysis, loading = false }: ConditionFormula
             <div className="mb-4">
                 <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                     <span>📋</span>
-                    <span>Applied Formula</span>
+                    <span>{analysis.playbook.title}</span>
                 </h3>
                 <p className="text-sm text-gray-400 mt-1">
-                    Steps followed to determine the condition
+                    Fórmula aplicada para la condición: <span className="text-blue-400 font-semibold">{analysis.playbook.condition}</span>
                 </p>
             </div>
 
             <div className="space-y-3">
-                {analysis.formulaSteps.map((step, index) => (
+                {analysis.playbook.steps.map((step, index) => (
                     <div
                         key={index}
                         className="flex items-start gap-3 p-3 bg-gray-900/50 rounded-lg border border-gray-700 hover:border-gray-600 transition-all duration-200"
@@ -51,8 +51,8 @@ export function ConditionFormula({ analysis, loading = false }: ConditionFormula
 
             <div className="mt-4 p-3 bg-blue-900/10 border border-blue-800/30 rounded-lg">
                 <p className="text-xs text-blue-300">
-                    <strong>Note:</strong> These steps are based on Hubbard's operational condition formulas,
-                    adapted to the metrics being analyzed.
+                    <strong>Nota:</strong> Esta fórmula está basada en las condiciones operativas de Hubbard,
+                    aplicada al comportamiento de la métrica analizada.
                 </p>
             </div>
         </div>

@@ -44,15 +44,45 @@ export interface Record {
 }
 
 export interface AnalysisResult {
-  resourceId: string;
-  metricKey: string;
-  condition: string;
-  inclination: number;
-  confidence: number;
-  reason: string;
-  signals: string[];
-  formulaSteps: string[];
-  evaluatedAt: string;
+  series: {
+    metricId: string;
+    points: Array<{ timestamp: string; value: number }>;
+  };
+  evaluation: {
+    metricId: string;
+    windowUsed: number;
+    periodType: string;
+    inclination: {
+      value: number;
+      previousValue: number;
+      currentValue: number;
+      delta: number;
+      isValid: boolean;
+    };
+    direction: string;
+    condition: string;
+    reason: {
+      code: string;
+      explanation: string;
+      threshold?: number;
+    };
+    signals: Array<{
+      type: string;
+      severity: string;
+      explanation: string;
+      windowUsed?: number;
+      evidence?: any;
+    }>;
+    evaluatedAt: string;
+    confidence: number;
+  };
+  appliedRuleConfig: any | null;
+  playbook: {
+    condition: string;
+    title: string;
+    steps: string[];
+    version: number;
+  } | null;
 }
 
 // ============================================================================
