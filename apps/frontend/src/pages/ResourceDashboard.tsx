@@ -9,10 +9,14 @@ import { MetricSelector } from '../components/MetricSelector';
 import { HistoricalChart } from '../components/HistoricalChart';
 import { ConditionFormula } from '../components/ConditionFormula';
 import { ConditionCard } from '../components/ConditionCard';
+import { RecordModal } from '../components/RecordModal';
+import { RecordFormData } from '../components/RecordForm';
+import { apiClient } from '../services/apiClient';
 
 export function ResourceDashboard() {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const [selectedMetricKey, setSelectedMetricKey] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const conditionsContainerRef = useRef<HTMLDivElement>(null);
   const conditionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
@@ -22,6 +26,7 @@ export function ResourceDashboard() {
   const {
     records,
     loading: loadingRecords,
+    refetch: refetchRecords,
   } = useRecords({
     resourceId: selectedResourceId || undefined,
     metricKey: selectedMetricKey || undefined,
@@ -73,6 +78,19 @@ export function ResourceDashboard() {
     [metrics, selectedMetricKey]
   );
 
+  const handleCreateRecord = async (data: RecordFormData) => {
+    await apiClient.upsertRecord(data);
+    // Refetch records to update chart
+    await refetchRecords();
+    // Re-evaluate analysis
+    if (selectedResourceId && selectedMetricKey) {
+      evaluate({
+        resourceId: selectedResourceId,
+        metricKey: selectedMetricKey,
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
@@ -115,8 +133,19 @@ export function ResourceDashboard() {
               </div>
             </div>
 
-            {/* Right side: Search, Notifications, Menu, Avatar */}
+            {/* Right side: Add Record button, Search, Notifications, Menu, Avatar */}
             <div className="flex items-center gap-4">
+              {/* Add Record Button */}
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors font-medium"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Agregar Registro</span>
+              </button>
+
               {/* Search Icon */}
               <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
                 <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -290,6 +319,15 @@ export function ResourceDashboard() {
         {/* Formula */}
         <ConditionFormula analysis={analysis} loading={loadingAnalysis} />
       </main>
+
+      {/* Record Modal */}
+      <RecordModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateRecord}
+        resources={resources}
+        metrics={metrics}
+      />
     </div>
   );
 }

@@ -225,7 +225,23 @@ export const apiClient = {
     resourceId: string;
     metricKey: string;
     week: string;
+    timestamp: string;
     value: number;
+    source?: string;
+  }): Promise<Record> {
+    return fetchJSON<Record>('/records', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async upsertRecord(data: {
+    resourceId: string;
+    metricKey: string;
+    week: string;
+    timestamp: string;
+    value: number;
+    source?: string;
   }): Promise<Record> {
     return fetchJSON<Record>('/records', {
       method: 'POST',
