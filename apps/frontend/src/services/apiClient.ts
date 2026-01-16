@@ -85,6 +85,21 @@ export interface AnalysisResult {
   } | null;
 }
 
+export interface ConditionMetadata {
+  condition: string;
+  order: number;
+  displayName: string;
+  description: string;
+  color: {
+    bg: string;
+    badge: string;
+    text: string;
+    border: string;
+  };
+  icon: string;
+  category: 'superior' | 'normal' | 'crisis' | 'technical';
+}
+
 // ============================================================================
 // Utilidades HTTP
 // ============================================================================
@@ -238,6 +253,14 @@ export const apiClient = {
     if (params.windowSize) query.set('windowSize', params.windowSize.toString());
 
     return fetchJSON<AnalysisResult>(`/analysis/evaluate?${query.toString()}`);
+  },
+
+  // --------------------------------------------------------------------------
+  // Conditions
+  // --------------------------------------------------------------------------
+
+  async getConditionsMetadata(): Promise<ConditionMetadata[]> {
+    return fetchJSON<ConditionMetadata[]>('/conditions/metadata');
   },
 };
 

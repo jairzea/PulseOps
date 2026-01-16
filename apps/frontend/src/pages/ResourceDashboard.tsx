@@ -3,10 +3,12 @@ import { useResources } from '../hooks/useResources';
 import { useMetrics } from '../hooks/useMetrics';
 import { useRecords } from '../hooks/useRecords';
 import { useAnalysis } from '../hooks/useAnalysis';
+import { useConditionsMetadata } from '../hooks/useConditionsMetadata';
 import { ResourceSelector } from '../components/ResourceSelector';
 import { MetricSelector } from '../components/MetricSelector';
 import { HistoricalChart } from '../components/HistoricalChart';
 import { ConditionFormula } from '../components/ConditionFormula';
+import { ConditionCard } from '../components/ConditionCard';
 
 export function ResourceDashboard() {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
@@ -14,6 +16,7 @@ export function ResourceDashboard() {
 
   const { resources, loading: loadingResources } = useResources();
   const { metrics, loading: loadingMetrics } = useMetrics();
+  const { conditions, loading: loadingConditions } = useConditionsMetadata();
   const {
     records,
     loading: loadingRecords,
@@ -56,24 +59,63 @@ export function ResourceDashboard() {
       <header className="bg-gray-800 border-b border-gray-700">
         <div className="max-w-[1800px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="text-2xl font-bold text-blue-400">⚡ PulseOps</div>
-              <span className="text-gray-400">Live</span>
+            {/* Left side: Logo + Selectors */}
+            <div className="flex items-center gap-6">
+              {/* Logo with ECG icon */}
+              <div className="flex items-center gap-2">
+                <svg className="w-8 h-8 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold text-white">PulseOps</span>
+                  <span className="text-xs text-gray-400 uppercase tracking-wider">Live</span>
+                </div>
+              </div>
+
+              {/* Selectors */}
+              <div className="flex items-center gap-3">
+                <ResourceSelector
+                  resources={resources}
+                  selectedId={selectedResourceId}
+                  onSelect={setSelectedResourceId}
+                  loading={loadingResources}
+                />
+                <MetricSelector
+                  metrics={metrics}
+                  selectedKey={selectedMetricKey}
+                  onSelect={setSelectedMetricKey}
+                  loading={loadingMetrics}
+                />
+              </div>
             </div>
 
+            {/* Right side: Search, Notifications, Menu, Avatar */}
             <div className="flex items-center gap-4">
-              <ResourceSelector
-                resources={resources}
-                selectedId={selectedResourceId}
-                onSelect={setSelectedResourceId}
-                loading={loadingResources}
-              />
-              <MetricSelector
-                metrics={metrics}
-                selectedKey={selectedMetricKey}
-                onSelect={setSelectedMetricKey}
-                loading={loadingMetrics}
-              />
+              {/* Search Icon */}
+              <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
+                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+
+              {/* Notifications Icon */}
+              <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
+                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </button>
+
+              {/* Menu Icon (3 dots) */}
+              <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
+                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+              </button>
+
+              {/* Avatar */}
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center font-semibold text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
+                JZ
+              </div>
             </div>
           </div>
         </div>
@@ -83,61 +125,28 @@ export function ResourceDashboard() {
       <main className="max-w-[1800px] mx-auto px-6 py-6">
         {/* Condition Cards - Horizontal Row */}
         <div className="grid grid-cols-4 gap-4 mb-6">
-          {/* PODER Card */}
-          <div className={`rounded-lg p-6 border-2 transition-all ${analysis?.evaluation?.condition === 'PODER' ? 'bg-green-900/50 border-green-500' : 'bg-gray-800 border-gray-700'
-            }`}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xl font-bold text-white">PODER</h3>
-              <div className="text-2xl">⚡</div>
-            </div>
-            <div className="text-sm text-green-400 uppercase font-semibold mb-1">GROWTH</div>
-            <div className="text-3xl font-bold text-green-300">
-              {analysis?.evaluation?.condition === 'PODER' ? `${Math.round((analysis?.evaluation?.confidence || 0) * 100)}%` : '--'}
-            </div>
-            <div className="text-xs text-gray-400 mt-1">CONFIDENCE</div>
-          </div>
-
-          {/* NORMAL Card */}
-          <div className={`rounded-lg p-6 border-2 transition-all ${analysis?.evaluation?.condition === 'NORMAL' ? 'bg-yellow-900/50 border-yellow-500' : 'bg-gray-800 border-gray-700'
-            }`}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xl font-bold text-white">NORMAL</h3>
-              <div className="text-2xl">↔️</div>
-            </div>
-            <div className="text-sm text-yellow-400 uppercase font-semibold mb-1">STAGNATION</div>
-            <div className="text-3xl font-bold text-yellow-300">
-              {analysis?.evaluation?.condition === 'NORMAL' ? `${Math.round((analysis?.evaluation?.confidence || 0) * 100)}%` : '--'}
-            </div>
-            <div className="text-xs text-gray-400 mt-1">CONFIDENCE</div>
-          </div>
-
-          {/* EMERGENCIA Card */}
-          <div className={`rounded-lg p-6 border-2 transition-all ${analysis?.evaluation?.condition === 'EMERGENCIA' ? 'bg-orange-900/50 border-orange-500' : 'bg-gray-800 border-gray-700'
-            }`}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xl font-bold text-white">EMERGENCIA</h3>
-              <div className="text-2xl">⚠️</div>
-            </div>
-            <div className="text-sm text-orange-400 uppercase font-semibold mb-1">DECLINE</div>
-            <div className="text-3xl font-bold text-orange-300">
-              {analysis?.evaluation?.condition === 'EMERGENCIA' ? `${Math.round((analysis?.evaluation?.confidence || 0) * 100)}%` : '--'}
-            </div>
-            <div className="text-xs text-gray-400 mt-1">CONFIDENCE</div>
-          </div>
-
-          {/* PELIGRO Card */}
-          <div className={`rounded-lg p-6 border-2 transition-all ${analysis?.evaluation?.condition === 'PELIGRO' ? 'bg-red-900/50 border-red-500' : 'bg-gray-800 border-gray-700'
-            }`}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xl font-bold text-white">PELIGRO</h3>
-              <div className="text-2xl">📉</div>
-            </div>
-            <div className="text-sm text-red-400 uppercase font-semibold mb-1">CRASH</div>
-            <div className="text-3xl font-bold text-red-300">
-              {analysis?.evaluation?.condition === 'PELIGRO' ? `${Math.round((analysis?.evaluation?.confidence || 0) * 100)}%` : '--'}
-            </div>
-            <div className="text-xs text-gray-400 mt-1">CONFIDENCE</div>
-          </div>
+          {loadingConditions ? (
+            // Loading skeleton
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-gray-800 border-2 border-gray-700 rounded-lg p-6 animate-pulse">
+                <div className="h-6 bg-gray-700 rounded w-3/4 mb-4"></div>
+                <div className="h-10 bg-gray-700 rounded w-1/2"></div>
+              </div>
+            ))
+          ) : (
+            conditions.map((conditionMeta) => (
+              <ConditionCard
+                key={conditionMeta.condition}
+                metadata={conditionMeta}
+                isActive={analysis?.evaluation?.condition === conditionMeta.condition}
+                confidence={
+                  analysis?.evaluation?.condition === conditionMeta.condition
+                    ? analysis.evaluation.confidence
+                    : undefined
+                }
+              />
+            ))
+          )}
         </div>
 
         {/* Chart + Analysis Panel */}
@@ -207,8 +216,8 @@ export function ResourceDashboard() {
                         analysis.evaluation.signals.slice(0, 2).map((signal, idx) => (
                           <div key={idx} className="flex items-center gap-2">
                             <span className={`px-2 py-1 rounded text-xs font-semibold ${signal.severity === 'HIGH' ? 'bg-red-900/50 text-red-300' :
-                                signal.severity === 'MEDIUM' ? 'bg-orange-900/50 text-orange-300' :
-                                  'bg-yellow-900/50 text-yellow-300'
+                              signal.severity === 'MEDIUM' ? 'bg-orange-900/50 text-orange-300' :
+                                'bg-yellow-900/50 text-yellow-300'
                               }`}>
                               {signal.severity || 'INFO'}
                             </span>
