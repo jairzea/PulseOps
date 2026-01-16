@@ -53,4 +53,8 @@ export class RecordsService {
     const result = await this.recordModel.deleteOne({ id }).exec();
     return result.deletedCount > 0;
   }
+
+  async findByResource(resourceId: string): Promise<MetricRecord[]> {
+    return this.recordModel.find({ resourceId }).exec();
+  }
 }
