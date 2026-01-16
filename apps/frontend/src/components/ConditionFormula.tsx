@@ -1,0 +1,60 @@
+import { AnalysisResult } from '../services/apiClient';
+
+interface ConditionFormulaProps {
+    analysis: AnalysisResult | null;
+    loading?: boolean;
+}
+
+export function ConditionFormula({ analysis, loading = false }: ConditionFormulaProps) {
+    if (loading) {
+        return (
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 animate-pulse">
+                <div className="h-6 bg-gray-700 rounded w-48 mb-4"></div>
+                <div className="space-y-3">
+                    {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="h-4 bg-gray-700 rounded"></div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    if (!analysis || !analysis.formulaSteps || analysis.formulaSteps.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 transition-all duration-300">
+            <div className="mb-4">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <span>📋</span>
+                    <span>Applied Formula</span>
+                </h3>
+                <p className="text-sm text-gray-400 mt-1">
+                    Steps followed to determine the condition
+                </p>
+            </div>
+
+            <div className="space-y-3">
+                {analysis.formulaSteps.map((step, index) => (
+                    <div
+                        key={index}
+                        className="flex items-start gap-3 p-3 bg-gray-900/50 rounded-lg border border-gray-700 hover:border-gray-600 transition-all duration-200"
+                    >
+                        <div className="flex-shrink-0 w-8 h-8 bg-blue-900/30 text-blue-400 rounded-full flex items-center justify-center font-semibold text-sm">
+                            {index + 1}
+                        </div>
+                        <p className="text-gray-300 flex-1 pt-1">{step}</p>
+                    </div>
+                ))}
+            </div>
+
+            <div className="mt-4 p-3 bg-blue-900/10 border border-blue-800/30 rounded-lg">
+                <p className="text-xs text-blue-300">
+                    <strong>Note:</strong> These steps are based on Hubbard's operational condition formulas,
+                    adapted to the metrics being analyzed.
+                </p>
+            </div>
+        </div>
+    );
+}

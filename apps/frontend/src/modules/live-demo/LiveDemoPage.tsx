@@ -183,7 +183,17 @@ export function LiveDemoPage() {
                     {/* Gráfico histórico */}
                     {result && (
                         <HistoricalChart
-                            points={getSeriesById(selectedMetricId)!.points}
+                            records={getSeriesById(selectedMetricId)!.points.map((point, idx) => ({
+                                id: `${selectedMetricId}-${idx}`,
+                                resourceId: 'team-alpha',
+                                metricKey: selectedMetricId,
+                                week: point.timestamp,
+                                timestamp: point.timestamp,
+                                value: point.value,
+                                createdBy: 'demo',
+                                createdAt: new Date().toISOString(),
+                                updatedAt: new Date().toISOString(),
+                            }))}
                             metricName={metricInfo?.name || 'Métrica'}
                         />
                     )}

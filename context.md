@@ -947,8 +947,230 @@ Cuando el análisis detecta una condición (ej: EMERGENCIA), el backend automát
 - ~~Visualizar en frontend con React Flow~~ ✅ **Completado en F**
   - ~~Mostrar `signals` como badges junto a condición~~ ✅
   - ~~Tooltip con explanation + evidence~~ ✅
+- ~~Playbooks (Fórmulas Hubbard) por condición~~ ✅ **Completado en G.2**
+  - ~~Motor calcula condición, backend adjunta fórmula~~ ✅
+  - ~~CRUD básico de playbooks~~ ✅
+  - ~~Seed con fórmulas oficiales Hubbard~~ ✅
+  - ~~Integración con endpoint de análisis~~ ✅
 - Crear dashboard histórico interactivo
 - Implementar motor de reglas declarativo
 - Versionado y simulación de reglas
 - Calibrar umbrales con datos reales de operación
 - Sustituir datos mock por integración con Jira/GitHub
+
+---
+
+## 📚 Playbooks (Fórmulas Hubbard)
+
+**Implementación**: 16 de enero, 2026 (Prompt G.2)
+
+### Arquitectura
+
+El sistema de Playbooks complementa el motor de análisis **sin modificarlo**:
+
+1. **Motor de análisis** (`@pulseops/analysis-engine`):
+   - Calcula condición operativa (HubbardCondition)
+   - Genera razón (ConditionReason) y señales (AnalysisSignal[])
+   - **NO contiene fórmulas de acción** (mantiene pureza)
+
+2. **Backend** (`/playbooks` module):
+   - Almacena fórmulas Hubbard en MongoDB
+   - Provee CRUD para gestionar playbooks
+   - Adjunta playbook correspondiente al retornar análisis
+
+3. **Frontend** (pendiente):
+   - Mostrará pasos de acción al usuario
+   - Interfaz para editar/actualizar playbooks
+
+### Modelo de datos
+
+**Colección**: `condition_playbooks`
+
+```typescript
+{
+  condition: HubbardCondition;  // Único índice
+  title: string;                 // "Fórmula de Emergencia"
+  steps: string[];               // Lista de pasos Hubbard
+  version: number;               // Versionado de fórmula
+  isActive: boolean;             // Habilitado/deshabilitado
+  updatedAt: string;             // ISO timestamp
+}
+```
+
+### Endpoints disponibles
+
+- `GET /playbooks` - Lista todos los playbooks activos
+- `GET /playbooks/:condition` - Obtiene playbook por condición
+- `PUT /playbooks/:condition` - Upsert (crear o actualizar)
+- `POST /playbooks/seed` - Inicializar con fórmulas oficiales
+
+### Catálogo oficial (8 condiciones)
+
+Cada condición tiene su fórmula Hubbard completa:
+
+1. **PODER** - 2 pasos (No te desconectes, Documenta tu puesto)
+2. **CAMBIO_DE_PODER** - 7 pasos (Familiarízate antes de cambiar)
+3. **AFLUENCIA** - 4 pasos (Economiza, Consolida, Refuerza)
+4. **NORMAL** - 4 pasos (No cambies nada, Analiza mejoras)
+5. **EMERGENCIA** - 5 pasos (Promociona, Cambia, Economiza)
+6. **PELIGRO** - 6 pasos (Pasa por alto, Resuelve, Reorganiza)
+7. **INEXISTENCIA** - 4 pasos (Comunica, Date a conocer, Produce)
+8. **SIN_DATOS** - 5 pasos técnicos (Verificar medición, Recolectar)
+
+### Integración con análisis
+
+El endpoint `/analysis/evaluate` ahora retorna:
+
+```typescript
+{
+  series: MetricSeries,
+  evaluation: MetricConditionEvaluation,
+  appliedRuleConfig: { id, version } | null,
+  playbook: {                          // ← NUEVO
+    condition: "EMERGENCIA",
+    title: "Fórmula de Emergencia",
+    steps: ["Promociona", "Cambia"...],
+    version: 1
+  } | null
+}
+```
+
+### Filosofía de separación
+
+**Motor puro** ≠ **Guía de acción**
+
+- Motor: Detecta condición (matemática, automática)
+- Playbook: Explica qué hacer (humano, contextual)
+- Backend: Une ambos mundos sin contaminar el motor
+
+Esta separación permite:
+- Actualizar fórmulas sin redeployar motor
+- Versionar cambios organizacionales
+- Personalizar acciones por empresa/equipo
+- Mantener trazabilidad de decisiones
+
+**Nota**: CAMBIO_DE_PODER tiene fórmula documentada pero el motor NO lo detecta automáticamente (requiere contexto externo: cambio de responsable, restructuración). Queda reservado para asignación manual desde capas superiores.
+
+---
+
+## [16 Enero 2026] – Fase 3.1 – Frontend Dashboard Conectado
+
+### Qué se implementó
+
+**Dashboard del Recurso** completamente funcional y conectado al backend:
+
+#### Capa de servicios
+- ✅ `apiClient.ts` - Cliente HTTP centralizado con métodos tipados
+- ✅ Manejo de errores con `HttpError`
+- ✅ Tipado estricto para Resources, Metrics, Records, AnalysisResult
+
+#### Hooks personalizados
+- ✅ `useResources` - Gestión de recursos con estados loading/error
+- ✅ `useMetrics` - Gestión de métricas
+- ✅ `useRecords` - Filtrado por resourceId y metricKey con lazy loading
+- ✅ `useAnalysis` - Evaluación de análisis con callback
+
+#### Componentes UI
+- ✅ `ResourceSelector` - Dropdown con loading states y transiciones
+- ✅ `MetricSelector` - Selector de métricas con feedback visual
+- ✅ `HistoricalChart` - Gráfico de series temporales con:
+  - Línea de tendencia (regresión lineal)
+  - Tooltips interactivos
+  - Estados vacíos y loading
+  - Animaciones suaves
+- ✅ `ConditionSummary` - Cards de condición operativa con:
+  - Color-coding por severidad
+  - Inclinación porcentual
+  - Señales detectadas
+  - Confidence badge
+- ✅ `ConditionFormula` - Pasos de fórmula Hubbard
+
+#### Dashboard principal
+- ✅ `ResourceDashboard.tsx` - Orquestación completa
+- ✅ Auto-selección de primer recurso/métrica
+- ✅ Re-evaluación automática al cambiar selección
+- ✅ Transiciones suaves entre estados
+- ✅ Debug panel para desarrollo
+
+### Decisiones técnicas
+
+1. **Separación de concerns**:
+   - Services: Comunicación HTTP pura
+   - Hooks: Lógica de data fetching y estado
+   - Components: Presentación pura con props tipadas
+   - Pages: Orquestación y flujo
+
+2. **Estados manejados**:
+   - Loading (skeletons)
+   - Empty (mensajes útiles)
+   - Error (manejo con HttpError)
+   - Success (renderizado normal)
+
+3. **Transiciones**:
+   - Fade-in con `transition-opacity duration-300`
+   - Skeletons con `animate-pulse`
+   - No parpadeos ni saltos bruscos
+
+4. **TypeScript strict**:
+   - 100% tipado
+   - No `any`
+   - Interfaces compartidas entre componentes
+
+### Qué se pospone
+
+- ❌ Autenticación Auth0 (preparado pero no activo)
+- ❌ Formularios CRUD completos
+- ❌ Importaciones externas (CSV/Jira)
+- ❌ Editor visual de reglas
+- ❌ Sistema de alertas
+- ❌ WebSockets para real-time updates
+
+### Impacto en arquitectura
+
+- Frontend ahora consume todos los endpoints principales del backend
+- Flujo completo: Resource → Metric → Records → Analysis
+- UI alineada con diseño mockup entregado
+- Base sólida para agregar features incrementales
+
+### Validación completada
+
+```bash
+# TypeScript
+✅ Frontend: npm run typecheck (0 errors)
+✅ Backend: npm run typecheck (0 errors)
+
+# Compilación
+✅ No imports inválidos
+✅ Componentes renderizables
+✅ Estados manejados correctamente
+```
+
+### Archivos creados/modificados
+
+**Nuevos**:
+- `src/services/apiClient.ts`
+- `src/hooks/useResources.ts`
+- `src/hooks/useMetrics.ts`
+- `src/hooks/useRecords.ts`
+- `src/hooks/useAnalysis.ts`
+- `src/components/ResourceSelector.tsx`
+- `src/components/MetricSelector.tsx`
+- `src/components/ConditionSummary.tsx`
+- `src/components/ConditionFormula.tsx`
+- `src/pages/ResourceDashboard.tsx`
+- `apps/frontend/.env.example`
+- `apps/frontend/DASHBOARD.md`
+
+**Modificados**:
+- `src/components/HistoricalChart.tsx` (actualizado para trabajar con Records)
+- `src/App.tsx` (cambio a ResourceDashboard)
+- `src/modules/live-demo/LiveDemoPage.tsx` (adaptado a nueva interfaz)
+
+### Próximos pasos sugeridos
+
+1. Poblar backend con datos de prueba (seed scripts)
+2. Implementar formularios de ingreso manual
+3. Activar Auth0 para demo
+4. Agregar WebSockets para updates en tiempo real
+
+---

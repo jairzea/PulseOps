@@ -1,7 +1,7 @@
-import { LiveDemoPage } from './modules/live-demo/LiveDemoPage';
+import { ResourceDashboard } from './pages/ResourceDashboard';
 
 function App() {
-    return <LiveDemoPage />;
+    return <ResourceDashboard />;
 }
 
 export default App;

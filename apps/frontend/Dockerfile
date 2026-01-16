@@ -1,24 +1,40 @@
 FROM node:20-alpine
 
-WORKDIR /app
+# Configurar directorio de trabajo
+WORKDIR /workspace
 
-# Copiar package files
+# Copiar package.json del monorepo y de los workspaces
 COPY package*.json ./
+COPY tsconfig.json ./
+COPY apps/frontend/package*.json ./apps/frontend/
+COPY apps/frontend/tsconfig*.json ./apps/frontend/
+COPY apps/frontend/vite.config.ts ./apps/frontend/
+COPY packages/shared-types/package*.json ./packages/shared-types/
+COPY packages/shared-types/tsconfig.json ./packages/shared-types/
 
-# Instalar dependencias
+# Instalar dependencias del monorepo
 RUN npm install
 
-# Copiar código fuente
-COPY . .
+# Copiar código fuente de shared-types
+COPY packages/shared-types/ ./packages/shared-types/
 
-# Compilar para producción
-RUN npm run build
+# Copiar código fuente del frontend
+COPY apps/frontend/ ./apps/frontend/
+
+# Construir shared-types
+RUN npm run build --workspace=packages/shared-types
+
+# Construir frontend
+RUN npm run build --workspace=apps/frontend
 
 # Instalar servidor estático
 RUN npm install -g serve
 
 # Exponer puerto
 EXPOSE 5173
+
+# Cambiar al directorio del frontend
+WORKDIR /workspace/apps/frontend
 
 # Servir build
 CMD ["serve", "-s", "dist", "-l", "5173"]

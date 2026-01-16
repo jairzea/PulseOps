@@ -1,0 +1,214 @@
+/**
+ * API Client - Servicio centralizado para comunicación con el backend
+ */
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+// ============================================================================
+// Tipos compartidos
+// ============================================================================
+
+export interface Resource {
+  id: string;
+  name: string;
+  roleType: 'DEV' | 'TL' | 'OTHER';
+  isActive: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Metric {
+  id: string;
+  key: string;
+  label: string;
+  description?: string;
+  unit?: string;
+  periodType?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Record {
+  id: string;
+  resourceId: string;
+  metricKey: string;
+  week: string;
+  timestamp: string;
+  value: number;
+  source?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AnalysisResult {
+  resourceId: string;
+  metricKey: string;
+  condition: string;
+  inclination: number;
+  confidence: number;
+  reason: string;
+  signals: string[];
+  formulaSteps: string[];
+  evaluatedAt: string;
+}
+
+// ============================================================================
+// Utilidades HTTP
+// ============================================================================
+
+class HttpError extends Error {
+  constructor(
+    public status: number,
+    public statusText: string,
+    message: string
+  ) {
+    super(message);
+    this.name = 'HttpError';
+  }
+}
+
+async function fetchJSON<T>(
+  endpoint: string,
+  options?: RequestInit
+): Promise<T> {
+  const url = `${API_BASE_URL}${endpoint}`;
+  
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new HttpError(
+      response.status,
+      response.statusText,
+      errorText || 'Request failed'
+    );
+  }
+
+  return response.json();
+}
+
+// ============================================================================
+// API Client
+// ============================================================================
+
+export const apiClient = {
+  // --------------------------------------------------------------------------
+  // Resources
+  // --------------------------------------------------------------------------
+  
+  async getResources(): Promise<Resource[]> {
+    return fetchJSON<Resource[]>('/resources');
+  },
+
+  async getResource(id: string): Promise<Resource> {
+    return fetchJSON<Resource>(`/resources/${id}`);
+  },
+
+  async createResource(data: Partial<Resource>): Promise<Resource> {
+    return fetchJSON<Resource>('/resources', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async updateResource(id: string, data: Partial<Resource>): Promise<Resource> {
+    return fetchJSON<Resource>(`/resources/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // --------------------------------------------------------------------------
+  // Metrics
+  // --------------------------------------------------------------------------
+
+  async getMetrics(): Promise<Metric[]> {
+    return fetchJSON<Metric[]>('/metrics');
+  },
+
+  async getMetric(id: string): Promise<Metric> {
+    return fetchJSON<Metric>(`/metrics/${id}`);
+  },
+
+  async createMetric(data: Partial<Metric>): Promise<Metric> {
+    return fetchJSON<Metric>('/metrics', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async updateMetric(id: string, data: Partial<Metric>): Promise<Metric> {
+    return fetchJSON<Metric>(`/metrics/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // --------------------------------------------------------------------------
+  // Records
+  // --------------------------------------------------------------------------
+
+  async getRecords(params?: {
+    resourceId?: string;
+    metricKey?: string;
+    fromWeek?: string;
+    toWeek?: string;
+  }): Promise<Record[]> {
+    const query = new URLSearchParams();
+    if (params?.resourceId) query.set('resourceId', params.resourceId);
+    if (params?.metricKey) query.set('metricKey', params.metricKey);
+    if (params?.fromWeek) query.set('fromWeek', params.fromWeek);
+    if (params?.toWeek) query.set('toWeek', params.toWeek);
+
+    const queryString = query.toString();
+    const endpoint = queryString ? `/records?${queryString}` : '/records';
+    
+    return fetchJSON<Record[]>(endpoint);
+  },
+
+  async createRecord(data: {
+    resourceId: string;
+    metricKey: string;
+    week: string;
+    value: number;
+  }): Promise<Record> {
+    return fetchJSON<Record>('/records', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deleteRecord(id: string): Promise<{ deleted: boolean }> {
+    return fetchJSON<{ deleted: boolean }>(`/records/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // --------------------------------------------------------------------------
+  // Analysis
+  // --------------------------------------------------------------------------
+
+  async evaluate(params: {
+    resourceId: string;
+    metricKey: string;
+    windowSize?: number;
+  }): Promise<AnalysisResult> {
+    const query = new URLSearchParams();
+    query.set('resourceId', params.resourceId);
+    query.set('metricKey', params.metricKey);
+    if (params.windowSize) query.set('windowSize', params.windowSize.toString());
+
+    return fetchJSON<AnalysisResult>(`/analysis/evaluate?${query.toString()}`);
+  },
+};
+
+export type { HttpError };
