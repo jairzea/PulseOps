@@ -5,6 +5,7 @@ import {
   Patch,
   Body,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { MetricsService } from './metrics.service';
@@ -24,7 +25,10 @@ export class MetricsController {
   }
 
   @Get()
-  findAll() {
+  findAll(@Query('resourceId') resourceId?: string) {
+    if (resourceId) {
+      return this.metricsService.findByResource(resourceId);
+    }
     return this.metricsService.findAll();
   }
 

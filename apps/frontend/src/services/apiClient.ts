@@ -176,8 +176,9 @@ export const apiClient = {
   // Metrics
   // --------------------------------------------------------------------------
 
-  async getMetrics(): Promise<Metric[]> {
-    return fetchJSON<Metric[]>('/metrics');
+  async getMetrics(resourceId?: string): Promise<Metric[]> {
+    const query = resourceId ? `?resourceId=${resourceId}` : '';
+    return fetchJSON<Metric[]>(`/metrics${query}`);
   },
 
   async getMetric(id: string): Promise<Metric> {

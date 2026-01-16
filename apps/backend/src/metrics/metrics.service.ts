@@ -1,13 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Metric, MetricDocument } from './schemas/metric.schema';
 import { CreateMetricDto, UpdateMetricDto } from './dto/metric.dto';
+import { RecordsService } from '../records/records.service';
 
 @Injectable()
 export class MetricsService {
   constructor(
     @InjectModel(Metric.name) private metricModel: Model<MetricDocument>,
+    @Inject(forwardRef(() => RecordsService))
+    private recordsService: RecordsService,
   ) {}
 
   async create(dto: CreateMetricDto, createdBy: string): Promise<Metric> {
@@ -28,5 +31,14 @@ export class MetricsService {
 
   async update(id: string, dto: UpdateMetricDto): Promise<Metric | null> {
     return this.metricModel.findOneAndUpdate({ id }, dto, { new: true }).exec();
+  }
+
+  async findByResource(resourceId: string): Promise<Metric[]> {
+    // Obtener métricas únicas que tiene este recurso
+    const records = await this.recordsService.findByResource(resourceId);
+    const metricKeys = [...new Set(records.map((r) => r.metricKey))];
+
+    // Retornar solo las métricas que existen en records
+    return this.metricModel.find({ key: { $in: metricKeys } }).exec();
   }
 }

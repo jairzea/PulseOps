@@ -17,7 +17,7 @@ export function ResourceDashboard() {
   const conditionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const { resources, loading: loadingResources } = useResources();
-  const { metrics, loading: loadingMetrics } = useMetrics();
+  const { metrics, loading: loadingMetrics } = useMetrics({ resourceId: selectedResourceId });
   const { conditions, loading: loadingConditions } = useConditionsMetadata();
   const {
     records,
