@@ -381,6 +381,68 @@
 			]
 		},
 		{
+			"name": "Playbooks",
+			"item": [
+				{
+					"name": "Get All Playbooks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/playbooks",
+							"host": ["{{base_url}}"],
+							"path": ["playbooks"]
+						}
+					}
+				},
+				{
+					"name": "Get Playbook by Condition",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/playbooks/EMERGENCIA",
+							"host": ["{{base_url}}"],
+							"path": ["playbooks", "EMERGENCIA"]
+						}
+					}
+				},
+				{
+					"name": "Upsert Playbook",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"condition\": \"EMERGENCIA\",\n  \"title\": \"Fórmula de Emergencia Actualizada\",\n  \"steps\": [\n    \"Promociona (Para un individuo: produce)\",\n    \"Cambia tu forma de actuar\",\n    \"Economiza\",\n    \"Prepárate para entregar servicio\",\n    \"Endurece la disciplina\"\n  ],\n  \"version\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/playbooks/EMERGENCIA",
+							"host": ["{{base_url}}"],
+							"path": ["playbooks", "EMERGENCIA"]
+						}
+					}
+				},
+				{
+					"name": "Seed Playbooks",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/playbooks/seed",
+							"host": ["{{base_url}}"],
+							"path": ["playbooks", "seed"]
+						}
+					}
+				}
+			]
+		},
+		{
 			"name": "Analysis",
 			"item": [
 				{

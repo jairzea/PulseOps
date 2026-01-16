@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RecordsService } from '../records/records.service';
 import { RulesService } from '../rules/rules.service';
+import { PlaybooksService } from '../playbooks/playbooks.service';
 import { analysisEngine } from '@pulseops/analysis-engine';
 import {
   MetricSeries,
@@ -11,6 +12,12 @@ export interface EvaluationResponse {
   series: MetricSeries;
   evaluation: MetricConditionEvaluation;
   appliedRuleConfig?: { id: string; version: number } | null;
+  playbook?: {
+    condition: string;
+    title: string;
+    steps: string[];
+    version: number;
+  } | null;
 }
 
 @Injectable()
@@ -18,6 +25,7 @@ export class AnalysisService {
   constructor(
     private readonly recordsService: RecordsService,
     private readonly rulesService: RulesService,
+    private readonly playbooksService: PlaybooksService,
   ) {}
 
   async evaluate(
@@ -57,12 +65,25 @@ export class AnalysisService {
       size: finalWindowSize,
     });
 
-    // 6. Retornar resultado
+    // 6. Obtener playbook para la condición detectada
+    const playbook = await this.playbooksService.findByCondition(
+      evaluation.condition as any,
+    );
+
+    // 7. Retornar resultado
     return {
       series,
       evaluation,
       appliedRuleConfig: activeRule
         ? { id: activeRule.id, version: activeRule.version }
+        : null,
+      playbook: playbook
+        ? {
+            condition: playbook.condition,
+            title: playbook.title,
+            steps: playbook.steps,
+            version: playbook.version,
+          }
         : null,
     };
   }

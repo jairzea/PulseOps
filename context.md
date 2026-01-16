@@ -861,6 +861,71 @@ const result = analysisEngine.analyzeWithConditions(series);
 - ✅ Detección de señales: 5 detectores funcionando
 - ✅ Explicaciones: Generadas automáticamente
 - ✅ Visualización: Grafo React Flow con pipeline completo
+- ✅ **Playbooks Hubbard**: Fórmulas configurables por condición (16 de enero, 2026)
+
+### 📚 Playbooks (Fórmulas Hubbard) - 16 de enero, 2026
+
+**¿Qué son los Playbooks?**
+
+Los playbooks son las **fórmulas operativas de Hubbard** asociadas a cada condición. No modifican el cálculo de la condición (eso lo hace el motor), sino que proporcionan **guía de acción** cuando se detecta una condición específica.
+
+**Arquitectura**:
+
+- **Motor** (@pulseops/analysis-engine): Calcula la condición basándose en inclinación e histórico
+- **Backend** (NestJS): Almacena y gestiona playbooks configurables
+- **Frontend**: Muestra la fórmula correspondiente al usuario
+
+**Implementación**:
+
+- **Colección MongoDB**: `condition_playbooks`
+- **Módulo NestJS**: `PlaybooksModule`
+  - Schema: `ConditionPlaybook` (condition, title, steps[], version, isActive)
+  - Service: CRUD + seed inicial
+  - Controller: GET all, GET by condition, PUT upsert, POST seed
+- **Integración con Analysis**: El endpoint `/analysis/evaluate` ahora retorna:
+  ```typescript
+  {
+    series: MetricSeries,
+    evaluation: MetricConditionEvaluation,
+    appliedRuleConfig: {...},
+    playbook: {
+      condition: string,
+      title: string,
+      steps: string[],
+      version: number
+    }
+  }
+  ```
+
+**Catálogo oficial seeded**:
+
+Todas las condiciones tienen playbook por defecto:
+- ✅ INEXISTENCIA (4 pasos)
+- ✅ PELIGRO (6 pasos)
+- ✅ EMERGENCIA (5 pasos)
+- ✅ NORMAL (4 pasos)
+- ✅ AFLUENCIA (4 pasos)
+- ✅ PODER (2 pasos)
+- ✅ CAMBIO_DE_PODER (7 pasos)
+- ✅ SIN_DATOS (5 pasos técnicos)
+
+**Endpoints disponibles**:
+- `GET /playbooks` - Lista todos los playbooks activos
+- `GET /playbooks/:condition` - Obtiene playbook específico
+- `PUT /playbooks/:condition` - Crea o actualiza playbook (versionado automático)
+- `POST /playbooks/seed` - Inicializa catálogo por defecto
+
+**Demo-friendly**:
+
+Cuando el análisis detecta una condición (ej: EMERGENCIA), el backend automáticamente adjunta la fórmula Hubbard correspondiente. El frontend puede mostrar:
+- Condición detectada: "EMERGENCIA"
+- Inclinación: "-3.5%"
+- Qué hacer: [Promociona, Cambia tu forma de actuar, Economiza, ...]
+
+**Separación de responsabilidades**:
+- ✅ Motor: Puro, sin conocimiento de acciones (solo detecta)
+- ✅ Backend: Almacena fórmulas como contenido configurable
+- ✅ Frontend: Presenta guía al usuario
 
 #### Próximos pasos
 

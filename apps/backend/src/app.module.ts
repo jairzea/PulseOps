@@ -9,6 +9,7 @@ import { ChartsModule } from './charts/charts.module';
 import { RecordsModule } from './records/records.module';
 import { RulesModule } from './rules/rules.module';
 import { AnalysisModule } from './analysis/analysis.module';
+import { PlaybooksModule } from './playbooks/playbooks.module';
 
 @Module({
   imports: [
@@ -16,13 +17,16 @@ import { AnalysisModule } from './analysis/analysis.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/pulseops'),
+    MongooseModule.forRoot(
+      process.env.MONGODB_URI || 'mongodb://localhost:27017/pulseops',
+    ),
     ResourcesModule,
     MetricsModule,
     ChartsModule,
     RecordsModule,
     RulesModule,
     AnalysisModule,
+    PlaybooksModule,
   ],
   controllers: [AppController],
   providers: [AppService],
