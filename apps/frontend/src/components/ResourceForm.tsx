@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { resourceFormSchema, ResourceFormData } from '../schemas/resourceFormSchema';
-import { Resource, Metric } from '../services/apiClient';
+import { Resource, Metric, apiClient } from '../services/apiClient';
 
 interface ResourceFormProps {
     resource?: Resource | null;
@@ -81,18 +81,30 @@ export const ResourceForm: React.FC<ResourceFormProps> = ({
     // Reset form when resource changes
     useEffect(() => {
         if (resource) {
-            // Cargar métricas asociadas desde el recurso
-            const associatedMetrics = metrics.filter((m) =>
-                resource.metricIds?.includes(m.id)
-            );
+            // Las métricas asociadas se obtendrán desde el endpoint /resources/:id/metrics
+            // Para editar, cargamos las métricas usando el nuevo endpoint
+            const loadAssociatedMetrics = async () => {
+                try {
+                    const associatedMetrics = await apiClient.getResourceMetrics(resource.id);
+                    setSelectedMetrics(associatedMetrics);
+                    setValue(
+                        'metricIds',
+                        associatedMetrics.map((m) => m.id)
+                    );
+                } catch (error) {
+                    console.error('Error cargando métricas asociadas:', error);
+                    setSelectedMetrics([]);
+                }
+            };
 
             reset({
                 name: resource.name,
                 roleType: resource.roleType,
                 isActive: resource.isActive,
-                metricIds: resource.metricIds || [],
+                metricIds: [],
             });
-            setSelectedMetrics(associatedMetrics);
+            
+            loadAssociatedMetrics();
         } else {
             reset({
                 name: '',
@@ -102,7 +114,7 @@ export const ResourceForm: React.FC<ResourceFormProps> = ({
             });
             setSelectedMetrics([]);
         }
-    }, [resource, reset, metrics]);
+    }, [resource, reset, setValue]);
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="form-container">

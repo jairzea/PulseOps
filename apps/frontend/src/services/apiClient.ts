@@ -14,7 +14,6 @@ export interface Resource {
   name: string;
   roleType: 'DEV' | 'TL' | 'OTHER';
   isActive: boolean;
-  metricIds?: string[];
   createdBy: string;
   createdAt: string;
   updatedAt: string;
@@ -149,6 +148,10 @@ export const apiClient = {
 
   async getResource(id: string): Promise<Resource> {
     return fetchJSON<Resource>(`/resources/${id}`);
+  },
+
+  async getResourceMetrics(id: string): Promise<Metric[]> {
+    return fetchJSON<Metric[]>(`/resources/${id}/metrics`);
   },
 
   async createResource(data: Partial<Resource>): Promise<Resource> {

@@ -17,6 +17,7 @@ export class CreateResourceDto {
   @IsBoolean()
   isActive?: boolean;
 
+  // Relación con métricas (solo para frontend, se manejará en el servicio)
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
@@ -36,6 +37,7 @@ export class UpdateResourceDto {
   @IsBoolean()
   isActive?: boolean;
 
+  // Relación con métricas (solo para frontend, se manejará en el servicio)
   @IsOptional()
   @IsArray()
   @IsString({ each: true })

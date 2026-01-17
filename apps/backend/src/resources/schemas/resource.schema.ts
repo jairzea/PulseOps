@@ -18,9 +18,6 @@ export class Resource {
   @Prop({ default: true })
   isActive: boolean;
 
-  @Prop({ type: [String], default: [] })
-  metricIds: string[];
-
   @Prop({ required: true })
   createdBy: string;
 }
