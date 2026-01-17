@@ -12,9 +12,9 @@ interface ShredderLoaderProps {
 }
 
 const sizeConfig = {
-  sm: { width: 50, height: 24, stripWidth: 2, fontSize: 'text-xs' },
-  md: { width: 80, height: 40, stripWidth: 3, fontSize: 'text-sm' },
-  lg: { width: 120, height: 60, stripWidth: 4, fontSize: 'text-base' },
+  sm: { width: 50, height: 28, stripWidth: 2, fontSize: 'text-xs' },
+  md: { width: 80, height: 48, stripWidth: 3, fontSize: 'text-sm' },
+  lg: { width: 120, height: 72, stripWidth: 4, fontSize: 'text-base' },
 };
 
 const colorConfig = {
@@ -63,112 +63,114 @@ export const ShredderLoader: React.FC<ShredderLoaderProps> = ({
             </linearGradient>
           </defs>
 
-          {/* Trituradora (líneas superiores más visibles) */}
+          {/* Trituradora (barra horizontal más gruesa y visible) */}
+          <rect
+            x={0}
+            y={height * 0.35}
+            width={width}
+            height={height * 0.12}
+            fill={colors.shredder}
+            opacity="0.95"
+          />
+          {/* Líneas de la trituradora */}
           <g>
             {[...Array(Math.floor(width / (stripWidth * 2)))].map((_, i) => (
               <rect
-                key={`shredder-${i}`}
+                key={`shredder-line-${i}`}
                 x={i * stripWidth * 2}
-                y={0}
-                width={stripWidth}
-                height={height * 0.2}
-                fill={colors.shredder}
-                opacity="1"
+                y={height * 0.35}
+                width={stripWidth * 0.6}
+                height={height * 0.12}
+                fill={colors.paper}
+                opacity="0.3"
               />
             ))}
           </g>
 
-          {/* Papel siendo triturado (animación descendente MÁS VISIBLE) */}
-          <rect
-            x={width * 0.1}
-            y={-height * 0.6}
-            width={width * 0.8}
-            height={height * 0.5}
-            fill={`url(#paper-gradient-${variant})`}
-            rx={2}
-            opacity="1"
-            stroke={colors.paper}
-            strokeWidth="1"
-          >
-            <animate
-              attributeName="y"
-              values={`${-height * 0.6};${height * 0.2};${height * 0.2}`}
-              dur="1.2s"
-              repeatCount="indefinite"
-            />
-            <animate
-              attributeName="opacity"
-              values="1;1;0.3;0"
-              keyTimes="0;0.6;0.8;1"
-              dur="1.2s"
-              repeatCount="indefinite"
-            />
-          </rect>
+          {/* Papel completo bajando (MUY VISIBLE como documento) */}
+          <g>
+            {/* Fondo del papel */}
+            <rect
+              x={width * 0.15}
+              y={-height * 0.8}
+              width={width * 0.7}
+              height={height * 0.6}
+              fill={`url(#paper-gradient-${variant})`}
+              rx={3}
+              opacity="1"
+            >
+              <animate
+                attributeName="y"
+                values={`${-height * 0.8};${height * 0.35}`}
+                dur="1s"
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="opacity"
+                values="1;1;0"
+                keyTimes="0;0.7;1"
+                dur="1s"
+                repeatCount="indefinite"
+              />
+            </rect>
+            {/* Líneas del documento para que se vea más realista */}
+            {[0, 1, 2].map((line) => (
+              <rect
+                key={`doc-line-${line}`}
+                x={width * 0.2}
+                y={-height * 0.8 + height * 0.15 + line * height * 0.12}
+                width={width * 0.5}
+                height={height * 0.04}
+                fill={colors.shredder}
+                opacity="0.4"
+                rx={1}
+              >
+                <animate
+                  attributeName="y"
+                  values={`${-height * 0.8 + height * 0.15 + line * height * 0.12};${height * 0.35 + height * 0.15 + line * height * 0.12}`}
+                  dur="1s"
+                  repeatCount="indefinite"
+                />
+                <animate
+                  attributeName="opacity"
+                  values="0.4;0.4;0"
+                  keyTimes="0;0.7;1"
+                  dur="1s"
+                  repeatCount="indefinite"
+                />
+              </rect>
+            ))}
+          </g>
 
-          {/* Tiras de papel cayendo */}
-          {[...Array(6)].map((_, i) => {
-            const xPos = width * 0.15 + (i * width * 0.12);
-            const delay = `${0.6 + i * 0.1}s`;
-            const fallDuration = '1.5s';
+          {/* Tiras de papel cayendo desde la trituradora */}
+          {[...Array(7)].map((_, i) => {
+            const xPos = width * 0.12 + (i * width * 0.11);
+            const delay = `${0.7 + i * 0.08}s`;
             
             return (
               <g key={`strip-${i}`}>
-                {/* Tira completa */}
+                {/* Tira principal */}
                 <rect
                   x={xPos}
-                  y={height * 0.2}
-                  width={stripWidth}
-                  height={height * 0.8}
+                  y={height * 0.47}
+                  width={stripWidth * 1.2}
+                  height={0}
                   fill={colors.strips}
                   opacity="0"
                 >
                   <animate
                     attributeName="opacity"
-                    values="0;1;1;0.4"
-                    keyTimes="0;0.2;0.7;1"
-                    dur={fallDuration}
+                    values="0;1;1;0.5"
+                    keyTimes="0;0.1;0.8;1"
+                    dur="1.3s"
                     begin={delay}
                     repeatCount="indefinite"
                   />
                   <animate
                     attributeName="height"
-                    values={`0;${height * 0.2};${height * 0.8};${height * 0.8}`}
-                    keyTimes="0;0.2;0.7;1"
-                    dur={fallDuration}
+                    values={`0;${height * 0.53}`}
+                    dur="1.3s"
                     begin={delay}
-                    repeatCount="indefinite"
-                  />
-                </rect>
-                
-                {/* Pequeños segmentos que flotan */}
-                <rect
-                  x={xPos + stripWidth * 0.5}
-                  y={height * 0.2}
-                  width={stripWidth * 0.8}
-                  height={stripWidth * 2}
-                  fill={colors.strips}
-                  opacity="0"
-                >
-                  <animate
-                    attributeName="y"
-                    values={`${height * 0.2};${height * 0.6};${height}`}
-                    dur="1.8s"
-                    begin={`${1 + i * 0.1}s`}
-                    repeatCount="indefinite"
-                  />
-                  <animate
-                    attributeName="opacity"
-                    values="0;0.9;0.9;0"
-                    dur="1.8s"
-                    begin={`${1 + i * 0.1}s`}
-                    repeatCount="indefinite"
-                  />
-                  <animateTransform
-                    attributeName="transform"
-                    type="rotate"
-                    values={`0 ${xPos} ${height * 0.2};180 ${xPos} ${height * 0.6};360 ${xPos} ${height}`}
-                    dur="1.8s"
-                    begin={`${1 + i * 0.1}s`}
                     repeatCount="indefinite"
                   />
                 </rect>
