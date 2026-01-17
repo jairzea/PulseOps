@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useMetricsStore } from '../stores/metricsStore';
 import { useResources } from '../hooks/useResources';
 import { MetricModal } from '../components/MetricModal';
-import { PulseLoader } from '../components/PulseLoader';
+import { TableSkeleton } from '../components/TableSkeleton';
 import { LoadingButton } from '../components/LoadingButton';
 
 export const MetricsPage: React.FC = () => {
@@ -64,11 +64,7 @@ export const MetricsPage: React.FC = () => {
 
                 {/* Tabla de métricas */}
                 <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
-                    {loading && (
-                        <div className="p-12">
-                            <PulseLoader size="lg" variant="primary" text="Cargando métricas..." />
-                        </div>
-                    )}
+                    {loading && <TableSkeleton columns={5} rows={6} showActions={true} />}
 
                     {error && (
                         <div className="p-8 text-center">
@@ -129,20 +125,46 @@ export const MetricsPage: React.FC = () => {
                                             <div className="text-sm text-gray-400">{metric.unit || '-'}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                            <button
-                                                onClick={() => handleEdit(metric)}
-                                                className="text-blue-500 hover:text-blue-400 mr-4"
-                                            >
-                                                Editar
-                                            </button>
-                                            <LoadingButton
-                                                onClick={() => handleDelete(metric.id)}
-                                                variant="danger"
-                                                loading={deletingId === metric.id}
-                                                className="!px-3 !py-1 text-sm"
-                                            >
-                                                Eliminar
-                                            </LoadingButton>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => handleEdit(metric)}
+                                                    className="p-2 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                                    title="Editar métrica"
+                                                >
+                                                    <svg
+                                                        className="w-5 h-5"
+                                                        fill="none"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth="2"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                </button>
+                                                <LoadingButton
+                                                    onClick={() => handleDelete(metric.id)}
+                                                    variant="danger"
+                                                    loading={deletingId === metric.id}
+                                                    className="!p-2 !min-w-0"
+                                                    title="Eliminar métrica"
+                                                >
+                                                    {!deletingId || deletingId !== metric.id ? (
+                                                        <svg
+                                                            className="w-5 h-5"
+                                                            fill="none"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth="2"
+                                                            viewBox="0 0 24 24"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    ) : null}
+                                                </LoadingButton>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
