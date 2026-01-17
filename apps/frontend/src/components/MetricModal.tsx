@@ -34,7 +34,7 @@ export const MetricModal: React.FC<MetricModalProps> = ({ resources }) => {
     };
 
     const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (e.target === e.currentTarget) {
+        if (e.target === e.currentTarget && !loading) {
             handleClose();
         }
     };
@@ -42,11 +42,12 @@ export const MetricModal: React.FC<MetricModalProps> = ({ resources }) => {
     if (!isModalOpen) return null;
 
     return (
-        <div
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
-            onClick={handleBackdropClick}
-        >
-            <div className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto border border-gray-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+                className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                onClick={handleBackdropClick}
+            />
+            <div className="relative bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-800" onClick={(e) => e.stopPropagation()}>
                 {/* Header */}
                 <div className="sticky top-0 bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between z-10">
                     <h2 className="text-xl font-semibold text-white">
@@ -54,10 +55,7 @@ export const MetricModal: React.FC<MetricModalProps> = ({ resources }) => {
                     </h2>
                     <button
                         type="button"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleClose();
-                        }}
+                        onClick={handleClose}
                         disabled={loading}
                         className="text-gray-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
