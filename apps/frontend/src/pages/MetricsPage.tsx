@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useMetricsStore } from '../stores/metricsStore';
 import { useResources } from '../hooks/useResources';
 import { MetricModal } from '../components/MetricModal';
+import { TableSkeleton } from '../components/TableSkeleton';
 
 export const MetricsPage: React.FC = () => {
     const { metrics, loading, error, setModalOpen, setEditingMetric, fetchMetrics, deleteMetric } = useMetricsStore();
@@ -56,12 +57,7 @@ export const MetricsPage: React.FC = () => {
 
                 {/* Tabla de métricas */}
                 <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
-                    {loading && (
-                        <div className="p-8 text-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                            <p className="mt-4 text-gray-400">Cargando métricas...</p>
-                        </div>
-                    )}
+                    {loading && <TableSkeleton columns={5} rows={6} showActions={true} />}
 
                     {error && (
                         <div className="p-8 text-center">

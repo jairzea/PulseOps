@@ -16,6 +16,7 @@ export class MetricsService {
   async create(dto: CreateMetricDto, createdBy: string): Promise<Metric> {
     const metric = new this.metricModel({
       ...dto,
+      resourceIds: dto.resourceIds || [],
       createdBy,
     });
     return metric.save();

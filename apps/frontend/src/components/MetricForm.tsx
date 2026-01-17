@@ -6,17 +6,20 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { metricFormSchema, MetricFormData } from '../schemas/metricFormSchema';
 import { Resource, Metric } from '../services/apiClient';
+import { LoadingButton } from './LoadingButton';
 
 interface MetricFormProps {
     onSubmit: (data: MetricFormData) => void;
     initialMetric?: Metric | null;
     resources: Resource[];
+    loading?: boolean;
 }
 
 export const MetricForm: React.FC<MetricFormProps> = ({
     onSubmit,
     initialMetric,
     resources,
+    loading = false,
 }) => {
     const [selectedResources, setSelectedResources] = useState<Resource[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -277,12 +280,13 @@ export const MetricForm: React.FC<MetricFormProps> = ({
 
             {/* Botones */}
             <div className="flex justify-end space-x-3 pt-4">
-                <button
+                <LoadingButton
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    loading={loading}
+                    variant="primary"
                 >
                     {initialMetric ? 'Actualizar' : 'Crear'} Métrica
-                </button>
+                </LoadingButton>
             </div>
         </form>
     );

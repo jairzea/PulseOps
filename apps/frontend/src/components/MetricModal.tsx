@@ -83,6 +83,7 @@ export const MetricModal: React.FC<MetricModalProps> = ({ resources }) => {
                         onSubmit={handleSubmit}
                         initialMetric={editingMetric}
                         resources={resources}
+                        loading={loading}
                     />
                 </div>
 
