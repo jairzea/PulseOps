@@ -2467,3 +2467,594 @@ de6fcb1 - feat(frontend): agregar componentes de loading y skeleton
    - Success toast después de create/update
    - Error toast con mensaje específico
    - Info toast para acciones relevantes
+
+---
+
+## [16 Enero 2026] – Fase 3.9 – Sistema Centralizado de Manejo de Errores
+
+### Contexto y motivación
+
+Durante la implementación de la Fase 3.8, se detectó un error 500 al crear métricas que exponía la necesidad de un sistema robusto de manejo de errores. Los errores se manejaban de forma inconsistente:
+
+- **Backend**: Errores genéricos sin contexto
+- **Frontend**: `console.error()` disperso, sin centralización
+- **UX**: Mensajes técnicos expuestos al usuario
+- **Debugging**: Difícil rastrear origen de errores
+
+Se decidió implementar un **sistema centralizado de manejo de errores** siguiendo principios SOLID, específicamente:
+
+- ✅ **Responsabilidad Única**: Cada clase tiene una única razón para cambiar
+- ✅ **Abierto/Cerrado**: Abierto a extensión, cerrado a modificación
+- ✅ **Patrón Factory**: Para crear instancias de errores
+- ✅ **Arquitectura por contratos**: Respuestas estandarizadas
+
+### Qué se implementó
+
+#### Backend - Sistema de excepciones
+
+**Estructura creada**:
+```
+apps/backend/src/common/
+├── exceptions/
+│   └── app.exception.ts        # Excepciones personalizadas
+└── filters/
+    └── global-exception.filter.ts  # Filtro global
+```
+
+**Excepciones disponibles**:
+- `AppException` - Clase base abstracta
+- `ValidationException` (400) - Errores de validación
+- `ResourceNotFoundException` (404) - Recurso no encontrado
+- `DuplicateResourceException` (409) - Recurso duplicado
+- `BusinessLogicException` (422) - Error de lógica de negocio
+- `DatabaseException` (500) - Error de base de datos
+- `UnauthorizedException` (401) - No autorizado
+- `ForbiddenException` (403) - Acceso prohibido
+
+**Respuesta estandarizada**:
+```json
+{
+  "statusCode": 409,
+  "message": "Métrica con key 'commits' ya existe",
+  "errorCode": "DUPLICATE_RESOURCE",
+  "details": {
+    "resource": "Métrica",
+    "field": "key",
+    "value": "commits"
+  },
+  "timestamp": "2026-01-16T12:34:56.789Z",
+  "path": "/metrics"
+}
+```
+
+**GlobalExceptionFilter**:
+- Intercepta todas las excepciones
+- Formatea respuestas de error
+- Logging diferencial (5xx vs 4xx)
+- Preserva stack traces en desarrollo
+
+#### Frontend - Sistema de errores
+
+**Estructura creada**:
+```
+apps/frontend/src/utils/errors/
+├── AppError.ts          # Clases de error base
+├── ErrorFactory.ts      # Factory (Patrón Factory)
+├── ErrorHandler.ts      # Handler centralizado
+└── index.ts            # Barrel export
+```
+
+**Clases de error disponibles**:
+- `AppError` - Clase base abstracta
+- `ValidationError` (400)
+- `NotFoundError` (404)
+- `ConflictError` (409)
+- `BusinessError` (422)
+- `NetworkError` (0)
+- `ServerError` (500)
+- `UnauthorizedError` (401)
+- `ForbiddenError` (403)
+- `UnknownError` (0)
+
+**Métodos abstractos**:
+```typescript
+abstract getUserMessage(): string;    // Mensaje user-friendly
+abstract isRecoverable(): boolean;    // Indica si es recuperable
+```
+
+**ErrorFactory - Patrón Factory**:
+```typescript
+// Crea errores desde respuestas del backend
+ErrorFactory.fromBackendResponse(response: BackendErrorResponse): AppError
+
+// Crea errores desde códigos HTTP
+ErrorFactory.fromStatusCode(statusCode: number, message: string): AppError
+
+// Crea errores desde excepciones de fetch
+ErrorFactory.fromFetchError(error: unknown): AppError
+
+// Permite extensión sin modificar código base
+ErrorFactory.registerErrorCreator(errorCode: string, creator: ErrorCreator)
+```
+
+**ErrorHandler - Handler centralizado**:
+```typescript
+// Procesa errores HTTP
+ErrorHandler.handleHttpError(response: Response, callbacks?: ErrorHandlerCallbacks)
+
+// Procesa errores genéricos
+ErrorHandler.handleGenericError(error: unknown, callbacks?: ErrorHandlerCallbacks)
+
+// Wrapper try-catch automático
+ErrorHandler.tryCatch<T>(fn: () => Promise<T>, callbacks?: ErrorHandlerCallbacks)
+
+// Configura callbacks globales
+ErrorHandler.setDefaultCallbacks(callbacks: ErrorHandlerCallbacks)
+```
+
+### Integración
+
+#### Backend - MetricsService
+
+**Antes**:
+```typescript
+async create(dto: CreateMetricDto): Promise<Metric> {
+  const metric = new this.metricModel(dto);
+  return metric.save();
+}
+```
+
+**Después**:
+```typescript
+async create(dto: CreateMetricDto, createdBy: string): Promise<Metric> {
+  try {
+    const existing = await this.metricModel.findOne({ key: dto.key }).exec();
+    if (existing) {
+      throw new DuplicateResourceException('Métrica', 'key', dto.key);
+    }
+
+    const metric = new this.metricModel({
+      ...dto,
+      resourceIds: dto.resourceIds || [],
+      createdBy,
+    });
+    return await metric.save();
+  } catch (error) {
+    if (error instanceof DuplicateResourceException) {
+      throw error; // Re-lanzar excepciones conocidas
+    }
+    throw new DatabaseException('Error al crear la métrica', {
+      originalError: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+```
+
+**Beneficios**:
+- Validación de duplicados antes de insertar
+- Mensajes de error descriptivos
+- Detalles contextuales en `details`
+- Stack traces preservados
+
+#### Frontend - apiClient
+
+**Antes**:
+```typescript
+async function fetchJSON<T>(endpoint: string): Promise<T> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new HttpError(response.status, response.statusText, 'Error');
+  }
+  return response.json();
+}
+```
+
+**Después**:
+```typescript
+async function fetchJSON<T>(endpoint: string): Promise<T> {
+  try {
+    const response = await fetch(url, options);
+
+    if (!response.ok) {
+      return await ErrorHandler.handleHttpError(response);
+    }
+
+    return response.json();
+  } catch (error) {
+    return ErrorHandler.handleGenericError(error);
+  }
+}
+```
+
+**Beneficios**:
+- Manejo centralizado de errores HTTP
+- Transformación automática a AppError
+- Mensajes user-friendly
+- Callbacks configurables
+
+#### Frontend - metricsStore
+
+**Antes**:
+```typescript
+fetchMetrics: async () => {
+  try {
+    const metrics = await apiClient.getMetrics();
+    set({ metrics });
+  } catch (error) {
+    set({ error: error.message }); // Mensaje técnico expuesto
+  }
+}
+```
+
+**Después**:
+```typescript
+fetchMetrics: async () => {
+  set({ loading: true, error: null });
+  try {
+    const metrics = await apiClient.getMetrics();
+    set({ metrics, loading: false });
+  } catch (error) {
+    const errorMessage = error instanceof AppError 
+      ? error.getUserMessage() 
+      : 'Error al cargar métricas';
+    set({ error: errorMessage, loading: false });
+  }
+}
+```
+
+**Beneficios**:
+- Mensajes user-friendly separados de técnicos
+- Consistencia en manejo de errores
+- Recuperabilidad explícita
+
+### Principios SOLID aplicados
+
+#### 1. Responsabilidad Única (SRP)
+
+**Cada clase tiene una única responsabilidad**:
+- `AppException`: Representar un tipo de error específico
+- `GlobalExceptionFilter`: Interceptar y formatear errores
+- `ErrorFactory`: Crear instancias de errores
+- `ErrorHandler`: Procesar errores y ejecutar callbacks
+- `AppError`: Representar errores del frontend con mensajes user-friendly
+
+#### 2. Abierto/Cerrado (OCP)
+
+**Sistema extensible sin modificar código base**:
+
+```typescript
+// Agregar nuevo tipo de error sin modificar ErrorFactory
+export class RateLimitError extends AppError {
+  constructor(message: string, retryAfter: number) {
+    super(message, 'RATE_LIMIT_EXCEEDED', 429, { retryAfter });
+  }
+
+  getUserMessage(): string {
+    return `Demasiadas solicitudes. Intenta en ${this.details.retryAfter}s`;
+  }
+
+  isRecoverable(): boolean {
+    return true;
+  }
+}
+
+// Registrar dinámicamente en el factory
+ErrorFactory.registerErrorCreator(
+  'RATE_LIMIT_EXCEEDED',
+  (response) => new RateLimitError(response.message, response.details.retryAfter)
+);
+```
+
+**No se modifica**:
+- ErrorFactory core
+- ErrorHandler core
+- GlobalExceptionFilter
+
+**Se extiende**:
+- Nuevas clases de error
+- Nuevos error creators
+- Nuevos callbacks
+
+#### 3. Sustitución de Liskov (LSP)
+
+Todas las subclases de `AppError` pueden sustituir a la clase base:
+
+```typescript
+function handleError(error: AppError) {
+  console.log(error.getUserMessage());  // Funciona con cualquier subclase
+  if (error.isRecoverable()) {
+    // Reintentar
+  }
+}
+```
+
+#### 4. Segregación de Interfaces (ISP)
+
+Callbacks específicos en lugar de una interfaz genérica:
+
+```typescript
+interface ErrorHandlerCallbacks {
+  onValidationError?: (error: AppError) => void;
+  onNotFoundError?: (error: AppError) => void;
+  onServerError?: (error: AppError) => void;
+  onNetworkError?: (error: AppError) => void;
+  onAnyError?: (error: AppError) => void;
+}
+```
+
+Cada callback es opcional, permitiendo implementar solo lo necesario.
+
+#### 5. Inversión de Dependencias (DIP)
+
+```typescript
+// Alto nivel depende de abstracción (ErrorHandler)
+// Bajo nivel implementa abstracción (AppError subclasses)
+
+// Alto nivel
+async fetchMetrics() {
+  try {
+    return await apiClient.getMetrics();
+  } catch (error) {
+    if (error instanceof AppError) {  // Abstracción
+      return error.getUserMessage();
+    }
+  }
+}
+
+// Bajo nivel
+class ValidationError extends AppError {
+  getUserMessage(): string {  // Implementa abstracción
+    return 'Los datos no son válidos';
+  }
+}
+```
+
+### Archivos modificados/creados
+
+**Nuevos (7)**:
+```
+apps/backend/src/common/exceptions/app.exception.ts           (101 líneas)
+apps/backend/src/common/filters/global-exception.filter.ts    (109 líneas)
+apps/frontend/src/utils/errors/AppError.ts                    (167 líneas)
+apps/frontend/src/utils/errors/ErrorFactory.ts                (95 líneas)
+apps/frontend/src/utils/errors/ErrorHandler.ts                (103 líneas)
+apps/frontend/src/utils/errors/index.ts                       (6 líneas)
+ERROR_HANDLING.md                                             (452 líneas)
+```
+
+**Modificados (4)**:
+```
+apps/backend/src/main.ts                          (+4 líneas: GlobalExceptionFilter)
+apps/backend/src/metrics/metrics.service.ts       (+60 líneas: manejo de errores)
+apps/frontend/src/services/apiClient.ts           (+8 líneas: ErrorHandler)
+apps/frontend/src/stores/metricsStore.ts          (+16 líneas: AppError checks)
+```
+
+### Validación
+
+**Build backend**:
+```bash
+✓ Compilación exitosa
+✓ 0 errores TypeScript
+✓ GlobalExceptionFilter registrado en main.ts
+```
+
+**Build frontend**:
+```bash
+✓ 877 modules transformed
+dist/assets/index-DwBlsOH7.js  688.36 kB │ gzip: 199.51 kB
+✓ built in 3.57s
+```
+
+**Commits**:
+```
+951a964 - feat: implementar sistema centralizado de manejo de errores
+```
+
+**Funcionalidad validada**:
+- ✅ Backend lanza DuplicateResourceException al crear métrica con key existente
+- ✅ GlobalExceptionFilter formatea respuesta con errorCode y details
+- ✅ Frontend transforma respuesta HTTP a AppError correctamente
+- ✅ getUserMessage() retorna mensajes user-friendly
+- ✅ metricsStore muestra mensajes amigables en lugar de técnicos
+- ✅ Stack traces preservados en desarrollo
+
+### Beneficios obtenidos
+
+#### 1. Centralización
+
+**Antes**:
+- 9 lugares con `console.error()` dispersos
+- Cada catch block con lógica diferente
+- Sin formato estándar de respuestas
+
+**Después**:
+- Un único punto de entrada: ErrorHandler
+- Un único filtro global: GlobalExceptionFilter
+- Respuestas estandarizadas en toda la app
+
+#### 2. Type Safety
+
+```typescript
+// IntelliSense completo
+const error = ErrorFactory.fromStatusCode(400, 'Invalid');
+error.getUserMessage();  // ✅ TypeScript conoce el método
+error.isRecoverable();   // ✅ TypeScript conoce el método
+error.statusCode;        // ✅ number
+error.code;             // ✅ string
+```
+
+#### 3. Extensibilidad
+
+**Sin modificar código existente**:
+```typescript
+// 1. Crear nueva clase de error
+class CustomError extends AppError { ... }
+
+// 2. Registrar en factory
+ErrorFactory.registerErrorCreator('CUSTOM_CODE', creator);
+
+// 3. Usar automáticamente en toda la app
+```
+
+#### 4. UX Mejorada
+
+**Antes**:
+```
+Error: Request failed
+```
+
+**Después**:
+```
+Métrica con key 'commits' ya existe
+Los datos ingresados no son válidos
+Error de conexión. Verifica tu internet.
+```
+
+#### 5. Debugging
+
+**Contexto completo en errores**:
+```json
+{
+  "statusCode": 409,
+  "message": "Métrica con key 'commits' ya existe",
+  "errorCode": "DUPLICATE_RESOURCE",
+  "details": {
+    "resource": "Métrica",
+    "field": "key",
+    "value": "commits"
+  },
+  "timestamp": "2026-01-16T12:34:56.789Z",
+  "path": "/metrics"
+}
+```
+
+### Casos de uso
+
+#### 1. Validación de duplicados
+
+```typescript
+// Backend
+const existing = await this.metricModel.findOne({ key: dto.key });
+if (existing) {
+  throw new DuplicateResourceException('Métrica', 'key', dto.key);
+}
+
+// Frontend recibe
+{
+  "statusCode": 409,
+  "message": "Métrica con key 'commits' ya existe",
+  "errorCode": "DUPLICATE_RESOURCE"
+}
+
+// Store muestra
+"El recurso ya existe"
+```
+
+#### 2. Recurso no encontrado
+
+```typescript
+// Backend
+const metric = await this.metricModel.findOne({ key });
+if (!metric) {
+  throw new ResourceNotFoundException('Métrica', key);
+}
+
+// Frontend recibe
+{
+  "statusCode": 404,
+  "message": "Métrica con identificador 'commits' no encontrado",
+  "errorCode": "RESOURCE_NOT_FOUND"
+}
+
+// Store muestra
+"El recurso solicitado no fue encontrado"
+```
+
+#### 3. Error de red
+
+```typescript
+// Frontend detecta error de fetch
+try {
+  const response = await fetch(url);
+} catch (error) {
+  // ErrorHandler crea NetworkError
+  return ErrorHandler.handleGenericError(error);
+}
+
+// Usuario ve
+"Error de conexión. Por favor, verifica tu conexión a internet."
+```
+
+### Documentación
+
+Archivo **ERROR_HANDLING.md** (452 líneas):
+
+**Contenido**:
+1. Arquitectura del sistema
+2. Backend - Excepciones y filtro
+3. Frontend - Errores, factory y handler
+4. Ejemplos de uso en services y stores
+5. Guía de extensibilidad
+6. Configuración de callbacks globales
+7. Testing patterns
+8. Próximos pasos
+
+**Formato**:
+- Diagramas de arquitectura
+- Código de ejemplo
+- Casos de uso reales
+- Guías paso a paso
+
+### Próximos pasos
+
+1. **Toast notifications** ✅ **SIGUIENTE**:
+   - Biblioteca: react-hot-toast
+   - Integrar con ErrorHandler.setDefaultCallbacks()
+   - Success toast después de create/update
+   - Error toast con getUserMessage()
+   - Configurar colores según severity
+
+2. **Aplicar en resourcesStore y recordsStore**:
+   - Replicar patrón de metricsStore
+   - Usar AppError en todos los catch blocks
+   - Mensajes user-friendly consistentes
+
+3. **Aplicar en otros services del backend**:
+   - ResourcesService con manejo de errores
+   - RecordsService con validaciones
+   - AnalysisService con errores de negocio
+
+4. **Tests unitarios**:
+   - Backend: Tests de excepciones personalizadas
+   - Backend: Tests de GlobalExceptionFilter
+   - Frontend: Tests de ErrorFactory
+   - Frontend: Tests de ErrorHandler
+   - Cobertura > 80%
+
+5. **Logging centralizado** (opcional):
+   - Integrar con servicio de logging (Sentry, LogRocket)
+   - Trackear errores en producción
+   - Métricas de error rates
+   - Alertas automáticas
+
+### Lecciones aprendidas
+
+1. **Errores son ciudadanos de primera clase**: Merecen la misma atención arquitectónica que features
+2. **SOLID no es overhead**: Facilita extensión y mantenimiento a largo plazo
+3. **Mensajes user-friendly son críticos**: Separar mensajes técnicos de UX
+4. **Type safety reduce bugs**: TypeScript detecta errores en tiempo de desarrollo
+5. **Documentación es esencial**: ERROR_HANDLING.md asegura consistencia en el equipo
+
+### Impacto en arquitectura
+
+**Antes**: Sistema reactivo a errores (handling ad-hoc)
+**Después**: Sistema proactivo (arquitectura de errores bien definida)
+
+**Beneficios a largo plazo**:
+- ✅ Fácil agregar nuevos tipos de error
+- ✅ Consistencia en toda la aplicación
+- ✅ Debugging más rápido
+- ✅ UX profesional
+- ✅ Preparado para monitoreo en producción
+
