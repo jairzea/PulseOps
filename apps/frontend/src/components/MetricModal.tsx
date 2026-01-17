@@ -43,22 +43,23 @@ export const MetricModal: React.FC<MetricModalProps> = ({ resources }) => {
 
     return (
         <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
             onClick={handleBackdropClick}
         >
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto border border-gray-800">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-900">
+                <div className="sticky top-0 bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between z-10">
+                    <h2 className="text-xl font-semibold text-white">
                         {editingMetric ? 'Editar Métrica' : 'Nueva Métrica'}
                     </h2>
                     <button
+                        type="button"
                         onClick={handleClose}
                         disabled={loading}
-                        className="text-gray-400 hover:text-gray-600 focus:outline-none disabled:opacity-50"
+                        className="text-gray-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <svg
-                            className="h-6 w-6"
+                            className="w-6 h-6"
                             fill="none"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -74,7 +75,7 @@ export const MetricModal: React.FC<MetricModalProps> = ({ resources }) => {
                 {/* Body */}
                 <div className="p-6">
                     {error && (
-                        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                        <div className="mb-4 bg-red-900/20 border border-red-700/50 text-red-300 px-4 py-3 rounded-lg">
                             <p className="text-sm">{error}</p>
                         </div>
                     )}
@@ -90,7 +91,7 @@ export const MetricModal: React.FC<MetricModalProps> = ({ resources }) => {
                 {/* Footer con loading indicator */}
                 {loading && (
                     <div className="px-6 pb-6">
-                        <div className="flex items-center justify-center text-gray-500">
+                        <div className="flex items-center justify-center text-gray-400">
                             <svg
                                 className="animate-spin h-5 w-5 mr-2"
                                 xmlns="http://www.w3.org/2000/svg"
