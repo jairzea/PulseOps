@@ -150,8 +150,10 @@ export const MetricsPage: React.FC = () => {
                                                     title="Eliminar métrica"
                                                 >
                                                     {deletingId === metric.id ? (
-                                                        <div className="absolute inset-0 flex items-center justify-center bg-white rounded-lg">
-                                                            <ShredderLoaderInline size="sm" variant="danger" />
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-white rounded-lg -m-2 p-2">
+                                                            <div className="w-10 h-10">
+                                                                <ShredderLoaderInline size="md" variant="danger" />
+                                                            </div>
                                                         </div>
                                                     ) : (
                                                         <svg
