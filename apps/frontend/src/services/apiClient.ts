@@ -14,6 +14,7 @@ export interface Resource {
   name: string;
   roleType: 'DEV' | 'TL' | 'OTHER';
   isActive: boolean;
+  metricIds?: string[];
   createdBy: string;
   createdAt: string;
   updatedAt: string;

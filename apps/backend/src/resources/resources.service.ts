@@ -13,6 +13,7 @@ export class ResourcesService {
   async create(dto: CreateResourceDto, createdBy: string): Promise<Resource> {
     const resource = new this.resourceModel({
       ...dto,
+      metricIds: dto.metricIds || [],
       createdBy,
     });
     return resource.save();

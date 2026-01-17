@@ -81,14 +81,16 @@ export const ResourceForm: React.FC<ResourceFormProps> = ({
     // Reset form when resource changes
     useEffect(() => {
         if (resource) {
-            // TODO: Cargar métricas asociadas cuando el backend lo soporte
-            const associatedMetrics: Metric[] = [];
+            // Cargar métricas asociadas desde el recurso
+            const associatedMetrics = metrics.filter((m) =>
+                resource.metricIds?.includes(m.id)
+            );
 
             reset({
                 name: resource.name,
                 roleType: resource.roleType,
                 isActive: resource.isActive,
-                metricIds: [],
+                metricIds: resource.metricIds || [],
             });
             setSelectedMetrics(associatedMetrics);
         } else {

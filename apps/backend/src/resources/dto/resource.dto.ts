@@ -1,4 +1,10 @@
-import { IsString, IsEnum, IsOptional, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsBoolean,
+  IsArray,
+} from 'class-validator';
 
 export class CreateResourceDto {
   @IsString()
@@ -10,6 +16,11 @@ export class CreateResourceDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  metricIds?: string[];
 }
 
 export class UpdateResourceDto {
@@ -24,4 +35,9 @@ export class UpdateResourceDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  metricIds?: string[];
 }

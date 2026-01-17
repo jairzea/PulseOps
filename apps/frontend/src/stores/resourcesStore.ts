@@ -55,7 +55,8 @@ export const useResourcesStore = create<ResourcesState>((set, get) => ({
                 name: data.name,
                 roleType: data.roleType,
                 isActive: data.isActive ?? true,
-            });
+                metricIds: data.metricIds || [],
+            } as Partial<Resource>);
 
             // Auto-refetch después de crear
             await get().fetchResources();
@@ -76,7 +77,8 @@ export const useResourcesStore = create<ResourcesState>((set, get) => ({
                 name: data.name,
                 roleType: data.roleType,
                 isActive: data.isActive,
-            });
+                metricIds: data.metricIds,
+            } as Partial<Resource>);
 
             // Auto-refetch después de actualizar
             await get().fetchResources();
