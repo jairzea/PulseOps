@@ -164,6 +164,12 @@ export const apiClient = {
     });
   },
 
+  async deleteResource(id: string): Promise<void> {
+    return fetchJSON<void>(`/resources/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
   // --------------------------------------------------------------------------
   // Metrics
   // --------------------------------------------------------------------------

@@ -89,11 +89,11 @@ export const useResourcesStore = create<ResourcesState>((set, get) => ({
         }
     },
 
-    // Delete resource (soft delete)
+    // Delete resource
     deleteResource: async (id: string) => {
         set({ loading: true, error: null });
         try {
-            await apiClient.updateResource(id, { isActive: false });
+            await apiClient.deleteResource(id);
             // Auto-refetch después de eliminar
             await get().fetchResources();
             set({ loading: false });

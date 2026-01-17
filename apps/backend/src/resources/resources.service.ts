@@ -31,4 +31,8 @@ export class ResourcesService {
       .findOneAndUpdate({ id }, dto, { new: true })
       .exec();
   }
+
+  async remove(id: string): Promise<Resource | null> {
+    return this.resourceModel.findOneAndDelete({ id }).exec();
+  }
 }

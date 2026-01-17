@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   UseGuards,
@@ -31,5 +32,10 @@ export class ResourcesController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateResourceDto) {
     return this.resourcesService.update(id, dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.resourcesService.remove(id);
   }
 }
