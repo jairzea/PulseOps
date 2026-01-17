@@ -1,7 +1,7 @@
 /**
  * MetricForm - Formulario de métricas con React Hook Form
  */
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { metricFormSchema, MetricFormData } from '../schemas/metricFormSchema';
@@ -18,11 +18,16 @@ export const MetricForm: React.FC<MetricFormProps> = ({
   initialMetric,
   resources,
 }) => {
+  const [selectedResources, setSelectedResources] = useState<Resource[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<MetricFormData>({
     resolver: yupResolver(metricFormSchema) as any,
     defaultValues: {
@@ -35,6 +40,36 @@ export const MetricForm: React.FC<MetricFormProps> = ({
     },
   });
 
+  // Filtrar recursos según búsqueda
+  const filteredResources = resources.filter(
+    (resource) =>
+      !selectedResources.find((sr) => sr.id === resource.id) &&
+      (resource.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        resource.roleType.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  // Agregar recurso seleccionado
+  const addResource = (resource: Resource) => {
+    const newSelected = [...selectedResources, resource];
+    setSelectedResources(newSelected);
+    setValue(
+      'resourceIds',
+      newSelected.map((r) => r.id)
+    );
+    setSearchTerm('');
+    setShowDropdown(false);
+  };
+
+  // Remover recurso seleccionado
+  const removeResource = (resourceId: string) => {
+    const newSelected = selectedResources.filter((r) => r.id !== resourceId);
+    setSelectedResources(newSelected);
+    setValue(
+      'resourceIds',
+      newSelected.map((r) => r.id)
+    );
+  };
+
   // Resetear el formulario cuando cambie el registro inicial
   useEffect(() => {
     if (initialMetric) {
@@ -46,6 +81,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
         periodType: (initialMetric.periodType as 'WEEK' | 'MONTH' | 'QUARTER' | 'YEAR') || 'WEEK',
         resourceIds: [], // TODO: Obtener desde backend
       });
+      setSelectedResources([]);
     } else {
       reset({
         key: '',
@@ -55,6 +91,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
         periodType: 'WEEK',
         resourceIds: [],
       });
+      setSelectedResources([]);
     }
   }, [initialMetric, reset]);
 
@@ -62,7 +99,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {/* Clave */}
       <div>
-        <label htmlFor="key" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="key" className="block text-sm font-medium text-gray-900 mb-1">
           Clave <span className="text-red-500">*</span>
         </label>
         <input
@@ -70,7 +107,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
           id="key"
           type="text"
           placeholder="ej: commits_per_week"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400"
           disabled={!!initialMetric} // La clave no se puede editar
         />
         {errors.key && (
@@ -83,7 +120,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
 
       {/* Etiqueta */}
       <div>
-        <label htmlFor="label" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="label" className="block text-sm font-medium text-gray-900 mb-1">
           Etiqueta <span className="text-red-500">*</span>
         </label>
         <input
@@ -91,7 +128,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
           id="label"
           type="text"
           placeholder="ej: Commits por Semana"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400"
         />
         {errors.label && (
           <p className="mt-1 text-sm text-red-600">{errors.label.message}</p>
@@ -100,7 +137,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
 
       {/* Descripción */}
       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="description" className="block text-sm font-medium text-gray-900 mb-1">
           Descripción
         </label>
         <textarea
@@ -108,7 +145,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
           id="description"
           rows={3}
           placeholder="Describe qué mide esta métrica..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400"
         />
         {errors.description && (
           <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
@@ -119,7 +156,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
       <div className="grid grid-cols-2 gap-4">
         {/* Unidad */}
         <div>
-          <label htmlFor="unit" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="unit" className="block text-sm font-medium text-gray-900 mb-1">
             Unidad
           </label>
           <input
@@ -127,7 +164,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
             id="unit"
             type="text"
             placeholder="ej: commits, horas"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400"
           />
           {errors.unit && (
             <p className="mt-1 text-sm text-red-600">{errors.unit.message}</p>
@@ -136,13 +173,13 @@ export const MetricForm: React.FC<MetricFormProps> = ({
 
         {/* Tipo de Período */}
         <div>
-          <label htmlFor="periodType" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="periodType" className="block text-sm font-medium text-gray-900 mb-1">
             Tipo de Período
           </label>
           <select
             {...register('periodType')}
             id="periodType"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="WEEK">Semanal</option>
             <option value="MONTH">Mensual</option>
@@ -155,39 +192,81 @@ export const MetricForm: React.FC<MetricFormProps> = ({
         </div>
       </div>
 
-      {/* Asociación de Recursos */}
+      {/* Asociación de Recursos con Autocompletado */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-900 mb-2">
           Recursos Asociados <span className="text-red-500">*</span>
         </label>
-        <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
-          {resources.length === 0 ? (
-            <p className="text-sm text-gray-500">No hay recursos disponibles</p>
-          ) : (
-            resources.map((resource) => (
-              <label
-                key={resource.id}
-                className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
-              >
-                <input
-                  {...register('resourceIds')}
-                  type="checkbox"
-                  value={resource.id}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <span className="text-sm text-gray-700">
-                  {resource.name}
+
+        {/* Input de búsqueda */}
+        <div className="relative">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setShowDropdown(true);
+            }}
+            onFocus={() => setShowDropdown(true)}
+            placeholder="Buscar recursos..."
+            className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400"
+          />
+
+          {/* Dropdown de autocompletado */}
+          {showDropdown && filteredResources.length > 0 && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+              {filteredResources.map((resource) => (
+                <button
+                  key={resource.id}
+                  type="button"
+                  onClick={() => addResource(resource)}
+                  className="w-full px-3 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                >
+                  <span className="text-sm text-gray-900 font-medium">{resource.name}</span>
                   <span className="text-xs text-gray-500 ml-2">({resource.roleType})</span>
-                </span>
-              </label>
-            ))
+                </button>
+              ))}
+            </div>
           )}
         </div>
+
+        {/* Recursos seleccionados como chips */}
+        {selectedResources.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {selectedResources.map((resource) => (
+              <div
+                key={resource.id}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full text-sm"
+              >
+                <span className="font-medium">{resource.name}</span>
+                <span className="text-xs text-blue-600">({resource.roleType})</span>
+                <button
+                  type="button"
+                  onClick={() => removeResource(resource.id)}
+                  className="ml-1 hover:bg-blue-200 rounded-full p-0.5 focus:outline-none"
+                >
+                  <svg
+                    className="w-3.5 h-3.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
         {errors.resourceIds && (
           <p className="mt-1 text-sm text-red-600">{errors.resourceIds.message}</p>
         )}
         <p className="mt-1 text-xs text-gray-500">
-          Selecciona los recursos a los que aplica esta métrica
+          Busca y selecciona los recursos a los que aplica esta métrica
         </p>
       </div>
 
