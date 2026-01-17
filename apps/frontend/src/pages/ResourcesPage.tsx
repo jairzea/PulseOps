@@ -304,7 +304,17 @@ export const ResourcesPage: React.FC = () => {
             />
 
             {/* Modal de Confirmación (reutilizable) */}
-            <ConfirmModal {...confirmModalProps} />
+            <ConfirmModal
+                isOpen={confirmModalProps.isOpen}
+                isLoading={confirmModalProps.isLoading}
+                onClose={confirmModalProps.handleClose}
+                onConfirm={confirmModalProps.handleConfirm}
+                title={confirmModalProps.options.title}
+                message={confirmModalProps.options.message}
+                variant={confirmModalProps.options.variant}
+                confirmText={confirmModalProps.options.confirmText}
+                cancelText={confirmModalProps.options.cancelText}
+            />
         </div>
     );
 };
