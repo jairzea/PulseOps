@@ -41,7 +41,8 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
                         {resource ? 'Editar Recurso' : 'Nuevo Recurso'}
                     </h2>
                     <button
-                        onClick={onClose}
+                        type="button"
+                        onClick={!isSubmitting ? onClose : undefined}
                         disabled={isSubmitting}
                         className="text-gray-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >

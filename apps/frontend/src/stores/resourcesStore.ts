@@ -3,7 +3,7 @@
  */
 import { create } from 'zustand';
 import { apiClient, Resource } from '../services/apiClient';
-import { AppError } from '../common/exceptions/AppError';
+import { AppError } from '../utils/errors';
 
 interface ResourcesState {
     resources: Resource[];
