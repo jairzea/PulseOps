@@ -162,3 +162,156 @@ export interface AnalysisSignal {
   evidence?: Record<string, number | string>;  // datos que justifican la señal
 }
 
+// ============================================================================
+// CONFIGURACIÓN: Umbrales y Reglas Personalizables
+// ============================================================================
+
+/**
+ * Configuración de umbrales para determinar condiciones operativas
+ * Permite ajustar los valores que definen cada condición
+ */
+export interface ConditionThresholds {
+  // AFLUENCIA: Crecimiento pronunciado
+  afluencia: {
+    minInclination: number;     // Default: +50%
+  };
+  
+  // NORMAL: Crecimiento positivo real
+  normal: {
+    minInclination: number;     // Default: +5%
+    maxInclination: number;     // Default: +50%
+  };
+  
+  // EMERGENCIA: Estancamiento o descenso leve
+  emergencia: {
+    minInclination: number;     // Default: -5%
+    maxInclination: number;     // Default: +5%
+  };
+  
+  // PELIGRO: Descenso pronunciado
+  peligro: {
+    minInclination: number;     // Default: -80%
+    maxInclination: number;     // Default: -50%
+  };
+  
+  // PODER: Estado sostenido de excelencia
+  poder: {
+    minConsecutivePeriods: number;  // Default: 3
+    minInclination: number;         // Default: -5% (permite pequeñas variaciones)
+    stabilityThreshold: number;     // Default: 0.1 (10% de variación máxima)
+  };
+  
+  // INEXISTENCIA: Valores cercanos a cero
+  inexistencia: {
+    threshold: number;          // Default: 0.01 (valores < 0.01 se consideran ~0)
+  };
+  
+  // Detección de señales
+  signals: {
+    volatility: {
+      minDirectionChanges: number;  // Default: 3
+      minWindowSize: number;        // Default: 5
+    };
+    slowDecline: {
+      minConsecutiveDeclines: number;  // Default: 3
+      maxInclinationPerPeriod: number; // Default: -5%
+    };
+    dataGaps: {
+      expectedDaysBetweenPoints: number;  // Default: 7 (semanal)
+      toleranceDays: number;              // Default: 2
+    };
+    recoverySpike: {
+      minPriorDeclines: number;     // Default: 2
+      minRecoveryInclination: number;  // Default: +50%
+    };
+    noise: {
+      maxInclinationVariation: number;  // Default: 5%
+      minWindowSize: number;            // Default: 4
+    };
+  };
+}
+
+/**
+ * Configuración completa del motor de análisis
+ */
+export interface AnalysisConfiguration {
+  _id?: string;                     // MongoDB ID
+  name: string;                     // Nombre descriptivo
+  description?: string;             // Descripción de la configuración
+  thresholds: ConditionThresholds;  // Umbrales configurables
+  isActive: boolean;                // Si está activa (solo una puede estar activa)
+  version: number;                  // Versionado de la configuración
+  createdAt: string;                // Timestamp de creación
+  updatedAt: string;                // Timestamp de última actualización
+  createdBy?: string;               // Usuario que creó la configuración
+}
+
+/**
+ * Tipo de operador para reglas de negocio
+ */
+export type RuleOperator = 
+  | 'EQUALS'
+  | 'NOT_EQUALS'
+  | 'GREATER_THAN'
+  | 'LESS_THAN'
+  | 'GREATER_OR_EQUAL'
+  | 'LESS_OR_EQUAL'
+  | 'BETWEEN'
+  | 'IN'
+  | 'NOT_IN';
+
+/**
+ * Expresión de una regla de negocio
+ * Define una condición lógica que puede evaluarse
+ */
+export interface RuleExpression {
+  field: string;                    // Campo a evaluar (ej: "inclination.value", "condition")
+  operator: RuleOperator;           // Operador de comparación
+  value: number | string | (number | string)[];  // Valor de comparación
+}
+
+/**
+ * Acción a ejecutar cuando una regla se cumple
+ */
+export interface RuleAction {
+  type: 'ALERT' | 'NOTIFY' | 'ESCALATE' | 'LOG';
+  target?: string;                  // Destinatario (email, webhook, etc.)
+  message: string;                  // Mensaje a enviar
+  metadata?: Record<string, any>;   // Datos adicionales
+}
+
+/**
+ * Regla de negocio aplicable a métricas
+ * Permite definir lógica personalizada sobre el análisis
+ */
+export interface BusinessRule {
+  _id?: string;                     // MongoDB ID
+  name: string;                     // Nombre de la regla
+  description: string;              // Descripción detallada
+  
+  // Alcance
+  resourceIds?: string[];           // Recursos específicos (vacío = todos)
+  metricIds?: string[];             // Métricas específicas (vacío = todas)
+  
+  // Lógica
+  expressions: RuleExpression[];    // Condiciones (AND entre ellas)
+  actions: RuleAction[];            // Acciones a ejecutar
+  
+  // Control
+  isActive: boolean;                // Si la regla está activa
+  priority: number;                 // Prioridad (1 = alta, 10 = baja)
+  
+  // Versionado
+  version: number;
+  previousVersionId?: string;       // Referencia a versión anterior
+  
+  // Metadata
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+  
+  // Estadísticas
+  lastTriggered?: string;           // Última vez que se disparó
+  triggerCount: number;             // Veces que se ha disparado
+}
+

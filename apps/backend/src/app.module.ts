@@ -11,6 +11,7 @@ import { RulesModule } from './rules/rules.module';
 import { AnalysisModule } from './analysis/analysis.module';
 import { PlaybooksModule } from './playbooks/playbooks.module';
 import { ConditionsModule } from './conditions/conditions.module';
+import { ConfigurationModule } from './configuration/configuration.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ConditionsModule } from './conditions/conditions.module';
     AnalysisModule,
     PlaybooksModule,
     ConditionsModule,
+    ConfigurationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
