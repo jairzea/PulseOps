@@ -7,6 +7,7 @@ import { useMetricsStore } from '../stores/metricsStore';
 import { Resource, Metric } from '../services/apiClient';
 import { MetricFormData } from '../schemas/metricFormSchema';
 import { PulseLoader } from './PulseLoader';
+import { useToast } from '../hooks/useToast';
 
 interface MetricModalProps {
     isOpen: boolean;
@@ -18,18 +19,22 @@ interface MetricModalProps {
 export const MetricModal: React.FC<MetricModalProps> = ({ isOpen, onClose, editingMetric, resources }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { error, createMetric, updateMetric } = useMetricsStore();
+    const { success, error: showError } = useToast();
 
     const handleSubmit = async (data: MetricFormData) => {
         setIsSubmitting(true);
         try {
             if (editingMetric) {
                 await updateMetric(editingMetric.id, data);
+                success('Métrica actualizada correctamente');
             } else {
                 await createMetric(data);
+                success('Métrica creada correctamente');
             }
             onClose();
         } catch (err) {
             console.error('Error al guardar métrica:', err);
+            showError(err instanceof Error ? err.message : 'Error al guardar la métrica');
         } finally {
             setIsSubmitting(false);
         }

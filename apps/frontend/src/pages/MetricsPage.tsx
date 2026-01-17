@@ -10,6 +10,7 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import { useConfirmModal } from '../hooks/useConfirmModal';
 import { PageHeader } from '../components/PageHeader';
 import { Metric } from '../services/apiClient';
+import { useToast } from '../hooks/useToast';
 
 export const MetricsPage: React.FC = () => {
     // Estado local de UI
@@ -21,6 +22,7 @@ export const MetricsPage: React.FC = () => {
     const { metrics, loading, error, fetchMetrics, deleteMetric } = useMetricsStore();
     const { resources } = useResources();
     const confirmModal = useConfirmModal();
+    const { success, error: showError } = useToast();
 
     useEffect(() => {
         fetchMetrics();
@@ -49,6 +51,9 @@ export const MetricsPage: React.FC = () => {
             setDeletingId(id);
             try {
                 await deleteMetric(id);
+                success('Métrica eliminada correctamente');
+            } catch (err) {
+                showError('Error al eliminar la métrica');
             } finally {
                 setDeletingId(null);
                 confirmModal.closeModal();

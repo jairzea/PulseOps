@@ -103,7 +103,7 @@ export const ResourceForm: React.FC<ResourceFormProps> = ({
                 isActive: resource.isActive,
                 metricIds: [],
             });
-            
+
             loadAssociatedMetrics();
         } else {
             reset({

@@ -4,6 +4,7 @@ import { ResourcesPage } from './pages/ResourcesPage';
 import { MetricsPage } from './pages/MetricsPage';
 import { RecordsPage } from './pages/RecordsPage';
 import { Layout } from './components/Layout';
+import { ToastContainer } from './components/ToastContainer';
 
 function App() {
     return (
@@ -17,6 +18,7 @@ function App() {
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </Layout>
+            <ToastContainer />
         </BrowserRouter>
     );
 }

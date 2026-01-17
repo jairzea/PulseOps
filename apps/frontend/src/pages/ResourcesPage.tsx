@@ -12,6 +12,7 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import { TableSkeleton } from '../components/TableSkeleton';
 import { ResourceFormData } from '../schemas/resourceFormSchema';
 import { Resource } from '../services/apiClient';
+import { useToast } from '../hooks/useToast';
 
 const ROLE_TYPE_LABELS: Record<string, string> = {
     DEV: 'Desarrollador',
@@ -39,6 +40,7 @@ export const ResourcesPage: React.FC = () => {
 
     const { metrics, fetchMetrics } = useMetricsStore();
     const { confirm, ...confirmModalProps } = useConfirmModal();
+    const { success, error: showError } = useToast();
 
     useEffect(() => {
         fetchResources();
@@ -60,12 +62,15 @@ export const ResourcesPage: React.FC = () => {
         try {
             if (editingResource) {
                 await updateResource(editingResource.id, data);
+                success('Recurso actualizado correctamente');
             } else {
                 await createResource(data);
+                success('Recurso creado correctamente');
             }
             handleCloseModal();
         } catch (err) {
             console.error('Error al guardar recurso:', err);
+            showError(err instanceof Error ? err.message : 'Error al guardar el recurso');
         } finally {
             setIsSubmitting(false);
         }
@@ -84,6 +89,9 @@ export const ResourcesPage: React.FC = () => {
             setDeletingId(resource.id);
             try {
                 await deleteResource(resource.id);
+                success('Recurso eliminado correctamente');
+            } catch (err) {
+                showError('Error al eliminar el recurso');
             } finally {
                 setDeletingId(null);
                 confirmModalProps.closeModal();
