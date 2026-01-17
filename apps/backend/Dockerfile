@@ -17,15 +17,16 @@ COPY packages/shared-types/tsconfig.json ./packages/shared-types/
 # Instalar dependencias del monorepo
 RUN npm install
 
-# Copiar código fuente de los packages
-COPY packages/ ./packages/
-
-# Copiar código fuente del backend
-COPY apps/backend/ ./apps/backend/
-
-# Construir packages
+# Paso 1: Copiar y construir shared-types
+COPY packages/shared-types/src ./packages/shared-types/src
 RUN npm run build --workspace=packages/shared-types
+
+# Paso 2: Copiar y construir analysis-engine (ahora shared-types está compilado)
+COPY packages/analysis-engine/src ./packages/analysis-engine/src
 RUN npm run build --workspace=packages/analysis-engine
+
+# Paso 3: Copiar código fuente del backend
+COPY apps/backend/src ./apps/backend/src
 
 # Construir backend
 RUN npm run build --workspace=apps/backend

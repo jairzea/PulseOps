@@ -11,18 +11,25 @@ COPY apps/frontend/tsconfig*.json ./apps/frontend/
 COPY apps/frontend/vite.config.ts ./apps/frontend/
 COPY packages/shared-types/package*.json ./packages/shared-types/
 COPY packages/shared-types/tsconfig.json ./packages/shared-types/
+COPY packages/analysis-engine/package*.json ./packages/analysis-engine/
+COPY packages/analysis-engine/tsconfig.json ./packages/analysis-engine/
 
 # Instalar dependencias del monorepo
 RUN npm install
 
-# Copiar código fuente de shared-types
-COPY packages/shared-types/ ./packages/shared-types/
-
-# Copiar código fuente del frontend
-COPY apps/frontend/ ./apps/frontend/
-
-# Construir shared-types
+# Paso 1: Copiar y construir shared-types
+COPY packages/shared-types/src ./packages/shared-types/src
 RUN npm run build --workspace=packages/shared-types
+
+# Paso 2: Copiar y construir analysis-engine
+COPY packages/analysis-engine/src ./packages/analysis-engine/src
+RUN npm run build --workspace=packages/analysis-engine
+
+# Paso 3: Copiar código fuente del frontend
+COPY apps/frontend/src ./apps/frontend/src
+COPY apps/frontend/index.html ./apps/frontend/
+COPY apps/frontend/postcss.config.js ./apps/frontend/
+COPY apps/frontend/tailwind.config.js ./apps/frontend/
 
 # Construir frontend
 RUN npm run build --workspace=apps/frontend
