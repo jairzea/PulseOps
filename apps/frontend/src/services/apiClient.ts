@@ -199,6 +199,12 @@ export const apiClient = {
     });
   },
 
+  async deleteMetric(id: string): Promise<{ deleted: boolean }> {
+    return fetchJSON<{ deleted: boolean }>(`/metrics/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
   // --------------------------------------------------------------------------
   // Records
   // --------------------------------------------------------------------------

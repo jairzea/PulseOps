@@ -24,13 +24,13 @@ export function ResourceDashboard() {
   const { resources, loading: loadingResources } = useResources();
   const { metrics, loading: loadingMetrics } = useMetrics({ resourceId: selectedResourceId });
   const { conditions, loading: loadingConditions } = useConditionsMetadata();
-  
+
   // Usar Zustand store para fetch de records
-  const { 
-    records, 
+  const {
+    records,
     loading: loadingRecords,
     fetchRecords,
-    setModalOpen 
+    setModalOpen
   } = useRecordsStore();
 
   const { result: analysis, loading: loadingAnalysis, evaluate } = useAnalysis();
@@ -172,7 +172,7 @@ export function ResourceDashboard() {
 
               {/* Menu Icon (3 dots) with dropdown */}
               <div className="relative" ref={menuRef}>
-                <button 
+                <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
                 >
