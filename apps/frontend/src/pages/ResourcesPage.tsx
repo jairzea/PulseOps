@@ -3,6 +3,7 @@
  */
 import { useState } from 'react';
 import { useResources } from '../hooks/useResources';
+import { PulseLoader } from '../components/PulseLoader';
 
 export const ResourcesPage: React.FC = () => {
     const { resources, loading, error } = useResources();
@@ -41,9 +42,8 @@ export const ResourcesPage: React.FC = () => {
                 {/* Tabla de recursos */}
                 <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
                     {loading && (
-                        <div className="p-8 text-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                            <p className="mt-4 text-gray-400">Cargando recursos...</p>
+                        <div className="p-12">
+                            <PulseLoader size="lg" variant="warning" text="Cargando recursos..." />
                         </div>
                     )}
 

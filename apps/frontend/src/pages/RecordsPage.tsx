@@ -6,6 +6,7 @@ import { useRecordsStore } from '../stores/recordsStore';
 import { useResources } from '../hooks/useResources';
 import { useMetrics } from '../hooks/useMetrics';
 import { RecordModal } from '../components/RecordModal';
+import { PulseLoader } from '../components/PulseLoader';
 
 export const RecordsPage: React.FC = () => {
     const { records, loading, error, fetchRecords, setModalOpen } = useRecordsStore();
@@ -122,9 +123,8 @@ export const RecordsPage: React.FC = () => {
                             <p className="text-gray-400">Selecciona un recurso y una métrica para ver los registros</p>
                         </div>
                     ) : loading ? (
-                        <div className="p-8 text-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                            <p className="mt-4 text-gray-400">Cargando registros...</p>
+                        <div className="p-12">
+                            <PulseLoader size="lg" variant="success" text="Cargando registros..." />
                         </div>
                     ) : error ? (
                         <div className="p-8 text-center">
