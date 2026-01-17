@@ -90,7 +90,7 @@ export class MetricsService {
     }
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string): Promise<{ deleted: boolean; id: string }> {
     try {
       const metric = await this.metricModel.findOne({ id }).exec();
       
@@ -99,6 +99,7 @@ export class MetricsService {
       }
 
       await this.metricModel.findOneAndDelete({ id }).exec();
+      return { deleted: true, id };
     } catch (error) {
       if (error instanceof ResourceNotFoundException) {
         throw error;
