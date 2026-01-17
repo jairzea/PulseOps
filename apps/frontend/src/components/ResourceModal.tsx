@@ -25,23 +25,23 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
 }) => {
     if (!isOpen) return null;
 
-    const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        // Solo cerrar si se hace click directamente en el backdrop
-        if (e.target === e.currentTarget && !isSubmitting) {
-            onClose();
-        }
-    };
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <div 
-                className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
-                onClick={handleBackdropClick}
-            />
+        <div 
+            className="fixed inset-0 z-50 overflow-y-auto"
+            aria-labelledby="modal-title" 
+            role="dialog" 
+            aria-modal="true"
+        >
+            <div className="flex min-h-screen items-center justify-center p-4">
+                {/* Backdrop */}
+                <div 
+                    className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm transition-opacity"
+                    onClick={onClose}
+                    aria-hidden="true"
+                />
 
-            {/* Modal */}
-            <div className="relative bg-gray-900 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-800" onClick={(e) => e.stopPropagation()}>
+                {/* Modal panel */}
+                <div className="relative bg-gray-900 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-800">
                 {/* Header */}
                 <div className="sticky top-0 bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between z-10">
                     <h2 className="text-xl font-semibold text-white">
@@ -78,6 +78,7 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
                         isSubmitting={isSubmitting}
                         metrics={metrics}
                     />
+                </div>
                 </div>
             </div>
         </div>

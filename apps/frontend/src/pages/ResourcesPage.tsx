@@ -48,6 +48,7 @@ export const ResourcesPage: React.FC = () => {
     };
 
     const handleCloseModal = () => {
+        console.log('Cerrando modal');
         setModalOpen(false);
         setEditingResource(null);
     };
@@ -215,24 +216,22 @@ export const ResourcesPage: React.FC = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span
-                                                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                                                    resource.roleType === 'DEV'
-                                                        ? 'bg-blue-900/50 text-blue-300'
-                                                        : resource.roleType === 'TL'
+                                                className={`px-3 py-1 text-xs font-medium rounded-full ${resource.roleType === 'DEV'
+                                                    ? 'bg-blue-900/50 text-blue-300'
+                                                    : resource.roleType === 'TL'
                                                         ? 'bg-purple-900/50 text-purple-300'
                                                         : 'bg-gray-700/50 text-gray-300'
-                                                }`}
+                                                    }`}
                                             >
                                                 {ROLE_TYPE_LABELS[resource.roleType] || resource.roleType}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span
-                                                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                                                    resource.isActive
-                                                        ? 'bg-green-900/50 text-green-300'
-                                                        : 'bg-gray-700/50 text-gray-400'
-                                                }`}
+                                                className={`px-3 py-1 text-xs font-medium rounded-full ${resource.isActive
+                                                    ? 'bg-green-900/50 text-green-300'
+                                                    : 'bg-gray-700/50 text-gray-400'
+                                                    }`}
                                             >
                                                 {resource.isActive ? 'Activo' : 'Inactivo'}
                                             </span>
