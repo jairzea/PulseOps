@@ -15,9 +15,9 @@ interface ShredderLoaderProps {
 
 // Tamaños para la animación Lottie
 const sizeConfig = {
-  sm: { width: 20, height: 20, fontSize: 'text-xs' },
-  md: { width: 32, height: 32, fontSize: 'text-sm' },
-  lg: { width: 48, height: 48, fontSize: 'text-base' },
+  sm: { width: 40, height: 40, fontSize: 'text-xs' },
+  md: { width: 64, height: 64, fontSize: 'text-sm' },
+  lg: { width: 96, height: 96, fontSize: 'text-base' },
 };
 
 const colorConfig = {
