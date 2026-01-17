@@ -7,6 +7,7 @@ import { useResources } from '../hooks/useResources';
 import { useMetrics } from '../hooks/useMetrics';
 import { RecordModal } from '../components/RecordModal';
 import { PulseLoader } from '../components/PulseLoader';
+import { PageHeader } from '../components/PageHeader';
 
 export const RecordsPage: React.FC = () => {
     const { records, loading, error, fetchRecords, setModalOpen } = useRecordsStore();
@@ -43,32 +44,14 @@ export const RecordsPage: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-950 text-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Header de la página */}
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold">Registros</h1>
-                        <p className="text-gray-400 mt-1">
-                            Gestiona los registros de métricas por recurso y semana
-                        </p>
-                    </div>
-                    <button
-                        onClick={() => setModalOpen(true)}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors flex items-center gap-2"
-                    >
-                        <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Agregar Registro
-                    </button>
-                </div>
+                <PageHeader
+                    title="Registros"
+                    description="Gestiona los registros de métricas por recurso y semana"
+                    action={{
+                        label: 'Agregar Registro',
+                        onClick: () => setModalOpen(true),
+                    }}
+                />
 
                 {/* Filtros */}
                 <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 mb-6">

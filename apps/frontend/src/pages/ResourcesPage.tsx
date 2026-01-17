@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useResources } from '../hooks/useResources';
 import { PulseLoader } from '../components/PulseLoader';
+import { PageHeader } from '../components/PageHeader';
 
 export const ResourcesPage: React.FC = () => {
     const { resources, loading, error } = useResources();
@@ -12,32 +13,14 @@ export const ResourcesPage: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-950 text-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Header de la página */}
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold">Recursos</h1>
-                        <p className="text-gray-400 mt-1">
-                            Gestiona los recursos del equipo (desarrolladores, líderes técnicos, etc.)
-                        </p>
-                    </div>
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors flex items-center gap-2"
-                    >
-                        <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Crear Recurso
-                    </button>
-                </div>
+                <PageHeader
+                    title="Recursos"
+                    description="Gestiona los recursos del equipo (desarrolladores, líderes técnicos, etc.)"
+                    action={{
+                        label: 'Crear Recurso',
+                        onClick: () => setIsModalOpen(true),
+                    }}
+                />
 
                 {/* Tabla de recursos */}
                 <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
