@@ -104,7 +104,6 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const updatedMetric = await apiClient.updateMetric(id, {
-        key: data.key,
         label: data.label,
         description: data.description,
         unit: data.unit,
