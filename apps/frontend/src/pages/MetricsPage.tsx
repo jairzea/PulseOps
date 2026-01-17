@@ -1,15 +1,17 @@
 /**
  * MetricsPage - Gestión de métricas
  */
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useMetricsStore } from '../stores/metricsStore';
 import { useResources } from '../hooks/useResources';
 import { MetricModal } from '../components/MetricModal';
 import { PulseLoader } from '../components/PulseLoader';
+import { LoadingButton } from '../components/LoadingButton';
 
 export const MetricsPage: React.FC = () => {
     const { metrics, loading, error, setModalOpen, setEditingMetric, fetchMetrics, deleteMetric } = useMetricsStore();
     const { resources } = useResources();
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
     useEffect(() => {
         fetchMetrics();
@@ -21,7 +23,12 @@ export const MetricsPage: React.FC = () => {
 
     const handleDelete = async (id: string) => {
         if (confirm('¿Estás seguro de que deseas eliminar esta métrica?')) {
-            await deleteMetric(id);
+            setDeletingId(id);
+            try {
+                await deleteMetric(id);
+            } finally {
+                setDeletingId(null);
+            }
         }
     };
 
@@ -128,12 +135,14 @@ export const MetricsPage: React.FC = () => {
                                             >
                                                 Editar
                                             </button>
-                                            <button
+                                            <LoadingButton
                                                 onClick={() => handleDelete(metric.id)}
-                                                className="text-red-500 hover:text-red-400"
+                                                variant="danger"
+                                                loading={deletingId === metric.id}
+                                                className="!px-3 !py-1 text-sm"
                                             >
                                                 Eliminar
-                                            </button>
+                                            </LoadingButton>
                                         </td>
                                     </tr>
                                 ))}
