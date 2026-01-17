@@ -7,11 +7,14 @@ import { useResources } from '../hooks/useResources';
 import { MetricModal } from '../components/MetricModal';
 import { TableSkeleton } from '../components/TableSkeleton';
 import { ShredderLoaderInline } from '../components/ShredderLoader';
+import { ConfirmModal } from '../components/ConfirmModal';
+import { useConfirmModal } from '../hooks/useConfirmModal';
 
 export const MetricsPage: React.FC = () => {
     const { metrics, loading, error, setModalOpen, setEditingMetric, fetchMetrics, deleteMetric } = useMetricsStore();
     const { resources } = useResources();
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const confirmModal = useConfirmModal();
 
     useEffect(() => {
         fetchMetrics();
@@ -21,13 +24,22 @@ export const MetricsPage: React.FC = () => {
         setEditingMetric(metric);
     };
 
-    const handleDelete = async (id: string) => {
-        if (confirm('¿Estás seguro de que deseas eliminar esta métrica?')) {
+    const handleDelete = async (id: string, metricName: string) => {
+        const confirmed = await confirmModal.confirm({
+            variant: 'danger',
+            title: 'Eliminar métrica',
+            message: `¿Estás seguro de que deseas eliminar la métrica "${metricName}"? Esta acción no se puede deshacer.`,
+            confirmText: 'Eliminar',
+            cancelText: 'Cancelar',
+        });
+
+        if (confirmed) {
             setDeletingId(id);
             try {
                 await deleteMetric(id);
             } finally {
                 setDeletingId(null);
+                confirmModal.closeModal();
             }
         }
     };
@@ -144,30 +156,21 @@ export const MetricsPage: React.FC = () => {
                                                     </svg>
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDelete(metric.id)}
-                                                    disabled={deletingId === metric.id}
-                                                    className={`p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors disabled:cursor-not-allowed relative ${deletingId === metric.id ? '' : 'disabled:opacity-50'}`}
+                                                    onClick={() => handleDelete(metric.id, metric.label)}
+                                                    className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                                                     title="Eliminar métrica"
                                                 >
-                                                    {deletingId === metric.id ? (
-                                                        <div className="absolute inset-0 flex items-center justify-center bg-white rounded-lg -m-2 p-2">
-                                                            <div className="w-10 h-10" style={{ filter: 'hue-rotate(200deg) saturate(1.5)' }}>
-                                                                <ShredderLoaderInline size="md" variant="danger" />
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <svg
-                                                            className="w-5 h-5"
-                                                            fill="none"
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth="2"
-                                                            viewBox="0 0 24 24"
-                                                            stroke="currentColor"
-                                                        >
-                                                            <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                        </svg>
-                                                    )}
+                                                    <svg
+                                                        className="w-5 h-5"
+                                                        fill="none"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth="2"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
                                                 </button>
                                             </div>
                                         </td>
@@ -196,6 +199,19 @@ export const MetricsPage: React.FC = () => {
 
                 {/* Modal de creación/edición */}
                 <MetricModal resources={resources} />
+
+                {/* Modal de confirmación */}
+                <ConfirmModal
+                    isOpen={confirmModal.isOpen}
+                    isLoading={deletingId !== null}
+                    title={confirmModal.options.title}
+                    message={confirmModal.options.message}
+                    confirmText={confirmModal.options.confirmText}
+                    cancelText={confirmModal.options.cancelText}
+                    variant={confirmModal.options.variant}
+                    onClose={confirmModal.handleClose}
+                    onConfirm={confirmModal.handleConfirm}
+                />
             </div>
         </div>
     );
