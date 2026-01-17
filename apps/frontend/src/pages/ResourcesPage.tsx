@@ -2,7 +2,7 @@
  * ResourcesPage - Gestión de recursos (desarrolladores, líderes técnicos, etc.)
  * CRUD completo con componentes reutilizables
  */
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useResourcesStore } from '../stores/resourcesStore';
 import { useMetricsStore } from '../stores/metricsStore';
 import { useConfirmModal } from '../hooks/useConfirmModal';
@@ -20,18 +20,20 @@ const ROLE_TYPE_LABELS: Record<string, string> = {
 };
 
 export const ResourcesPage: React.FC = () => {
+    // Estado local de UI
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingResource, setEditingResource] = useState<Resource | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Zustand solo para datos globales
     const {
         resources,
         loading,
         error,
-        isModalOpen,
-        editingResource,
         fetchResources,
         createResource,
         updateResource,
         deleteResource,
-        setModalOpen,
-        setEditingResource,
     } = useResourcesStore();
 
     const { metrics, fetchMetrics } = useMetricsStore();
@@ -44,22 +46,28 @@ export const ResourcesPage: React.FC = () => {
 
     const handleOpenModal = (resource?: Resource) => {
         setEditingResource(resource || null);
-        setModalOpen(true);
+        setIsModalOpen(true);
     };
 
     const handleCloseModal = () => {
-        console.log('Cerrando modal');
-        setModalOpen(false);
+        setIsModalOpen(false);
         setEditingResource(null);
     };
 
     const handleSubmit = async (data: ResourceFormData) => {
-        if (editingResource) {
-            await updateResource(editingResource.id, data);
-        } else {
-            await createResource(data);
+        setIsSubmitting(true);
+        try {
+            if (editingResource) {
+                await updateResource(editingResource.id, data);
+            } else {
+                await createResource(data);
+            }
+            handleCloseModal();
+        } catch (err) {
+            console.error('Error al guardar recurso:', err);
+        } finally {
+            setIsSubmitting(false);
         }
-        // El store cierra el modal automáticamente después de crear/actualizar
     };
 
     const handleDelete = async (resource: Resource) => {
@@ -136,7 +144,7 @@ export const ResourcesPage: React.FC = () => {
                                 </svg>
                             </div>
                             <p className="text-red-500 font-medium mb-2">Error al cargar recursos</p>
-                            <p className="text-gray-400 text-sm">{error?.message || 'Error desconocido'}</p>
+                            <p className="text-gray-400 text-sm">{error || 'Error desconocido'}</p>
                             <button
                                 onClick={() => fetchResources()}
                                 className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors"
@@ -291,7 +299,7 @@ export const ResourcesPage: React.FC = () => {
                 onClose={handleCloseModal}
                 resource={editingResource}
                 onSubmit={handleSubmit}
-                isSubmitting={loading}
+                isSubmitting={isSubmitting}
                 metrics={metrics}
             />
 

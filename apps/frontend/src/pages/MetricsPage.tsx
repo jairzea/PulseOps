@@ -6,23 +6,34 @@ import { useMetricsStore } from '../stores/metricsStore';
 import { useResources } from '../hooks/useResources';
 import { MetricModal } from '../components/MetricModal';
 import { TableSkeleton } from '../components/TableSkeleton';
-import { ShredderLoaderInline } from '../components/ShredderLoader';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { useConfirmModal } from '../hooks/useConfirmModal';
 import { PageHeader } from '../components/PageHeader';
+import { Metric } from '../services/apiClient';
 
 export const MetricsPage: React.FC = () => {
-    const { metrics, loading, error, setModalOpen, setEditingMetric, fetchMetrics, deleteMetric } = useMetricsStore();
-    const { resources } = useResources();
+    // Estado local de UI
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingMetric, setEditingMetric] = useState<Metric | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+
+    // Zustand solo para datos globales
+    const { metrics, loading, error, fetchMetrics, deleteMetric } = useMetricsStore();
+    const { resources } = useResources();
     const confirmModal = useConfirmModal();
 
     useEffect(() => {
         fetchMetrics();
     }, [fetchMetrics]);
 
-    const handleEdit = (metric: any) => {
+    const handleEdit = (metric: Metric) => {
         setEditingMetric(metric);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setEditingMetric(null);
     };
 
     const handleDelete = async (id: string, metricName: string) => {
@@ -53,7 +64,7 @@ export const MetricsPage: React.FC = () => {
                     description="Gestiona las métricas del sistema (Story Points, Performance, Integraciones, etc.)"
                     action={{
                         label: 'Crear Métrica',
-                        onClick: () => setModalOpen(true),
+                        onClick: () => setIsModalOpen(true),
                     }}
                 />
 
@@ -71,7 +82,7 @@ export const MetricsPage: React.FC = () => {
                         <div className="p-8 text-center">
                             <p className="text-gray-400">No hay métricas registradas</p>
                             <button
-                                onClick={() => setModalOpen(true)}
+                                onClick={() => setIsModalOpen(true)}
                                 className="mt-4 text-blue-500 hover:text-blue-400 transition-colors"
                             >
                                 Crear la primera métrica
@@ -181,7 +192,12 @@ export const MetricsPage: React.FC = () => {
                 )}
 
                 {/* Modal de creación/edición */}
-                <MetricModal resources={resources} />
+                <MetricModal 
+                    isOpen={isModalOpen}
+                    onClose={handleCloseModal}
+                    editingMetric={editingMetric}
+                    resources={resources}
+                />
 
                 {/* Modal de confirmación */}
                 <ConfirmModal

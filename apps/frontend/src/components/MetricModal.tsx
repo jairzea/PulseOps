@@ -1,45 +1,52 @@
 /**
  * MetricModal - Modal para crear/editar métricas
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { MetricForm } from './MetricForm';
 import { useMetricsStore } from '../stores/metricsStore';
-import { Resource } from '../services/apiClient';
+import { Resource, Metric } from '../services/apiClient';
 import { MetricFormData } from '../schemas/metricFormSchema';
 
 interface MetricModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    editingMetric: Metric | null;
     resources: Resource[];
 }
 
-export const MetricModal: React.FC<MetricModalProps> = ({ resources }) => {
-    const { isModalOpen, editingMetric, loading, error, setModalOpen, createMetric, updateMetric } =
-        useMetricsStore();
+export const MetricModal: React.FC<MetricModalProps> = ({ isOpen, onClose, editingMetric, resources }) => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { error, createMetric, updateMetric } = useMetricsStore();
 
     const handleSubmit = async (data: MetricFormData) => {
+        setIsSubmitting(true);
         try {
             if (editingMetric) {
                 await updateMetric(editingMetric.id, data);
             } else {
                 await createMetric(data);
             }
+            onClose();
         } catch (err) {
             console.error('Error al guardar métrica:', err);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleClose = () => {
-        if (!loading) {
-            setModalOpen(false);
+        if (!isSubmitting) {
+            onClose();
         }
     };
 
     const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (e.target === e.currentTarget && !loading) {
+        if (e.target === e.currentTarget && !isSubmitting) {
             handleClose();
         }
     };
 
-    if (!isModalOpen) return null;
+    if (!isOpen) return null;
 
     return (
         <div
@@ -57,7 +64,7 @@ export const MetricModal: React.FC<MetricModalProps> = ({ resources }) => {
                     </h2>
                     <button
                         onClick={handleClose}
-                        disabled={loading}
+                        disabled={isSubmitting}
                         className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
                         aria-label="Cerrar"
                     >
@@ -89,12 +96,12 @@ export const MetricModal: React.FC<MetricModalProps> = ({ resources }) => {
                         onSubmit={handleSubmit}
                         initialMetric={editingMetric}
                         resources={resources}
-                        loading={loading}
+                        loading={isSubmitting}
                     />
                 </div>
 
                 {/* Footer con loading indicator */}
-                {loading && (
+                {isSubmitting && (
                     <div className="px-6 pb-6">
                         <div className="flex items-center justify-center text-gray-400">
                             <svg

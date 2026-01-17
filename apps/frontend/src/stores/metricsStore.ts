@@ -1,5 +1,5 @@
 /**
- * Metrics Store - Estado global para métricas con Zustand
+ * Metrics Store - Estado global para métricas con Zustand (solo datos globales)
  */
 import { create } from 'zustand';
 import { Metric, apiClient } from '../services/apiClient';
@@ -10,12 +10,6 @@ interface MetricsState {
   metrics: Metric[];
   loading: boolean;
   error: string | null;
-  isModalOpen: boolean;
-  editingMetric: Metric | null;
-
-  // Acciones
-  setModalOpen: (isOpen: boolean) => void;
-  setEditingMetric: (metric: Metric | null) => void;
   
   // Operaciones CRUD
   fetchMetrics: () => Promise<void>;
@@ -44,20 +38,6 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
   metrics: [],
   loading: false,
   error: null,
-  isModalOpen: false,
-  editingMetric: null,
-
-  // Acciones
-  setModalOpen: (isOpen: boolean) => {
-    set({ isModalOpen: isOpen });
-    if (!isOpen) {
-      set({ editingMetric: null, error: null });
-    }
-  },
-
-  setEditingMetric: (metric: Metric | null) => {
-    set({ editingMetric: metric, isModalOpen: !!metric });
-  },
 
   // Fetch de métricas
   fetchMetrics: async () => {
@@ -88,7 +68,7 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
       
       // Auto-refetch después de crear
       await get().fetchMetrics();
-      set({ loading: false, isModalOpen: false });
+      set({ loading: false });
       return newMetric;
     } catch (error) {
       const errorMessage = error instanceof AppError 
@@ -113,7 +93,7 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
       
       // Auto-refetch después de actualizar
       await get().fetchMetrics();
-      set({ loading: false, isModalOpen: false, editingMetric: null });
+      set({ loading: false });
       return updatedMetric;
     } catch (error) {
       const errorMessage = error instanceof AppError 
@@ -147,8 +127,6 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
       metrics: [],
       loading: false,
       error: null,
-      isModalOpen: false,
-      editingMetric: null,
     });
   },
 }));

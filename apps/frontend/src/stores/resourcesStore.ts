@@ -1,5 +1,5 @@
 /**
- * Resources Store - Zustand store para gestión de recursos
+ * Resources Store - Zustand store para gestión de recursos (solo datos globales)
  */
 import { create } from 'zustand';
 import { apiClient, Resource } from '../services/apiClient';
@@ -9,8 +9,6 @@ interface ResourcesState {
     resources: Resource[];
     loading: boolean;
     error: string | null;
-    isModalOpen: boolean;
-    editingResource: Resource | null;
 
     // Actions
     fetchResources: () => Promise<void>;
@@ -30,16 +28,12 @@ interface ResourcesState {
         }
     ) => Promise<Resource>;
     deleteResource: (id: string) => Promise<void>;
-    setModalOpen: (open: boolean) => void;
-    setEditingResource: (resource: Resource | null) => void;
 }
 
 export const useResourcesStore = create<ResourcesState>((set, get) => ({
     resources: [],
     loading: false,
     error: null,
-    isModalOpen: false,
-    editingResource: null,
 
     // Fetch resources
     fetchResources: async () => {
@@ -65,7 +59,7 @@ export const useResourcesStore = create<ResourcesState>((set, get) => ({
 
             // Auto-refetch después de crear
             await get().fetchResources();
-            set({ loading: false, isModalOpen: false });
+            set({ loading: false });
             return newResource;
         } catch (error) {
             const errorMessage = error instanceof AppError ? error.getUserMessage() : 'Error al crear recurso';
@@ -86,7 +80,7 @@ export const useResourcesStore = create<ResourcesState>((set, get) => ({
 
             // Auto-refetch después de actualizar
             await get().fetchResources();
-            set({ loading: false, isModalOpen: false, editingResource: null });
+            set({ loading: false });
             return updatedResource;
         } catch (error) {
             const errorMessage = error instanceof AppError ? error.getUserMessage() : 'Error al actualizar recurso';
@@ -95,11 +89,11 @@ export const useResourcesStore = create<ResourcesState>((set, get) => ({
         }
     },
 
-    // Delete resource
+    // Delete resource (soft delete)
     deleteResource: async (id: string) => {
         set({ loading: true, error: null });
         try {
-            await apiClient.deleteResource(id);
+            await apiClient.updateResource(id, { isActive: false });
             // Auto-refetch después de eliminar
             await get().fetchResources();
             set({ loading: false });
@@ -108,17 +102,5 @@ export const useResourcesStore = create<ResourcesState>((set, get) => ({
             set({ error: errorMessage, loading: false });
             throw error;
         }
-    },
-
-    // Modal actions
-    setModalOpen: (open: boolean) => {
-        set({ isModalOpen: open });
-        if (!open) {
-            set({ editingResource: null, error: null });
-        }
-    },
-
-    setEditingResource: (resource: Resource | null) => {
-        set({ editingResource: resource, isModalOpen: true });
     },
 }));
