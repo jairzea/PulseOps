@@ -26,7 +26,9 @@ export function ResourceDashboard() {
     records,
     loading: loadingRecords,
     fetchRecords,
-    setModalOpen
+    setModalOpen,
+    isModalOpen,
+    lastCreatedRecord
   } = useRecordsStore();
 
   const { result: analysis, loading: loadingAnalysis, evaluate } = useAnalysis();
@@ -48,11 +50,33 @@ export function ResourceDashboard() {
     }
   }, [resources, selectedResourceId]);
 
+  // Auto-select first metric when metrics change or resource changes
   useEffect(() => {
-    if (!selectedMetricKey && metrics.length > 0) {
-      setSelectedMetricKey(metrics[0].key);
+    if (metrics.length > 0) {
+      // Si no hay métrica seleccionada O la métrica actual no está en la lista de métricas del recurso
+      const currentMetricExists = metrics.some(m => m.key === selectedMetricKey);
+      if (!selectedMetricKey || !currentMetricExists) {
+        setSelectedMetricKey(metrics[0].key);
+      }
+    } else {
+      // Si no hay métricas, limpiar la selección
+      setSelectedMetricKey(null);
     }
-  }, [metrics, selectedMetricKey]);
+  }, [metrics]);
+
+  // Detectar cuando se cierra el modal (indica que se creó un registro)
+  const prevModalOpen = useRef(isModalOpen);
+  useEffect(() => {
+    // Si el modal se cerró (de true a false), verificar si hay un registro recién creado
+    if (prevModalOpen.current && !isModalOpen && lastCreatedRecord) {
+      // Actualizar la selección al recurso y métrica del registro creado
+      setSelectedResourceId(lastCreatedRecord.resourceId);
+      // La métrica se actualizará automáticamente cuando cambien las métricas del recurso
+      // pero podemos forzarla aquí también
+      setSelectedMetricKey(lastCreatedRecord.metricKey);
+    }
+    prevModalOpen.current = isModalOpen;
+  }, [isModalOpen, lastCreatedRecord]);
 
   // Trigger analysis when resource or metric changes
   useEffect(() => {
@@ -265,7 +289,6 @@ export function ResourceDashboard() {
       {/* Record Modal */}
       <RecordModal
         resources={resources}
-        metrics={metrics}
       />
     </div>
   );

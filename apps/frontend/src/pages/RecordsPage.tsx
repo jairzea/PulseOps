@@ -202,7 +202,7 @@ export const RecordsPage: React.FC = () => {
             </div>
 
             {/* Modal de formulario */}
-            <RecordModal resources={resources} metrics={metrics} />
+            <RecordModal resources={resources} />
         </div>
     );
 };

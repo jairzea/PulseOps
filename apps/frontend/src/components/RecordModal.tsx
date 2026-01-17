@@ -2,31 +2,30 @@
  * RecordModal - Modal con integración a Zustand store
  */
 import { useEffect, useState } from 'react';
-import { Resource, Metric } from '../services/apiClient';
+import { Resource } from '../services/apiClient';
 import { RecordForm } from './RecordForm';
-import { RecordFormData } from '../schemas/recordFormSchema';
 import { useRecordsStore } from '../stores/recordsStore';
+import { useToast } from '../hooks/useToast';
 
 interface RecordModalProps {
     resources: Resource[];
-    metrics: Metric[];
     title?: string;
 }
 
 export const RecordModal: React.FC<RecordModalProps> = ({
     resources,
-    metrics,
     title,
 }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const {
         isModalOpen,
-        editingRecord,
         error: storeError,
         setModalOpen,
         createRecord
     } = useRecordsStore();
+
+    const { success, error: showError } = useToast();
 
     // Prevenir scroll del body cuando modal está abierto
     useEffect(() => {
@@ -40,13 +39,35 @@ export const RecordModal: React.FC<RecordModalProps> = ({
         };
     }, [isModalOpen]);
 
-    const handleSubmit = async (data: RecordFormData) => {
+    const handleSubmit = async (data: any) => {
         setIsSubmitting(true);
         try {
-            await createRecord(data);
+            // Crear múltiples registros, uno por cada métrica con valor
+            const metricValues = data.metricValues || {};
+            const promises = Object.entries(metricValues)
+                .filter(([_, value]) => value !== null && value !== undefined && value !== 0)
+                .map(([metricKey, value]) => {
+                    return createRecord({
+                        resourceId: data.resourceId,
+                        metricKey,
+                        week: data.week,
+                        timestamp: data.timestamp,
+                        value: value as number,
+                        source: 'MANUAL',
+                    });
+                });
+
+            if (promises.length === 0) {
+                showError('Debes ingresar al menos un valor de métrica');
+                return;
+            }
+
+            await Promise.all(promises);
+            success(`${promises.length} registro(s) creado(s) correctamente`);
             setModalOpen(false);
         } catch (err) {
             console.error('Error submitting record:', err);
+            showError('Error al crear los registros');
         } finally {
             setIsSubmitting(false);
         }
@@ -93,7 +114,7 @@ export const RecordModal: React.FC<RecordModalProps> = ({
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-700">
                     <h2 className="text-xl font-bold text-white">
-                        {title || (editingRecord ? 'Editar Registro' : 'Nuevo Registro Manual')}
+                        {title || 'Nuevo Registro Manual'}
                     </h2>
                     <button
                         onClick={handleClose}
@@ -118,17 +139,15 @@ export const RecordModal: React.FC<RecordModalProps> = ({
                 </div>
 
                 {/* Body */}
-                <div className="p-6">
+                <div className="p-6 max-h-[70vh] overflow-y-auto">
                     {storeError && (
-                        <div className="mb-4 p-4 bg-red-900 bg-opacity-20 border border-red-500 rounded-lg">
-                            <p className="text-sm text-red-400">{storeError}</p>
+                        <div className="mb-4 bg-red-900/20 border border-red-700/50 text-red-300 px-4 py-3 rounded-lg">
+                            <p className="text-sm">{storeError}</p>
                         </div>
                     )}
 
                     <RecordForm
                         resources={resources}
-                        metrics={metrics}
-                        initialRecord={editingRecord}
                         onSubmit={handleSubmit}
                         onCancel={handleClose}
                         isSubmitting={isSubmitting}

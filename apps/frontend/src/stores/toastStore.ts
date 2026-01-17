@@ -24,10 +24,11 @@ export const useToastStore = create<ToastState>((set) => ({
   
   addToast: (toast) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const duration = toast.duration ?? 5000; // 5 segundos por defecto
     const newToast: Toast = {
       ...toast,
       id,
-      duration: toast.duration ?? 5000, // 5 segundos por defecto
+      duration,
     };
     
     set((state) => ({
@@ -35,12 +36,12 @@ export const useToastStore = create<ToastState>((set) => ({
     }));
     
     // Auto-remover después de la duración especificada
-    if (newToast.duration > 0) {
+    if (duration > 0) {
       setTimeout(() => {
         set((state) => ({
           toasts: state.toasts.filter((t) => t.id !== id),
         }));
-      }, newToast.duration);
+      }, duration);
     }
   },
   

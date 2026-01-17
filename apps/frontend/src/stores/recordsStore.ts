@@ -11,6 +11,7 @@ interface RecordsState {
   error: string | null;
   isModalOpen: boolean;
   editingRecord: MetricRecord | null;
+  lastCreatedRecord: { resourceId: string; metricKey: string } | null;
 
   // Actions
   setModalOpen: (isOpen: boolean) => void;
@@ -40,6 +41,7 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
   error: null,
   isModalOpen: false,
   editingRecord: null,
+  lastCreatedRecord: null,
 
   // Actions
   setModalOpen: (isOpen) => {
@@ -73,6 +75,13 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
     set({ error: null });
     try {
       const newRecord = await apiClient.upsertRecord(data);
+      // Guardar el último registro creado
+      set({ 
+        lastCreatedRecord: {
+          resourceId: data.resourceId,
+          metricKey: data.metricKey
+        }
+      });
       // Refetch con los mismos parámetros si existen
       const currentParams = {
         resourceId: data.resourceId,
@@ -109,6 +118,7 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
       error: null,
       isModalOpen: false,
       editingRecord: null,
+      lastCreatedRecord: null,
     });
   },
 }));
