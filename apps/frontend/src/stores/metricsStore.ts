@@ -127,18 +127,18 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
 
   // Eliminar métrica
   deleteMetric: async (id: string) => {
-    set({ loading: true, error: null });
+    set({ error: null });
     try {
       await apiClient.deleteMetric(id);
       
-      // Auto-refetch después de eliminar
+      // Auto-refetch después de eliminar (sin mostrar loading global)
       await get().fetchMetrics();
-      set({ loading: false });
     } catch (error) {
       const errorMessage = error instanceof AppError 
         ? error.getUserMessage() 
         : 'Error al eliminar métrica';
-      set({ error: errorMessage, loading: false });
+      set({ error: errorMessage });
+      throw error; // Re-lanzar para que el componente pueda manejar el estado
     }
   },
 
