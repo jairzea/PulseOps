@@ -54,7 +54,7 @@ export const ShredderLoader: React.FC<ShredderLoaderProps> = ({
         {/* Cuerpo del bote de basura */}
         <path d="M5 7l.867 12.142A2 2 0 007.862 21h8.276a2 2 0 001.995-1.858L19 7" opacity="1" />
 
-        {/* Líneas verticales internas */}
+        {/* Líneas verticales internas - animadas */}
         <path d="M10 11v6" opacity="1">
           <animate
             attributeName="opacity"
@@ -73,53 +73,44 @@ export const ShredderLoader: React.FC<ShredderLoaderProps> = ({
           />
         </path>
 
-        {/* Tapa superior - con animación de apertura */}
-        <path
-          d="M15 4v3M9 4v3"
-          style={{ transformOrigin: 'center', transformBox: 'fill-box' }}
-        >
+        {/* Grupo de tapa - animado completo */}
+        <g>
+          <path d="M15 4v3" />
+          <path d="M9 4v3" />
+          <path d="M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+          
+          {/* Animación de toda la tapa levantándose */}
           <animateTransform
             attributeName="transform"
             type="translate"
-            values="0,0; 0,-2; 0,0"
-            keyTimes="0; 0.4; 1"
+            values="0 0; 0 -3; 0 0"
+            keyTimes="0; 0.3; 1"
             dur="2s"
             repeatCount="indefinite"
           />
-        </path>
-        <path
-          d="M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"
-          style={{ transformOrigin: 'center', transformBox: 'fill-box' }}
-        >
-          <animateTransform
-            attributeName="transform"
-            type="translate"
-            values="0,0; 0,-2; 0,0"
-            keyTimes="0; 0.4; 1"
-            dur="2s"
-            repeatCount="indefinite"
-          />
-        </path>
+        </g>
 
-        {/* Bola de papel cayendo */}
+        {/* Bola de papel cayendo desde arriba */}
         <circle
           cx="12"
-          cy="3"
+          cy="0"
           r="1.5"
           fill="currentColor"
           opacity="0"
         >
+          {/* Animación de caída */}
           <animate
             attributeName="cy"
-            values="3; 14; 14"
-            keyTimes="0; 0.5; 1"
+            values="0; 13; 13"
+            keyTimes="0; 0.6; 1"
             dur="2s"
             repeatCount="indefinite"
           />
+          {/* Animación de visibilidad */}
           <animate
             attributeName="opacity"
-            values="0; 1; 1; 0"
-            keyTimes="0; 0.2; 0.5; 0.6"
+            values="0; 0; 1; 1; 0"
+            keyTimes="0; 0.1; 0.2; 0.6; 0.7"
             dur="2s"
             repeatCount="indefinite"
           />
