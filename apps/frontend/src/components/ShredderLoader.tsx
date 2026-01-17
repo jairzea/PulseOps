@@ -63,7 +63,7 @@ export const ShredderLoader: React.FC<ShredderLoaderProps> = ({
             </linearGradient>
           </defs>
 
-          {/* Trituradora (líneas superiores) */}
+          {/* Trituradora (líneas superiores más visibles) */}
           <g>
             {[...Array(Math.floor(width / (stripWidth * 2)))].map((_, i) => (
               <rect
@@ -71,33 +71,36 @@ export const ShredderLoader: React.FC<ShredderLoaderProps> = ({
                 x={i * stripWidth * 2}
                 y={0}
                 width={stripWidth}
-                height={height * 0.15}
+                height={height * 0.2}
                 fill={colors.shredder}
-                opacity="0.8"
+                opacity="1"
               />
             ))}
           </g>
 
-          {/* Papel siendo triturado (animación descendente) */}
+          {/* Papel siendo triturado (animación descendente MÁS VISIBLE) */}
           <rect
             x={width * 0.1}
-            y={-height * 0.3}
+            y={-height * 0.6}
             width={width * 0.8}
-            height={height * 0.4}
+            height={height * 0.5}
             fill={`url(#paper-gradient-${variant})`}
             rx={2}
-            opacity="0.9"
+            opacity="1"
+            stroke={colors.paper}
+            strokeWidth="1"
           >
             <animate
               attributeName="y"
-              values={`${-height * 0.3};${height * 0.15};${height * 0.15}`}
-              dur="1.5s"
+              values={`${-height * 0.6};${height * 0.2};${height * 0.2}`}
+              dur="1.2s"
               repeatCount="indefinite"
             />
             <animate
               attributeName="opacity"
-              values="0.9;0.9;0"
-              dur="1.5s"
+              values="1;1;0.3;0"
+              keyTimes="0;0.6;0.8;1"
+              dur="1.2s"
               repeatCount="indefinite"
             />
           </rect>
@@ -105,30 +108,32 @@ export const ShredderLoader: React.FC<ShredderLoaderProps> = ({
           {/* Tiras de papel cayendo */}
           {[...Array(6)].map((_, i) => {
             const xPos = width * 0.15 + (i * width * 0.12);
-            const delay = `${i * 0.15}s`;
-            const fallDuration = '1.8s';
+            const delay = `${0.6 + i * 0.1}s`;
+            const fallDuration = '1.5s';
             
             return (
               <g key={`strip-${i}`}>
                 {/* Tira completa */}
                 <rect
                   x={xPos}
-                  y={height * 0.15}
+                  y={height * 0.2}
                   width={stripWidth}
-                  height={height * 0.85}
+                  height={height * 0.8}
                   fill={colors.strips}
                   opacity="0"
                 >
                   <animate
                     attributeName="opacity"
-                    values="0;0.9;0.9;0.3"
+                    values="0;1;1;0.4"
+                    keyTimes="0;0.2;0.7;1"
                     dur={fallDuration}
                     begin={delay}
                     repeatCount="indefinite"
                   />
                   <animate
                     attributeName="height"
-                    values={`0;${height * 0.3};${height * 0.85};${height * 0.85}`}
+                    values={`0;${height * 0.2};${height * 0.8};${height * 0.8}`}
+                    keyTimes="0;0.2;0.7;1"
                     dur={fallDuration}
                     begin={delay}
                     repeatCount="indefinite"
@@ -138,7 +143,7 @@ export const ShredderLoader: React.FC<ShredderLoaderProps> = ({
                 {/* Pequeños segmentos que flotan */}
                 <rect
                   x={xPos + stripWidth * 0.5}
-                  y={height * 0.15}
+                  y={height * 0.2}
                   width={stripWidth * 0.8}
                   height={stripWidth * 2}
                   fill={colors.strips}
@@ -146,24 +151,24 @@ export const ShredderLoader: React.FC<ShredderLoaderProps> = ({
                 >
                   <animate
                     attributeName="y"
-                    values={`${height * 0.15};${height * 0.5};${height}`}
-                    dur="2s"
-                    begin={`${0.8 + i * 0.15}s`}
+                    values={`${height * 0.2};${height * 0.6};${height}`}
+                    dur="1.8s"
+                    begin={`${1 + i * 0.1}s`}
                     repeatCount="indefinite"
                   />
                   <animate
                     attributeName="opacity"
-                    values="0;0.8;0.8;0"
-                    dur="2s"
-                    begin={`${0.8 + i * 0.15}s`}
+                    values="0;0.9;0.9;0"
+                    dur="1.8s"
+                    begin={`${1 + i * 0.1}s`}
                     repeatCount="indefinite"
                   />
                   <animateTransform
                     attributeName="transform"
                     type="rotate"
-                    values={`0 ${xPos} ${height * 0.15};180 ${xPos} ${height * 0.5};360 ${xPos} ${height}`}
-                    dur="2s"
-                    begin={`${0.8 + i * 0.15}s`}
+                    values={`0 ${xPos} ${height * 0.2};180 ${xPos} ${height * 0.6};360 ${xPos} ${height}`}
+                    dur="1.8s"
+                    begin={`${1 + i * 0.1}s`}
                     repeatCount="indefinite"
                   />
                 </rect>
