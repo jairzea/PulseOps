@@ -79,20 +79,6 @@ export function ResourceDashboard() {
     }
   }, [analysis?.evaluation?.condition]);
 
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    };
-
-    if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [isMenuOpen]);
-
   const selectedMetric = useMemo(
     () => metrics.find((m) => m.key === selectedMetricKey),
     [metrics, selectedMetricKey]
