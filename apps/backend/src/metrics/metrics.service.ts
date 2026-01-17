@@ -90,6 +90,26 @@ export class MetricsService {
     }
   }
 
+  async delete(id: string): Promise<void> {
+    try {
+      const metric = await this.metricModel.findById(id).exec();
+      
+      if (!metric) {
+        throw new ResourceNotFoundException('Métrica', id);
+      }
+
+      await this.metricModel.findByIdAndDelete(id).exec();
+    } catch (error) {
+      if (error instanceof ResourceNotFoundException) {
+        throw error;
+      }
+      throw new DatabaseException('Error al eliminar la métrica', {
+        originalError: error instanceof Error ? error.message : String(error),
+        metricId: id,
+      });
+    }
+  }
+
   async findByResource(resourceId: string): Promise<Metric[]> {
     try {
       // Buscar métricas que tienen este recurso asociado

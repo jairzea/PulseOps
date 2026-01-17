@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -35,5 +36,10 @@ export class MetricsController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateMetricDto) {
     return this.metricsService.update(id, dto);
+  }
+
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    return this.metricsService.delete(id);
   }
 }
