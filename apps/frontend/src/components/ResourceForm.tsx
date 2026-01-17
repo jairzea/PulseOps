@@ -236,8 +236,7 @@ export const ResourceForm: React.FC<ResourceFormProps> = ({
                     <button
                         type="button"
                         onClick={onCancel}
-                        disabled={isSubmitting}
-                        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
                     >
                         Cancelar
                     </button>

@@ -53,16 +53,12 @@ export const ResourcesPage: React.FC = () => {
     };
 
     const handleSubmit = async (data: ResourceFormData) => {
-        try {
-            if (editingResource) {
-                await updateResource(editingResource.id, data);
-            } else {
-                await createResource(data);
-            }
-            handleCloseModal();
-        } catch (err) {
-            console.error('Error al guardar recurso:', err);
+        if (editingResource) {
+            await updateResource(editingResource.id, data);
+        } else {
+            await createResource(data);
         }
+        // El store cierra el modal automáticamente después de crear/actualizar
     };
 
     const handleDelete = async (resource: Resource) => {

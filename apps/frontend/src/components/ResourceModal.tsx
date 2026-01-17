@@ -30,7 +30,7 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
-                onClick={!isSubmitting ? onClose : undefined}
+                onClick={onClose}
             />
 
             {/* Modal */}
@@ -42,9 +42,8 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
                     </h2>
                     <button
                         type="button"
-                        onClick={!isSubmitting ? onClose : undefined}
-                        disabled={isSubmitting}
-                        className="text-gray-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={onClose}
+                        className="text-gray-400 hover:text-white transition-colors"
                     >
                         <svg
                             className="w-6 h-6"
