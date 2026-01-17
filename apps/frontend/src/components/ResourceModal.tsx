@@ -25,13 +25,20 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
 }) => {
     if (!isOpen) return null;
 
+    const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        // Solo cerrar si se hace click directamente en el backdrop
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            onClick={handleBackdropClick}
+        >
             {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
-                onClick={onClose}
-            />
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity" />
 
             {/* Modal */}
             <div className="relative bg-gray-900 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-800">
@@ -42,7 +49,10 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
                     </h2>
                     <button
                         type="button"
-                        onClick={onClose}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onClose();
+                        }}
                         className="text-gray-400 hover:text-white transition-colors"
                     >
                         <svg

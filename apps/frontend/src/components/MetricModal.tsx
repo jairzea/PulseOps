@@ -54,7 +54,10 @@ export const MetricModal: React.FC<MetricModalProps> = ({ resources }) => {
                     </h2>
                     <button
                         type="button"
-                        onClick={handleClose}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleClose();
+                        }}
                         disabled={loading}
                         className="text-gray-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
