@@ -146,7 +146,7 @@ export const MetricsPage: React.FC = () => {
                                                 <button
                                                     onClick={() => handleDelete(metric.id)}
                                                     disabled={deletingId === metric.id}
-                                                    className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed relative"
+                                                    className={`p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors disabled:cursor-not-allowed relative ${deletingId === metric.id ? '' : 'disabled:opacity-50'}`}
                                                     title="Eliminar métrica"
                                                 >
                                                     {deletingId === metric.id ? (

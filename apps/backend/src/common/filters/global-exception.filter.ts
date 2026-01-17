@@ -92,7 +92,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     // Error genérico
     const message =
-      exception instanceof Error ? exception.message : 'Error interno del servidor';
+      exception instanceof Error
+        ? exception.message
+        : 'Error interno del servidor';
 
     return {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,

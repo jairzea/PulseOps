@@ -70,7 +70,12 @@ export class DuplicateResourceException extends AppException {
  */
 export class BusinessLogicException extends AppException {
   constructor(message: string, details?: unknown) {
-    super(message, HttpStatus.UNPROCESSABLE_ENTITY, 'BUSINESS_LOGIC_ERROR', details);
+    super(
+      message,
+      HttpStatus.UNPROCESSABLE_ENTITY,
+      'BUSINESS_LOGIC_ERROR',
+      details,
+    );
   }
 }
 
@@ -79,12 +84,7 @@ export class BusinessLogicException extends AppException {
  */
 export class DatabaseException extends AppException {
   constructor(message: string, details?: unknown) {
-    super(
-      message,
-      HttpStatus.INTERNAL_SERVER_ERROR,
-      'DATABASE_ERROR',
-      details,
-    );
+    super(message, HttpStatus.INTERNAL_SERVER_ERROR, 'DATABASE_ERROR', details);
   }
 }
 
