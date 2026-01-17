@@ -151,7 +151,7 @@ export const MetricsPage: React.FC = () => {
                                                 >
                                                     {deletingId === metric.id ? (
                                                         <div className="absolute inset-0 flex items-center justify-center bg-white rounded-lg -m-2 p-2">
-                                                            <div className="w-10 h-10">
+                                                            <div className="w-10 h-10" style={{ filter: 'hue-rotate(200deg) saturate(1.5)' }}>
                                                                 <ShredderLoaderInline size="md" variant="danger" />
                                                             </div>
                                                         </div>
