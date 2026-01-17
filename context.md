@@ -1692,3 +1692,196 @@ La propiedad 'source' es opcional en el tipo X, pero obligatoria en el tipo Y.
 6. Implementar eliminación con confirmación
 
 ---
+
+## [16 Enero 2026] – Fase 3.6 – Sistema de Navegación con Menú Dropdown
+
+### Qué se implementó
+
+**Sistema completo de navegación** mediante menú dropdown en el header existente:
+
+#### Componentes creados
+
+- ✅ **Header.tsx** - Componente de navegación global (creado y luego removido)
+- ✅ **ResourcesPage.tsx** - Vista dedicada para gestión de recursos
+- ✅ **MetricsPage.tsx** - Vista dedicada para gestión de métricas  
+- ✅ **RecordsPage.tsx** - Vista dedicada para gestión de registros
+
+#### Arquitectura de navegación implementada
+
+**Router configurado** (`App.tsx`):
+```typescript
+<BrowserRouter>
+  <Routes>
+    <Route path="/" element={<ResourceDashboard />} />
+    <Route path="/resources" element={<ResourcesPage />} />
+    <Route path="/metrics" element={<MetricsPage />} />
+    <Route path="/records" element={<RecordsPage />} />
+  </Routes>
+</BrowserRouter>
+```
+
+**Menú dropdown en tres puntos**:
+- Ubicación: Header del dashboard, junto al avatar
+- Trigger: Click en ícono de tres puntos verticales
+- Opciones:
+  1. 📊 Dashboard (/)
+  2. 👥 Recursos (/resources)
+  3. 📈 Métricas (/metrics)
+  4. 📄 Registros (/records)
+- Comportamiento:
+  - Cierre automático al hacer click fuera (useEffect + mousedown event)
+  - Cierre automático al seleccionar opción
+  - Navegación con `useNavigate()` de react-router-dom
+
+**Header restaurado** en ResourceDashboard:
+- Logo PulseOps con ícono ECG
+- Selectores de recurso y métrica
+- Botón "Agregar Registro"
+- Íconos de búsqueda y notificaciones
+- Menú de tres puntos con dropdown
+- Avatar del usuario
+
+#### Páginas CRUD creadas
+
+**1. ResourcesPage** (`/resources`):
+- Tabla con columnas: Nombre, Rol, ID, Acciones
+- Botón "Crear Recurso" en header de página
+- Estadísticas: Total recursos, Desarrolladores (DEV), Líderes (TL)
+- Estados manejados: loading, error, empty, success
+- Modal placeholder para formulario
+
+**2. MetricsPage** (`/metrics`):
+- Tabla con columnas: Etiqueta, Clave, Descripción, Unidad, Acciones
+- Botón "Crear Métrica" en header de página
+- Estadísticas: Total métricas, Métricas configuradas
+- Estados manejados: loading, error, empty, success
+- Modal placeholder para formulario
+
+**3. RecordsPage** (`/records`):
+- Filtros: Selector de recurso + Selector de métrica
+- Tabla: Semana, Valor, Fuente, Timestamp, Acciones
+- Botón "Agregar Registro" en header de página
+- RecordModal completamente funcional (movido del dashboard)
+- Integrado con Zustand store (`useRecordsStore`)
+- Estadísticas: Total registros, Promedio, Último valor
+
+### Decisiones de diseño
+
+1. **Menú en tres puntos (no barra de navegación)**:
+   - Mantiene el header limpio y enfocado en el análisis
+   - Contexto principal: Dashboard de análisis
+   - Navegación a CRUD: Acceso secundario vía menú
+
+2. **Header solo en Dashboard**:
+   - Cada página CRUD tiene su propio layout independiente
+   - No hay header global compartido
+   - Permite flexibilidad en diseño por página
+
+3. **Separación de responsabilidades**:
+   - **Dashboard**: Visualización y análisis (gráficos, condiciones, fórmulas)
+   - **CRUD Pages**: Gestión completa de entidades (tablas, formularios)
+   - **Zustand stores**: Estado global compartido entre páginas
+
+4. **Navegación con react-router-dom**:
+   - SPA completa sin recargas de página
+   - URLs semánticas (`/resources`, `/metrics`, `/records`)
+   - Navigate programático con `useNavigate()`
+
+### Flujo de usuario
+
+**Desde el Dashboard**:
+1. Usuario hace click en **tres puntos** junto al avatar
+2. Se despliega menú dropdown con 4 opciones
+3. Click en opción deseada (ej: "Recursos")
+4. Navegación a `/resources`
+5. Menú se cierra automáticamente
+
+**En páginas CRUD**:
+1. Usuario ve tabla con datos existentes
+2. Click en "Crear [Entidad]" abre modal
+3. Completa formulario y guarda
+4. Tabla se actualiza automáticamente
+5. Puede navegar de vuelta al Dashboard vía URL o botón atrás
+
+### Archivos creados
+
+- ✅ `apps/frontend/src/components/Header.tsx` (71 líneas) - Creado y luego removido
+- ✅ `apps/frontend/src/pages/ResourcesPage.tsx` (145 líneas)
+- ✅ `apps/frontend/src/pages/MetricsPage.tsx` (137 líneas)
+- ✅ `apps/frontend/src/pages/RecordsPage.tsx` (222 líneas)
+
+### Archivos modificados
+
+- ✅ `apps/frontend/src/App.tsx`
+  - Configurado BrowserRouter
+  - 4 rutas definidas
+  - Header global removido (no necesario)
+
+- ✅ `apps/frontend/src/pages/ResourceDashboard.tsx`
+  - Agregado `useNavigate` de react-router-dom
+  - Agregado estado `isMenuOpen` para dropdown
+  - Agregado `menuRef` para detectar clicks fuera
+  - Implementado menú dropdown en tres puntos
+  - Header completamente restaurado
+  - RecordModal reintegrado
+
+- ✅ `package.json` (frontend)
+  - Agregado `react-router-dom@7.12.0`
+
+### Validación completada
+
+```bash
+✅ react-router-dom instalado
+✅ 4 rutas configuradas
+✅ Menú dropdown funcional
+✅ Navegación entre vistas operativa
+✅ Header restaurado completamente
+✅ RecordModal reintegrado en dashboard
+✅ Click fuera cierra menú (useEffect)
+✅ Build exitoso: 669 KB
+✅ TypeScript: 0 errores críticos
+✅ Commits: 43aebd9, 2f304a3
+✅ Push completado
+```
+
+### Beneficios de la arquitectura
+
+**UX**:
+- Navegación contextual sin saturar el header
+- Dashboard enfocado en análisis
+- CRUD separado y organizado
+
+**Mantenibilidad**:
+- Cada página es independiente
+- Fácil agregar nuevas vistas
+- No hay coupling entre layouts
+
+**Escalabilidad**:
+- Patrón replicable para nuevas secciones
+- Router fácilmente extensible
+- Stores pueden compartirse entre páginas
+
+### Próximos pasos
+
+1. **Implementar formularios completos**:
+   - ResourceForm + ResourceModal (RHF + Yup + Zustand)
+   - MetricForm + MetricModal (RHF + Yup + Zustand)
+   - Edición y eliminación en RecordsPage
+
+2. **Mejorar tablas**:
+   - Paginación
+   - Ordenamiento
+   - Búsqueda/filtros
+   - Acciones inline (editar/eliminar)
+
+3. **Navegación mejorada**:
+   - Breadcrumbs
+   - Indicador de página activa en menú
+   - Animaciones de transición entre rutas
+
+4. **Integración completa**:
+   - Stores para Resources y Metrics
+   - Auto-refetch tras mutaciones
+   - Optimistic updates
+
+---
