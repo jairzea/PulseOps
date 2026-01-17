@@ -1865,7 +1865,7 @@ La propiedad 'source' es opcional en el tipo X, pero obligatoria en el tipo Y.
 
 1. **Implementar formularios completos**:
    - ResourceForm + ResourceModal (RHF + Yup + Zustand)
-   - MetricForm + MetricModal (RHF + Yup + Zustand)
+   - MetricForm + MetricModal (RHF + Yup + Zustand) ✅ **COMPLETADO en Fase 3.7**
    - Edición y eliminación en RecordsPage
 
 2. **Mejorar tablas**:
@@ -1880,8 +1880,322 @@ La propiedad 'source' es opcional en el tipo X, pero obligatoria en el tipo Y.
    - Animaciones de transición entre rutas
 
 4. **Integración completa**:
-   - Stores para Resources y Metrics
+   - Stores para Resources y Metrics ✅ **metricsStore completado en Fase 3.7**
    - Auto-refetch tras mutaciones
    - Optimistic updates
 
 ---
+
+## [16 Enero 2026] – Fase 3.7 – Formulario de Métricas con Asociación a Recursos
+
+### Qué se implementó
+
+Sistema completo de CRUD para métricas siguiendo el patrón moderno establecido en Fase 3.5 (React Hook Form + Yup + Zustand), con la capacidad de asociar múltiples recursos a cada métrica.
+
+**Componentes creados**:
+- `schemas/metricFormSchema.ts` - Validaciones con Yup para formulario de métricas
+- `stores/metricsStore.ts` - Estado global con Zustand para métricas
+- `components/MetricForm.tsx` - Formulario con RHF y validación en tiempo real
+- `components/MetricModal.tsx` - Modal reutilizable para crear/editar métricas
+- Integración completa en `pages/MetricsPage.tsx`
+
+**Funcionalidad API agregada**:
+- `apiClient.deleteMetric()` - Eliminar métrica por ID (faltaba en apiClient)
+
+### Schema de validación (metricFormSchema.ts)
+
+**Campos validados**:
+
+```typescript
+{
+  key: string;        // Obligatorio, formato: lowercase + números + underscores, 2-50 chars
+  label: string;      // Obligatorio, 2-100 caracteres
+  description: string; // Opcional, máx 500 caracteres
+  unit: string;       // Opcional, máx 20 caracteres (ej: "commits", "horas")
+  periodType: 'WEEK' | 'MONTH' | 'QUARTER' | 'YEAR'; // Opcional, default: WEEK
+  resourceIds: string[]; // Obligatorio, array de IDs de recursos (mínimo 1)
+}
+```
+
+**Reglas especiales**:
+- `key`: Solo letras minúsculas, números y underscores (regex: `/^[a-z0-9_]+$/`)
+- `periodType`: Enum con 4 opciones (WEEK, MONTH, QUARTER, YEAR)
+- `resourceIds`: Array con al menos 1 recurso seleccionado
+
+**Workaround de tipos**:
+- Se usa interfaz manual (`MetricFormData`) en lugar de `yup.InferType`
+- Type assertion `as any` en `yupResolver` por problemas con campos opcionales
+- Patrón consistente con `recordFormSchema.ts`
+
+### Store de métricas (metricsStore.ts)
+
+**Estado**:
+```typescript
+{
+  metrics: Metric[];           // Array de métricas
+  loading: boolean;           // Indicador de carga
+  error: string | null;       // Mensaje de error
+  isModalOpen: boolean;       // Control de modal
+  editingMetric: Metric | null; // Métrica en edición (null = crear nuevo)
+}
+```
+
+**Acciones**:
+- `setModalOpen(isOpen)` - Abrir/cerrar modal, limpia editingMetric al cerrar
+- `setEditingMetric(metric)` - Preparar métrica para edición
+- `fetchMetrics()` - GET /metrics
+- `createMetric(data)` - POST /metrics, auto-refetch tras éxito
+- `updateMetric(id, data)` - PATCH /metrics/:id, auto-refetch tras éxito
+- `deleteMetric(id)` - DELETE /metrics/:id, auto-refetch tras éxito
+- `reset()` - Resetear todo el estado
+
+**Patrón de auto-refetch**:
+Después de cada mutación (create/update/delete), se ejecuta automáticamente `fetchMetrics()` para mantener la UI sincronizada.
+
+### Componente MetricForm
+
+**Props**:
+```typescript
+{
+  onSubmit: (data: MetricFormData) => void;
+  initialMetric?: Metric | null;  // null = crear, Metric = editar
+  resources: Resource[];           // Lista de recursos para asociación
+}
+```
+
+**Características**:
+- Usa `useForm` con `yupResolver(metricFormSchema) as any`
+- Campo `key` deshabilitado en modo edición (no editable después de crear)
+- Select para `periodType` con 4 opciones (Semanal, Mensual, Trimestral, Anual)
+- **Selector de recursos**: Lista scrolleable con checkboxes para multi-select
+- Reseteo automático del formulario cuando cambia `initialMetric` (useEffect)
+- Validación en tiempo real con mensajes de error debajo de cada campo
+- Botón dinámico: "Crear Métrica" o "Actualizar Métrica" según modo
+
+**UI de asociación de recursos**:
+```tsx
+<div className="max-h-48 overflow-y-auto border border-gray-300 rounded-md p-3">
+  {resources.map(resource => (
+    <label className="flex items-center space-x-2">
+      <input type="checkbox" value={resource.id} {...register('resourceIds')} />
+      <span>{resource.name} ({resource.roleType})</span>
+    </label>
+  ))}
+</div>
+```
+
+### Componente MetricModal
+
+**Props simplificadas**:
+```typescript
+{
+  resources: Resource[];  // Solo recursos necesarios
+}
+```
+
+**Integración con Zustand**:
+- Lee `isModalOpen`, `editingMetric`, `loading`, `error` del store
+- Usa `setModalOpen()`, `createMetric()`, `updateMetric()` del store
+- NO recibe callbacks externos (todo manejado por el store)
+
+**Flujo**:
+1. Usuario abre modal → `setModalOpen(true)` o `setEditingMetric(metric)`
+2. Usuario llena formulario y envía
+3. Modal llama `createMetric()` o `updateMetric()` según `editingMetric`
+4. Store ejecuta API call, auto-refetch y cierra modal
+5. Tabla se actualiza automáticamente
+
+**Manejo de errores**:
+- Banner rojo con mensaje de error si `error !== null`
+- Loading spinner en footer mientras `loading === true`
+- Cierre deshabilitado durante loading
+
+### Integración en MetricsPage
+
+**Cambios**:
+- Reemplazado `useState` local por `useMetricsStore()`
+- Agregado `useResources()` para obtener lista de recursos
+- useEffect para `fetchMetrics()` al montar
+- Botones "Editar" y "Eliminar" ahora funcionales:
+  - Editar → `setEditingMetric(metric)`
+  - Eliminar → `deleteMetric(id)` con confirmación
+- Modal al final del componente: `<MetricModal resources={resources} />`
+- Eliminado modal placeholder de líneas 166-182
+
+**Tabla de métricas**:
+```tsx
+<tbody>
+  {metrics.map(metric => (
+    <tr>
+      <td>{metric.label}</td>
+      <td><code>{metric.key}</code></td>
+      <td>{metric.description || 'Sin descripción'}</td>
+      <td>{metric.unit || '-'}</td>
+      <td>
+        <button onClick={() => handleEdit(metric)}>Editar</button>
+        <button onClick={() => handleDelete(metric.id)}>Eliminar</button>
+      </td>
+    </tr>
+  ))}
+</tbody>
+```
+
+### Decisiones técnicas
+
+**1. Asociación de recursos**
+
+**Problema**: La interfaz `Metric` del backend NO tiene campo `resourceIds`.
+
+```typescript
+// Backend actual (apiClient.ts)
+export interface Metric {
+  id: string;
+  key: string;
+  label: string;
+  description?: string;
+  unit?: string;
+  periodType?: string;
+  // ❌ No existe resourceIds
+}
+```
+
+**Solución temporal**:
+- Frontend incluye `resourceIds` en el formulario (validación obligatoria)
+- Se envía en `createMetric()` y `updateMetric()` pero backend aún no lo procesa
+- TODO marcado en `metricsStore.ts` líneas 76 y 112: "Manejar resourceIds - puede requerir endpoint adicional"
+
+**Próximo paso**: Agregar soporte en backend para asociación métrica-recursos:
+- Opción A: Extender DTO de métrica con `resourceIds?: string[]`
+- Opción B: Crear endpoint separado POST `/metrics/:id/resources` con body `{ resourceIds: string[] }`
+- Opción C: Tabla intermedia `metric_resources` con relación many-to-many
+
+**2. Uso de apiClient existente**
+
+Ya existían funciones CRUD para métricas en `apiClient.ts`:
+- `getMetrics(resourceId?)` - línea 179
+- `getMetric(id)` - línea 184
+- `createMetric(data)` - línea 188
+- `updateMetric(id, data)` - línea 194
+
+Solo se agregó:
+- `deleteMetric(id)` - línea 200 (faltaba)
+
+**Nota**: Evitar duplicados. Inicialmente se intentó crear `upsertMetric()` pero ya existían funciones separadas.
+
+**3. Diferencia con Records**
+
+| Aspecto | RecordsStore | MetricsStore |
+|---------|--------------|--------------|
+| Función crear | `upsertRecord()` | `createMetric()` |
+| Función editar | `upsertRecord()` | `updateMetric()` |
+| Backend | POST /records (upsert) | POST /metrics + PATCH /metrics/:id |
+
+Ambos siguen el mismo patrón de auto-refetch después de mutaciones.
+
+### Archivos modificados
+
+**Nuevos archivos (4)**:
+```
+apps/frontend/src/schemas/metricFormSchema.ts      (48 líneas)
+apps/frontend/src/stores/metricsStore.ts          (143 líneas)
+apps/frontend/src/components/MetricForm.tsx       (218 líneas)
+apps/frontend/src/components/MetricModal.tsx       (98 líneas)
+```
+
+**Archivos modificados (2)**:
+```
+apps/frontend/src/services/apiClient.ts           (+7 líneas, deleteMetric)
+apps/frontend/src/pages/MetricsPage.tsx           (eliminado placeholder, +integración)
+```
+
+### Validación
+
+**Build exitoso**:
+```bash
+✓ 871 modules transformed
+dist/assets/index-BXLZb2Uf.js  680.68 kB │ gzip: 197.21 kB
+✓ built in 2.43s
+```
+
+**Commits**:
+```
+51f882b - feat(frontend): implementar formulario de métricas con asociación a recursos
+```
+
+**Funcionalidad probada**:
+- ✅ Compilación sin errores TypeScript
+- ✅ Validación de Yup en tiempo real
+- ✅ Modal se abre/cierra correctamente
+- ✅ Zustand store funcional (crear/editar/eliminar)
+- ✅ Multi-select de recursos con checkboxes
+- ✅ Auto-refetch después de mutaciones
+- ⏳ **Pendiente**: Integración backend para `resourceIds` (TODO en código)
+
+### Patrón establecido
+
+Este es el **patrón definitivo** para todos los formularios CRUD en PulseOps:
+
+1. **Schema de validación** (`schemas/[entity]FormSchema.ts`):
+   - Yup schema con validaciones
+   - Interfaz manual (no `InferType`) para compatibilidad
+   - Type assertion `as any` en resolver
+
+2. **Store de Zustand** (`stores/[entity]Store.ts`):
+   - Estado: items, loading, error, isModalOpen, editing[Entity]
+   - Acciones: setModalOpen, setEditing[Entity], fetch, create, update, delete, reset
+   - Auto-refetch después de mutaciones
+
+3. **Formulario** (`components/[Entity]Form.tsx`):
+   - useForm con yupResolver
+   - Props: onSubmit, initial[Entity], dependencies
+   - useEffect para reset cuando cambia initial[Entity]
+   - Validación en tiempo real con mensajes de error
+
+4. **Modal** (`components/[Entity]Modal.tsx`):
+   - Props mínimas (solo dependencias externas)
+   - Integración total con store (no callbacks externos)
+   - Manejo de loading y errores desde store
+
+5. **Página** (`pages/[Entity]Page.tsx`):
+   - useEffect para fetch al montar
+   - Tabla con botones edit/delete
+   - Modal al final del componente
+
+### Beneficios del patrón
+
+- **Consistencia**: Mismo flujo en todos los formularios
+- **Mantenibilidad**: Stores centralizados y reutilizables
+- **Type safety**: TypeScript + Yup + interfaces manuales
+- **UX**: Auto-refetch mantiene UI sincronizada
+- **Escalabilidad**: Fácil agregar nuevas entidades
+
+### Próximos pasos
+
+1. **Backend - Asociación de recursos**:
+   - Extender DTO de métricas con `resourceIds`
+   - Crear/modificar tabla `metric_resources`
+   - Endpoint para asociar/desasociar recursos
+
+2. **ResourceForm + ResourceModal**:
+   - Aplicar mismo patrón (RHF + Yup + Zustand)
+   - resourceFormSchema.ts
+   - resourcesStore.ts
+   - ResourceForm.tsx
+   - ResourceModal.tsx
+   - Integrar en ResourcesPage
+
+3. **Edición de registros**:
+   - Botón "Editar" en RecordsPage
+   - Poblar RecordForm con datos existentes
+   - `setEditingRecord()` en recordsStore
+
+4. **Funcionalidad de eliminación mejorada**:
+   - Confirmación modal personalizada (no `confirm()` nativo)
+   - Toast notifications (success/error)
+   - Undo capability (opcional)
+
+5. **Mejoras de tabla**:
+   - Paginación (react-table o TanStack Table)
+   - Sorting por columnas
+   - Búsqueda/filtros avanzados
+   - Bulk actions (seleccionar múltiples y eliminar)
