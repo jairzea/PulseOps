@@ -3,6 +3,7 @@
  */
 import React from 'react';
 import { PulseLoaderInline } from './PulseLoader';
+import { ShredderLoaderInline } from './ShredderLoader';
 
 interface LoadingButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     loading?: boolean;
@@ -26,11 +27,12 @@ export const LoadingButton: React.FC<LoadingButtonProps> = ({
         danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
     };
 
-    // Mapeo de variantes de botón a variantes de PulseLoader
-    const loaderVariantMap = {
-        primary: 'white' as const,
-        secondary: 'white' as const,
-        danger: 'white' as const,
+    // Renderizar loader apropiado según variante
+    const renderLoader = () => {
+        if (variant === 'danger') {
+            return <ShredderLoaderInline size="sm" variant="white" />;
+        }
+        return <PulseLoaderInline size="sm" variant="white" />;
     };
 
     return (
@@ -39,11 +41,7 @@ export const LoadingButton: React.FC<LoadingButtonProps> = ({
             disabled={disabled || loading}
             {...props}
         >
-            {loading ? (
-                <PulseLoaderInline size="sm" variant={loaderVariantMap[variant]} />
-            ) : (
-                children
-            )}
+            {loading ? renderLoader() : children}
         </button>
     );
 };
