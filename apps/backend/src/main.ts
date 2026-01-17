@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 async function bootstrap() {
   console.log('[DEBUG] Starting bootstrap...');
@@ -15,6 +16,10 @@ async function bootstrap() {
     console.log('[DEBUG] Creating NestJS application...');
     const app = await NestFactory.create(AppModule);
     console.log('[DEBUG] NestJS application created');
+
+    // Global exception filter
+    app.useGlobalFilters(new GlobalExceptionFilter());
+    console.log('[DEBUG] Global exception filter configured');
 
     // Global validation pipe
     app.useGlobalPipes(

@@ -1,6 +1,7 @@
 /**
  * API Client - Servicio centralizado para comunicación con el backend
  */
+import { ErrorHandler } from '../utils/errors';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -105,41 +106,31 @@ export interface ConditionMetadata {
 // Utilidades HTTP
 // ============================================================================
 
-class HttpError extends Error {
-  constructor(
-    public status: number,
-    public statusText: string,
-    message: string
-  ) {
-    super(message);
-    this.name = 'HttpError';
-  }
-}
-
 async function fetchJSON<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new HttpError(
-      response.status,
-      response.statusText,
-      errorText || 'Request failed'
-    );
+    if (!response.ok) {
+      // Delegar al ErrorHandler para procesar errores HTTP
+      return await ErrorHandler.handleHttpError(response);
+    }
+
+    return response.json();
+  } catch (error) {
+    // Delegar al ErrorHandler para procesar errores genéricos (network, etc)
+    return ErrorHandler.handleGenericError(error);
   }
-
-  return response.json();
 }
 
 // ============================================================================
@@ -287,5 +278,3 @@ export const apiClient = {
     return fetchJSON<ConditionMetadata[]>('/conditions/metadata');
   },
 };
-
-export type { HttpError };

@@ -2171,10 +2171,10 @@ Este es el **patrón definitivo** para todos los formularios CRUD en PulseOps:
 
 ### Próximos pasos
 
-1. **Backend - Asociación de recursos**:
-   - Extender DTO de métricas con `resourceIds`
-   - Crear/modificar tabla `metric_resources`
-   - Endpoint para asociar/desasociar recursos
+1. **Backend - Asociación de recursos**: ✅ **COMPLETADO en commit c8f5636**
+   - Extender DTO de métricas con `resourceIds` ✅
+   - Crear/modificar tabla `metric_resources` ✅
+   - Endpoint para asociar/desasociar recursos ✅
 
 2. **ResourceForm + ResourceModal**:
    - Aplicar mismo patrón (RHF + Yup + Zustand)
@@ -2194,8 +2194,276 @@ Este es el **patrón definitivo** para todos los formularios CRUD en PulseOps:
    - Toast notifications (success/error)
    - Undo capability (opcional)
 
-5. **Mejoras de tabla**:
+5. **Mejoras de tabla**: ✅ **PARCIALMENTE COMPLETADO en Fase 3.8**
+   - Skeleton loaders reutilizables ✅
    - Paginación (react-table o TanStack Table)
    - Sorting por columnas
    - Búsqueda/filtros avanzados
    - Bulk actions (seleccionar múltiples y eliminar)
+
+---
+
+## [16 Enero 2026] – Fase 3.8 – Componentes de Loading y Skeleton Loaders
+
+### Qué se implementó
+
+Sistema de componentes reutilizables para mejorar la UX durante operaciones asíncronas y carga de datos.
+
+**Componentes creados**:
+- `components/TableSkeleton.tsx` - Skeleton loader reutilizable para tablas
+- `components/LoadingButton.tsx` - Botón con spinner integrado
+- Integración en MetricsPage y MetricForm
+
+**Fix aplicado**:
+- Backend: asegurar que `resourceIds` siempre sea array vacío si no se provee
+
+### TableSkeleton - Componente reutilizable
+
+**Props configurables**:
+```typescript
+{
+  columns: number;      // Número de columnas a renderizar
+  rows?: number;        // Número de filas (default: 5)
+  showActions?: boolean; // Mostrar columna de acciones (default: true)
+}
+```
+
+**Características**:
+- Animación de pulso con Tailwind (`animate-pulse`)
+- Header con barras de carga en gris oscuro
+- Filas con anchos variables para simular contenido real
+- Última columna renderiza botones skeleton si `showActions=true`
+- Responsive: anchos adaptativos según posición de columna
+- Tema oscuro integrado (bg-gray-700, bg-gray-800)
+
+**Ejemplo de uso**:
+```tsx
+<TableSkeleton columns={5} rows={6} showActions={true} />
+```
+
+**Anchos generados automáticamente**:
+```typescript
+const widths = ['w-32', 'w-24', 'w-48', 'w-20', 'w-28'];
+// Se rotan según índice de columna para variedad visual
+```
+
+### LoadingButton - Botón con estado de carga
+
+**Props**:
+```typescript
+{
+  loading?: boolean;     // Estado de carga
+  children: ReactNode;   // Contenido del botón
+  variant?: 'primary' | 'secondary' | 'danger'; // Estilo
+  ...HTMLButtonAttributes; // Props nativas de button
+}
+```
+
+**Variantes de estilo**:
+```typescript
+{
+  primary: 'bg-blue-600 hover:bg-blue-700',
+  secondary: 'bg-gray-600 hover:bg-gray-700',
+  danger: 'bg-red-600 hover:bg-red-700'
+}
+```
+
+**Características**:
+- Spinner SVG con animación de rotación (`animate-spin`)
+- Deshabilita automáticamente cuando `loading=true`
+- Opacity reducida cuando disabled (`disabled:opacity-50`)
+- Cursor not-allowed cuando disabled
+- Gap automático entre spinner e ícono
+- Focus ring configurable por variante
+
+**SVG Spinner**:
+- Circle con opacity 25% (fondo)
+- Path con opacity 75% (segmento giratorio)
+- Tamaño: 20x20px (h-5 w-5)
+- Color: inherit del botón
+
+### Integración en MetricsPage
+
+**Antes**:
+```tsx
+{loading && (
+  <div className="p-8 text-center">
+    <div className="animate-spin ..."></div>
+    <p>Cargando métricas...</p>
+  </div>
+)}
+```
+
+**Después**:
+```tsx
+{loading && <TableSkeleton columns={5} rows={6} showActions={true} />}
+```
+
+**Beneficios**:
+- Mantiene estructura visual de la tabla
+- Usuario ve exactamente qué se está cargando
+- Reduce sensación de espera
+- Profesional y moderno
+
+### Integración en MetricForm
+
+**Cambios**:
+1. Agregada prop `loading?: boolean` a MetricFormProps
+2. Reemplazado `<button>` por `<LoadingButton>`
+3. Pasado `loading` desde MetricModal
+4. Texto dinámico: "Crear Métrica" / "Actualizar Métrica"
+
+**Flujo completo**:
+```
+Usuario submit form
+  → MetricModal.handleSubmit()
+  → loading=true (Zustand)
+  → LoadingButton muestra spinner
+  → apiClient.createMetric() / updateMetric()
+  → Auto-refetch
+  → loading=false
+  → Modal se cierra
+```
+
+### Fix backend - resourceIds
+
+**Problema**: 
+Error 500 al crear métrica porque `resourceIds` llegaba como `undefined` y MongoDB no lo manejaba bien.
+
+**Solución**:
+```typescript
+async create(dto: CreateMetricDto, createdBy: string): Promise<Metric> {
+  const metric = new this.metricModel({
+    ...dto,
+    resourceIds: dto.resourceIds || [], // ← Siempre array
+    createdBy,
+  });
+  return metric.save();
+}
+```
+
+**Resultado**: Métricas se crean correctamente incluso sin recursos asociados.
+
+### Patrones establecidos
+
+**1. Skeleton loaders**:
+- Componente base reutilizable
+- Props para personalizar columnas/filas/acciones
+- Anchos variables para realismo
+- Integrar en cualquier tabla del proyecto
+
+**2. Loading buttons**:
+- Componente wrapper de button
+- Props nativas + loading + variant
+- Deshabilita y muestra spinner automáticamente
+- Reutilizable en todos los formularios
+
+**3. Estados de carga consistentes**:
+- Zustand store maneja loading global
+- Componentes leen directamente del store
+- No props drilling de estados de carga
+- UX consistente en toda la app
+
+### Archivos modificados/creados
+
+**Nuevos (2)**:
+```
+apps/frontend/src/components/TableSkeleton.tsx     (62 líneas)
+apps/frontend/src/components/LoadingButton.tsx     (57 líneas)
+```
+
+**Modificados (4)**:
+```
+apps/frontend/src/components/MetricForm.tsx        (+2 líneas: prop loading)
+apps/frontend/src/components/MetricModal.tsx       (+1 línea: pass loading)
+apps/frontend/src/pages/MetricsPage.tsx           (-7 líneas: usa TableSkeleton)
+apps/backend/src/metrics/metrics.service.ts       (+1 línea: resourceIds default)
+```
+
+### Validación
+
+**Build exitoso**:
+```bash
+✓ 873 modules transformed
+dist/assets/index-ByH4RO1d.js  684.10 kB │ gzip: 198.06 kB
+✓ built in 2.89s
+```
+
+**Commits**:
+```
+de6fcb1 - feat(frontend): agregar componentes de loading y skeleton
+```
+
+**Funcionalidad probada**:
+- ✅ TableSkeleton renderiza correctamente con diferentes props
+- ✅ LoadingButton muestra spinner cuando loading=true
+- ✅ MetricsPage usa skeleton durante carga
+- ✅ MetricForm deshabilita botón durante submit
+- ✅ Backend crea métricas sin error 500
+
+### Próximos usos de estos componentes
+
+**TableSkeleton puede usarse en**:
+- ResourcesPage (cuando se implemente)
+- RecordsPage (reemplazar spinner actual)
+- Cualquier tabla futura del dashboard
+- Configuración: ajustar `columns` según tabla
+
+**LoadingButton puede usarse en**:
+- ResourceForm (botones crear/editar)
+- RecordForm (botón guardar)
+- Botones de eliminación con confirmación
+- Cualquier acción async en formularios
+- Diferentes variantes según contexto
+
+### Beneficios de UX
+
+**Sin skeleton**:
+- Pantalla vacía o spinner genérico
+- Usuario no sabe qué esperar
+- Sensación de demora mayor
+
+**Con skeleton**:
+- Usuario ve estructura de la tabla
+- Comprensión inmediata de qué se carga
+- Percepción de velocidad mejorada
+- Experiencia más profesional
+
+**Sin LoadingButton**:
+- Botón clickeable múltiples veces
+- Sin feedback visual de progreso
+- Posibles requests duplicados
+
+**Con LoadingButton**:
+- Botón se deshabilita automáticamente
+- Spinner indica progreso claramente
+- Previene clicks duplicados
+- UX estándar de aplicaciones modernas
+
+### Próximos pasos (actualizados)
+
+1. **Aplicar LoadingButton en RecordForm**:
+   - Reemplazar botón submit actual
+   - Usar variant="primary"
+
+2. **Aplicar TableSkeleton en RecordsPage**:
+   - Reemplazar spinner de carga
+   - columns={5} (Semana, Valor, Fuente, Timestamp, Acciones)
+
+3. **ResourceForm completo con loading states**:
+   - resourceFormSchema.ts
+   - resourcesStore.ts
+   - ResourceForm con LoadingButton
+   - ResourceModal
+   - ResourcesPage con TableSkeleton
+
+4. **Confirmación modal de eliminación**:
+   - Componente ConfirmDialog reutilizable
+   - LoadingButton en botones de confirmar
+   - Integrar en delete de todas las entidades
+
+5. **Toast notifications**:
+   - Biblioteca: react-hot-toast o similar
+   - Success toast después de create/update
+   - Error toast con mensaje específico
+   - Info toast para acciones relevantes

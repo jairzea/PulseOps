@@ -3,6 +3,7 @@
  */
 import { create } from 'zustand';
 import { Metric, apiClient } from '../services/apiClient';
+import { AppError } from '../utils/errors';
 
 interface MetricsState {
   // Estado
@@ -65,10 +66,10 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
       const metrics = await apiClient.getMetrics();
       set({ metrics, loading: false });
     } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Error al cargar métricas',
-        loading: false,
-      });
+      const errorMessage = error instanceof AppError 
+        ? error.getUserMessage() 
+        : 'Error al cargar métricas';
+      set({ error: errorMessage, loading: false });
     }
   },
 
@@ -90,9 +91,11 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
       set({ loading: false, isModalOpen: false });
       return newMetric;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error al crear métrica';
+      const errorMessage = error instanceof AppError 
+        ? error.getUserMessage() 
+        : 'Error al crear métrica';
       set({ error: errorMessage, loading: false });
-      throw new Error(errorMessage);
+      throw error; // Re-lanzar para que el componente pueda manejarlo si necesita
     }
   },
 
@@ -114,9 +117,11 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
       set({ loading: false, isModalOpen: false, editingMetric: null });
       return updatedMetric;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error al actualizar métrica';
+      const errorMessage = error instanceof AppError 
+        ? error.getUserMessage() 
+        : 'Error al actualizar métrica';
       set({ error: errorMessage, loading: false });
-      throw new Error(errorMessage);
+      throw error; // Re-lanzar para que el componente pueda manejarlo si necesita
     }
   },
 
@@ -130,10 +135,10 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
       await get().fetchMetrics();
       set({ loading: false });
     } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Error al eliminar métrica',
-        loading: false,
-      });
+      const errorMessage = error instanceof AppError 
+        ? error.getUserMessage() 
+        : 'Error al eliminar métrica';
+      set({ error: errorMessage, loading: false });
     }
   },
 
