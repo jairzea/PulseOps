@@ -25,33 +25,31 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
 }) => {
     if (!isOpen) return null;
 
-    return (
-        <div 
-            className="fixed inset-0 z-50 overflow-y-auto"
-            aria-labelledby="modal-title" 
-            role="dialog" 
-            aria-modal="true"
-        >
-            <div className="flex min-h-screen items-center justify-center p-4">
-                {/* Backdrop */}
-                <div 
-                    className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm transition-opacity"
-                    onClick={onClose}
-                    aria-hidden="true"
-                />
+    const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (e.target === e.currentTarget && !isSubmitting) {
+            onClose();
+        }
+    };
 
-                {/* Modal panel */}
-                <div className="relative bg-gray-900 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-800">
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity duration-300"
+            onClick={handleBackdropClick}
+        >
+            <div
+                className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl mx-4 border border-gray-700 transform transition-all duration-300 scale-100"
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
-                <div className="sticky top-0 bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between z-10">
-                    <h2 className="text-xl font-semibold text-white">
+                <div className="flex items-center justify-between p-6 border-b border-gray-700">
+                    <h2 className="text-xl font-bold text-white">
                         {resource ? 'Editar Recurso' : 'Nuevo Recurso'}
                     </h2>
                     <button
-                        type="button"
                         onClick={onClose}
                         disabled={isSubmitting}
-                        className="text-gray-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                        aria-label="Cerrar"
                     >
                         <svg
                             className="w-6 h-6"
@@ -78,7 +76,6 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
                         isSubmitting={isSubmitting}
                         metrics={metrics}
                     />
-                </div>
                 </div>
             </div>
         </div>
