@@ -290,15 +290,17 @@ export const MetricForm: React.FC<MetricFormProps> = ({
             </div>
 
             {/* Botones */}
-            <div className="form-actions">
-                <LoadingButton
-                    type="submit"
-                    loading={loading}
-                    variant="primary"
-                >
-                    {initialMetric ? 'Actualizar' : 'Crear'} Métrica
-                </LoadingButton>
-            </div>
+            {!loading && (
+                <div className="form-actions">
+                    <LoadingButton
+                        type="submit"
+                        loading={false}
+                        variant="primary"
+                    >
+                        {initialMetric ? 'Actualizar' : 'Crear'} Métrica
+                    </LoadingButton>
+                </div>
+            )}
         </form>
     );
 };
