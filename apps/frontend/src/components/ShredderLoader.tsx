@@ -38,89 +38,62 @@ export const ShredderLoader: React.FC<ShredderLoaderProps> = ({
 
   return (
     <div className="flex flex-col items-center justify-center gap-2">
-      {/* Icono de basura animado - mismo estilo que el icono original */}
-      <svg
-        className={className}
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        {/* Línea superior del bote (base) */}
-        <path d="M4 7h16" opacity="1" />
-
-        {/* Cuerpo del bote de basura */}
-        <path d="M5 7l.867 12.142A2 2 0 007.862 21h8.276a2 2 0 001.995-1.858L19 7" opacity="1" />
-
-        {/* Líneas verticales internas - animadas */}
-        <path d="M10 11v6" opacity="1">
-          <animate
-            attributeName="opacity"
-            values="1;0.3;1"
-            dur="2s"
-            repeatCount="indefinite"
-          />
-        </path>
-        <path d="M14 11v6" opacity="1">
-          <animate
-            attributeName="opacity"
-            values="1;0.3;1"
-            dur="2s"
-            begin="0.3s"
-            repeatCount="indefinite"
-          />
-        </path>
-
-        {/* Grupo de tapa - animado completo */}
-        <g>
-          <path d="M15 4v3" />
-          <path d="M9 4v3" />
-          <path d="M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
-          
-          {/* Animación de toda la tapa levantándose */}
-          <animateTransform
-            attributeName="transform"
-            type="translate"
-            values="0 0; 0 -3; 0 0"
-            keyTimes="0; 0.3; 1"
-            dur="2s"
-            repeatCount="indefinite"
-          />
-        </g>
-
-        {/* Bola de papel cayendo desde arriba */}
-        <circle
-          cx="12"
-          cy="0"
-          r="1.5"
-          fill="currentColor"
-          opacity="0"
+      <div className="relative">
+        {/* Icono de basura - base estática */}
+        <svg
+          className={className}
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
         >
-          {/* Animación de caída */}
-          <animate
-            attributeName="cy"
-            values="0; 13; 13"
-            keyTimes="0; 0.6; 1"
-            dur="2s"
-            repeatCount="indefinite"
+          <path d="M4 7h16" />
+          <path d="M5 7l.867 12.142A2 2 0 007.862 21h8.276a2 2 0 001.995-1.858L19 7" />
+          <path d="M10 11v6" />
+          <path d="M14 11v6" />
+          <path d="M15 7V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3" />
+        </svg>
+        
+        {/* Bola de papel cayendo - animación separada */}
+        <div className="absolute inset-0 flex items-start justify-center pointer-events-none">
+          <div 
+            className="w-1.5 h-1.5 rounded-full bg-current opacity-0"
+            style={{
+              animation: 'dropPaper 1.5s ease-in infinite'
+            }}
           />
-          {/* Animación de visibilidad */}
-          <animate
-            attributeName="opacity"
-            values="0; 0; 1; 1; 0"
-            keyTimes="0; 0.1; 0.2; 0.6; 0.7"
-            dur="2s"
-            repeatCount="indefinite"
-          />
-        </circle>
-      </svg>
+        </div>
+      </div>
 
       {/* Texto opcional */}
       {showText && (
         <span className={`${fontSize} ${colors.text} font-medium animate-pulse`}>{text}</span>
       )}
+      
+      <style>{`
+        @keyframes dropPaper {
+          0% {
+            transform: translateY(-10px);
+            opacity: 0;
+          }
+          20% {
+            opacity: 1;
+          }
+          50% {
+            transform: translateY(15px);
+            opacity: 1;
+          }
+          60% {
+            opacity: 0;
+          }
+          100% {
+            transform: translateY(15px);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   );
 };
