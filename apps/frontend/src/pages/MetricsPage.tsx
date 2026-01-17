@@ -6,7 +6,7 @@ import { useMetricsStore } from '../stores/metricsStore';
 import { useResources } from '../hooks/useResources';
 import { MetricModal } from '../components/MetricModal';
 import { TableSkeleton } from '../components/TableSkeleton';
-import { LoadingButton } from '../components/LoadingButton';
+import { ShredderLoaderInline } from '../components/ShredderLoader';
 
 export const MetricsPage: React.FC = () => {
     const { metrics, loading, error, setModalOpen, setEditingMetric, fetchMetrics, deleteMetric } = useMetricsStore();
@@ -143,14 +143,17 @@ export const MetricsPage: React.FC = () => {
                                                         <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                     </svg>
                                                 </button>
-                                                <LoadingButton
+                                                <button
                                                     onClick={() => handleDelete(metric.id)}
-                                                    variant="danger"
-                                                    loading={deletingId === metric.id}
-                                                    className="!p-2 !min-w-0"
+                                                    disabled={deletingId === metric.id}
+                                                    className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed relative"
                                                     title="Eliminar métrica"
                                                 >
-                                                    {!deletingId || deletingId !== metric.id ? (
+                                                    {deletingId === metric.id ? (
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-white rounded-lg">
+                                                            <ShredderLoaderInline size="sm" variant="danger" />
+                                                        </div>
+                                                    ) : (
                                                         <svg
                                                             className="w-5 h-5"
                                                             fill="none"
@@ -162,8 +165,8 @@ export const MetricsPage: React.FC = () => {
                                                         >
                                                             <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                         </svg>
-                                                    ) : null}
-                                                </LoadingButton>
+                                                    )}
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
