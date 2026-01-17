@@ -24,6 +24,7 @@ export const ResourcesPage: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingResource, setEditingResource] = useState<Resource | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
     // Zustand solo para datos globales
     const {
@@ -80,7 +81,13 @@ export const ResourcesPage: React.FC = () => {
         });
 
         if (confirmed) {
-            await deleteResource(resource.id);
+            setDeletingId(resource.id);
+            try {
+                await deleteResource(resource.id);
+            } finally {
+                setDeletingId(null);
+                confirmModalProps.closeModal();
+            }
         }
     };
 
@@ -306,7 +313,7 @@ export const ResourcesPage: React.FC = () => {
             {/* Modal de Confirmación (reutilizable) */}
             <ConfirmModal
                 isOpen={confirmModalProps.isOpen}
-                isLoading={confirmModalProps.isLoading}
+                isLoading={deletingId !== null}
                 onClose={confirmModalProps.handleClose}
                 onConfirm={confirmModalProps.handleConfirm}
                 title={confirmModalProps.options.title}

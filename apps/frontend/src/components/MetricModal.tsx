@@ -50,11 +50,11 @@ export const MetricModal: React.FC<MetricModalProps> = ({ isOpen, onClose, editi
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity duration-300"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity duration-300 p-4"
             onClick={handleBackdropClick}
         >
             <div
-                className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl mx-4 border border-gray-700 transform transition-all duration-300 scale-100"
+                className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-700 transform transition-all duration-300 scale-100"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}

@@ -192,7 +192,7 @@ export const MetricsPage: React.FC = () => {
                 )}
 
                 {/* Modal de creación/edición */}
-                <MetricModal 
+                <MetricModal
                     isOpen={isModalOpen}
                     onClose={handleCloseModal}
                     editingMetric={editingMetric}
