@@ -24,14 +24,14 @@ export const LoadingButton: React.FC<LoadingButtonProps> = ({
     const variantClasses = {
         primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
         secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500',
-        danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+        danger: 'bg-white text-red-600 border-2 border-red-600 hover:bg-red-50 focus:ring-red-500',
     };
 
     // Clases cuando está loading (fondo blanco para danger)
     const loadingClasses = {
         primary: variantClasses.primary,
         secondary: variantClasses.secondary,
-        danger: 'bg-white hover:bg-white focus:ring-red-500', // Fondo blanco cuando está eliminando
+        danger: 'bg-white hover:bg-white focus:ring-red-500 border-2 border-transparent',
     };
 
     // Renderizar loader apropiado según variante
