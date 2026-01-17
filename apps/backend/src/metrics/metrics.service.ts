@@ -92,13 +92,13 @@ export class MetricsService {
 
   async delete(id: string): Promise<void> {
     try {
-      const metric = await this.metricModel.findById(id).exec();
+      const metric = await this.metricModel.findOne({ id }).exec();
       
       if (!metric) {
         throw new ResourceNotFoundException('Métrica', id);
       }
 
-      await this.metricModel.findByIdAndDelete(id).exec();
+      await this.metricModel.findOneAndDelete({ id }).exec();
     } catch (error) {
       if (error instanceof ResourceNotFoundException) {
         throw error;
