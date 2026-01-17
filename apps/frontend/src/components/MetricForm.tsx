@@ -104,103 +104,93 @@ export const MetricForm: React.FC<MetricFormProps> = ({
     }, [initialMetric, reset, resources]);
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="form-container">
             {/* Clave */}
             <div>
-                <label htmlFor="key" className="block text-sm font-medium text-gray-300 mb-2">
-                    Clave <span className="text-red-500">*</span>
+                <label htmlFor="key" className="form-label form-label-required">
+                    Clave
                 </label>
                 <input
                     {...register('key')}
                     id="key"
                     type="text"
                     placeholder="ej: commits_per_week"
-                    className={`w-full px-4 py-2 bg-gray-800 border ${
-                        errors.key ? 'border-red-500' : 'border-gray-700'
-                    } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                    className={errors.key ? 'form-input-error' : 'form-input'}
                     disabled={!!initialMetric || loading}
                 />
                 {errors.key && (
-                    <p className="mt-1 text-sm text-red-500">{errors.key.message}</p>
+                    <p className="form-error">{errors.key.message}</p>
                 )}
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="form-help">
                     Solo letras minúsculas, números y guiones bajos
                 </p>
             </div>
 
             {/* Etiqueta */}
             <div>
-                <label htmlFor="label" className="block text-sm font-medium text-gray-300 mb-2">
-                    Etiqueta <span className="text-red-500">*</span>
+                <label htmlFor="label" className="form-label form-label-required">
+                    Etiqueta
                 </label>
                 <input
                     {...register('label')}
                     id="label"
                     type="text"
                     placeholder="ej: Commits por Semana"
-                    className={`w-full px-4 py-2 bg-gray-800 border ${
-                        errors.label ? 'border-red-500' : 'border-gray-700'
-                    } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                    className={errors.label ? 'form-input-error' : 'form-input'}
                     disabled={loading}
                 />
                 {errors.label && (
-                    <p className="mt-1 text-sm text-red-500">{errors.label.message}</p>
+                    <p className="form-error">{errors.label.message}</p>
                 )}
             </div>
 
             {/* Descripción */}
             <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-2">
-                    Descripción <span className="text-gray-500">(Opcional)</span>
+                <label htmlFor="description" className="form-label form-label-optional">
+                    Descripción
                 </label>
                 <textarea
                     {...register('description')}
                     id="description"
                     rows={3}
                     placeholder="Describe qué mide esta métrica..."
-                    className={`w-full px-4 py-2 bg-gray-800 border ${
-                        errors.description ? 'border-red-500' : 'border-gray-700'
-                    } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                    className={errors.description ? 'form-textarea-error' : 'form-textarea'}
                     disabled={loading}
                 />
                 {errors.description && (
-                    <p className="mt-1 text-sm text-red-500">{errors.description.message}</p>
+                    <p className="form-error">{errors.description.message}</p>
                 )}
             </div>
 
             {/* Unidad y Tipo de Período */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="form-grid-2">
                 {/* Unidad */}
                 <div>
-                    <label htmlFor="unit" className="block text-sm font-medium text-gray-300 mb-2">
-                        Unidad <span className="text-gray-500">(Opcional)</span>
+                    <label htmlFor="unit" className="form-label form-label-optional">
+                        Unidad
                     </label>
                     <input
                         {...register('unit')}
                         id="unit"
                         type="text"
                         placeholder="ej: commits, horas"
-                        className={`w-full px-4 py-2 bg-gray-800 border ${
-                            errors.unit ? 'border-red-500' : 'border-gray-700'
-                        } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                        className={errors.unit ? 'form-input-error' : 'form-input'}
                         disabled={loading}
                     />
                     {errors.unit && (
-                        <p className="mt-1 text-sm text-red-500">{errors.unit.message}</p>
+                        <p className="form-error">{errors.unit.message}</p>
                     )}
                 </div>
 
                 {/* Tipo de Período */}
                 <div>
-                    <label htmlFor="periodType" className="block text-sm font-medium text-gray-300 mb-2">
-                        Tipo de Período <span className="text-red-500">*</span>
+                    <label htmlFor="periodType" className="form-label form-label-required">
+                        Tipo de Período
                     </label>
                     <select
                         {...register('periodType')}
                         id="periodType"
-                        className={`w-full px-4 py-2 bg-gray-800 border ${
-                            errors.periodType ? 'border-red-500' : 'border-gray-700'
-                        } rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                        className={errors.periodType ? 'form-select-error' : 'form-select'}
                         disabled={loading}
                     >
                         <option value="WEEK">Semanal</option>
@@ -209,15 +199,15 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                         <option value="YEAR">Anual</option>
                     </select>
                     {errors.periodType && (
-                        <p className="mt-1 text-sm text-red-500">{errors.periodType.message}</p>
+                        <p className="form-error">{errors.periodType.message}</p>
                     )}
                 </div>
             </div>
 
             {/* Asociación de Recursos con Autocompletado */}
             <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Recursos Asociados <span className="text-red-500">*</span>
+                <label className="form-label form-label-required">
+                    Recursos Asociados
                 </label>
 
                 {/* Input de búsqueda */}
@@ -232,19 +222,19 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                         onFocus={() => setShowDropdown(true)}
                         placeholder="Buscar recursos..."
                         disabled={loading}
-                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:opacity-50"
+                        className="form-input"
                     />
 
                     {/* Dropdown de autocompletado */}
                     {showDropdown && filteredResources.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        <div className="form-dropdown">
                             {filteredResources.map((resource) => (
                                 <button
                                     key={resource.id}
                                     type="button"
                                     onClick={() => addResource(resource)}
                                     disabled={loading}
-                                    className="w-full px-4 py-3 text-left hover:bg-gray-700 transition-colors disabled:opacity-50 border-b border-gray-700 last:border-b-0"
+                                    className="form-dropdown-item"
                                 >
                                     <div className="flex items-center justify-between">
                                         <div>
@@ -262,16 +252,13 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                 {selectedResources.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
                         {selectedResources.map((resource) => (
-                            <div
-                                key={resource.id}
-                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-900/30 border border-blue-700/50 rounded-lg text-sm text-blue-300"
-                            >
+                            <div key={resource.id} className="form-chip">
                                 <span>{resource.name}</span>
                                 <button
                                     type="button"
                                     onClick={() => removeResource(resource.id)}
                                     disabled={loading}
-                                    className="hover:text-blue-100 transition-colors disabled:opacity-50"
+                                    className="form-chip-button"
                                 >
                                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path
@@ -287,23 +274,23 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                 )}
 
                 {errors.resourceIds && (
-                    <p className="mt-1 text-sm text-red-500">{errors.resourceIds.message}</p>
+                    <p className="form-error">{errors.resourceIds.message}</p>
                 )}
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="form-help">
                     Busca y selecciona los recursos a los que aplica esta métrica
                 </p>
 
                 {/* Click outside para cerrar dropdown */}
                 {showDropdown && (
                     <div
-                        className="fixed inset-0 z-0"
+                        className="form-dropdown-backdrop"
                         onClick={() => setShowDropdown(false)}
                     />
                 )}
             </div>
 
             {/* Botones */}
-            <div className="flex justify-end space-x-3 pt-4">
+            <div className="form-actions">
                 <LoadingButton
                     type="submit"
                     loading={loading}

@@ -15,3 +15,123 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* ========================================
+   PULSEOPS - COMPONENTES DE FORMULARIO
+   ======================================== */
+
+@layer components {
+  /* Labels de formulario */
+  .form-label {
+    @apply block text-sm font-medium text-gray-300 mb-2;
+  }
+
+  .form-label-required::after {
+    @apply text-red-500 ml-1;
+    content: '*';
+  }
+
+  .form-label-optional::after {
+    @apply text-gray-500 ml-1;
+    content: '(Opcional)';
+  }
+
+  /* Inputs de texto */
+  .form-input {
+    @apply w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg 
+           text-white placeholder-gray-400 
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+           transition-colors
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .form-input-error {
+    @apply form-input border-red-500 focus:ring-red-500;
+  }
+
+  /* Textarea */
+  .form-textarea {
+    @apply w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg 
+           text-white placeholder-gray-400 
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+           transition-colors resize-none
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .form-textarea-error {
+    @apply form-textarea border-red-500 focus:ring-red-500;
+  }
+
+  /* Select */
+  .form-select {
+    @apply w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg 
+           text-white 
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+           transition-colors
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .form-select-error {
+    @apply form-select border-red-500 focus:ring-red-500;
+  }
+
+  /* Checkbox */
+  .form-checkbox {
+    @apply w-4 h-4 text-blue-600 bg-gray-800 border-gray-700 rounded 
+           focus:ring-blue-500 focus:ring-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Mensajes de error */
+  .form-error {
+    @apply mt-1 text-sm text-red-500;
+  }
+
+  /* Mensajes de ayuda */
+  .form-help {
+    @apply mt-1 text-xs text-gray-400;
+  }
+
+  /* Dropdown de autocomplete */
+  .form-dropdown {
+    @apply absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 
+           rounded-lg shadow-lg max-h-60 overflow-y-auto;
+  }
+
+  .form-dropdown-item {
+    @apply w-full px-4 py-3 text-left hover:bg-gray-700 
+           transition-colors border-b border-gray-700 last:border-b-0
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Chips/Tags de selección */
+  .form-chip {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 
+           bg-blue-900/30 border border-blue-700/50 rounded-lg 
+           text-sm text-blue-300;
+  }
+
+  .form-chip-button {
+    @apply hover:text-blue-100 transition-colors disabled:opacity-50;
+  }
+
+  /* Container de formulario */
+  .form-container {
+    @apply space-y-6;
+  }
+
+  /* Grid de 2 columnas */
+  .form-grid-2 {
+    @apply grid grid-cols-2 gap-4;
+  }
+
+  /* Botones de acción */
+  .form-actions {
+    @apply flex justify-end space-x-3 pt-4;
+  }
+
+  /* Backdrop para cerrar dropdowns */
+  .form-dropdown-backdrop {
+    @apply fixed inset-0 z-0;
+  }
+}

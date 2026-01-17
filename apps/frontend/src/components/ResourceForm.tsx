@@ -103,36 +103,32 @@ export const ResourceForm: React.FC<ResourceFormProps> = ({
     }, [resource, reset, metrics]);
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="form-container">
             {/* Nombre del recurso */}
             <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-                    Nombre del Recurso <span className="text-red-500">*</span>
+                <label htmlFor="name" className="form-label form-label-required">
+                    Nombre del Recurso
                 </label>
                 <input
                     id="name"
                     type="text"
                     {...register('name')}
-                    className={`w-full px-4 py-2 bg-gray-800 border ${
-                        errors.name ? 'border-red-500' : 'border-gray-700'
-                    } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                    className={errors.name ? 'form-input-error' : 'form-input'}
                     placeholder="Ej: Juan Pérez"
                     disabled={isSubmitting}
                 />
-                {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>}
+                {errors.name && <p className="form-error">{errors.name.message}</p>}
             </div>
 
             {/* Tipo de Rol */}
             <div>
-                <label htmlFor="roleType" className="block text-sm font-medium text-gray-300 mb-2">
-                    Tipo de Rol <span className="text-red-500">*</span>
+                <label htmlFor="roleType" className="form-label form-label-required">
+                    Tipo de Rol
                 </label>
                 <select
                     id="roleType"
                     {...register('roleType')}
-                    className={`w-full px-4 py-2 bg-gray-800 border ${
-                        errors.roleType ? 'border-red-500' : 'border-gray-700'
-                    } rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                    className={errors.roleType ? 'form-select-error' : 'form-select'}
                     disabled={isSubmitting}
                 >
                     {ROLE_TYPES.map((role) => (
@@ -141,7 +137,7 @@ export const ResourceForm: React.FC<ResourceFormProps> = ({
                         </option>
                     ))}
                 </select>
-                {errors.roleType && <p className="mt-1 text-sm text-red-500">{errors.roleType.message}</p>}
+                {errors.roleType && <p className="form-error">{errors.roleType.message}</p>}
             </div>
 
             {/* Estado Activo */}
@@ -150,7 +146,7 @@ export const ResourceForm: React.FC<ResourceFormProps> = ({
                     id="isActive"
                     type="checkbox"
                     {...register('isActive')}
-                    className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-700 rounded focus:ring-blue-500 focus:ring-2"
+                    className="form-checkbox"
                     disabled={isSubmitting}
                 />
                 <label htmlFor="isActive" className="text-sm font-medium text-gray-300">
@@ -160,24 +156,21 @@ export const ResourceForm: React.FC<ResourceFormProps> = ({
 
             {/* Métricas Asociadas (Opcional) */}
             <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Métricas Asociadas <span className="text-gray-500">(Opcional)</span>
+                <label className="form-label form-label-optional">
+                    Métricas Asociadas
                 </label>
 
                 {/* Métricas seleccionadas */}
                 {selectedMetrics.length > 0 && (
                     <div className="mb-3 flex flex-wrap gap-2">
                         {selectedMetrics.map((metric) => (
-                            <div
-                                key={metric.id}
-                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-900/30 border border-blue-700/50 rounded-lg text-sm text-blue-300"
-                            >
+                            <div key={metric.id} className="form-chip">
                                 <span>{metric.label}</span>
                                 <button
                                     type="button"
                                     onClick={() => removeMetric(metric.id)}
                                     disabled={isSubmitting}
-                                    className="hover:text-blue-100 transition-colors disabled:opacity-50"
+                                    className="form-chip-button"
                                 >
                                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path
@@ -201,19 +194,19 @@ export const ResourceForm: React.FC<ResourceFormProps> = ({
                         onFocus={() => setShowDropdown(true)}
                         placeholder="Buscar métricas..."
                         disabled={isSubmitting}
-                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:opacity-50"
+                        className="form-input"
                     />
 
                     {/* Dropdown de métricas */}
                     {showDropdown && filteredMetrics.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        <div className="form-dropdown">
                             {filteredMetrics.map((metric) => (
                                 <button
                                     key={metric.id}
                                     type="button"
                                     onClick={() => addMetric(metric)}
                                     disabled={isSubmitting}
-                                    className="w-full px-4 py-3 text-left hover:bg-gray-700 transition-colors disabled:opacity-50 border-b border-gray-700 last:border-b-0"
+                                    className="form-dropdown-item"
                                 >
                                     <div className="flex items-center justify-between">
                                         <div>
@@ -231,14 +224,14 @@ export const ResourceForm: React.FC<ResourceFormProps> = ({
                 {/* Click outside para cerrar dropdown */}
                 {showDropdown && (
                     <div
-                        className="fixed inset-0 z-0"
+                        className="form-dropdown-backdrop"
                         onClick={() => setShowDropdown(false)}
                     />
                 )}
             </div>
 
             {/* Botones */}
-            <div className="flex justify-end space-x-3 pt-4">
+            <div className="form-actions">
                 {onCancel && (
                     <button
                         type="button"
