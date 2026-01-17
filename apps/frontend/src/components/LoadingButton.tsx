@@ -18,7 +18,7 @@ export const LoadingButton: React.FC<LoadingButtonProps> = ({
     disabled,
     ...props
 }) => {
-    const baseClasses = 'px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2';
+    const baseClasses = 'px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2';
 
     const variantClasses = {
         primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
@@ -35,12 +35,15 @@ export const LoadingButton: React.FC<LoadingButtonProps> = ({
 
     return (
         <button
-            className={`${baseClasses} ${variantClasses[variant]} ${className}`}
+            className={`${baseClasses} ${variantClasses[variant]} ${loading ? 'opacity-90' : disabled ? 'opacity-50' : ''} ${className}`}
             disabled={disabled || loading}
             {...props}
         >
-            {loading && <PulseLoaderInline size="sm" variant={loaderVariantMap[variant]} />}
-            {children}
+            {loading ? (
+                <PulseLoaderInline size="sm" variant={loaderVariantMap[variant]} />
+            ) : (
+                children
+            )}
         </button>
     );
 };

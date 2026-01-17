@@ -3058,3 +3058,453 @@ Archivo **ERROR_HANDLING.md** (452 líneas):
 - ✅ UX profesional
 - ✅ Preparado para monitoreo en producción
 
+---
+
+## [16 Enero 2026] – Fase 3.10 – PulseLoader: Loading Animado Tipo Electrocardiograma
+
+### Contexto y motivación
+
+Durante la implementación de las fases anteriores, se usaron diferentes componentes de loading:
+- **TableSkeleton**: Para tablas (Fase 3.8)
+- **Spinner genérico**: En RecordsPage y ResourcesPage
+- **LoadingButton**: Con spinner circular básico
+
+Esto generaba **inconsistencia visual** y no reflejaba la identidad de marca de **PulseOps**. Se decidió crear un componente de loading único, llamativo y alineado con el concepto de "pulso" y monitoreo de rendimiento.
+
+**Objetivo**: Componente de loading personalizado tipo electrocardiograma (ECG) para usar en toda la aplicación.
+
+### Qué se implementó
+
+#### Componente PulseLoader
+
+**Archivo creado**: `apps/frontend/src/components/PulseLoader.tsx` (225 líneas)
+
+**Características principales**:
+
+1. **Animación SVG de Electrocardiograma**:
+   - Path complejo simulando latidos cardíacos con picos y valles
+   - 11 puntos de control para forma realista de ECG
+   - Stroke width configurable según tamaño
+
+2. **Gradiente Animado**:
+   - Gradiente lineal que se mueve de 0% a 100%
+   - Duración: 2s con `repeatCount="indefinite"`
+   - Efecto de barrido continuo sobre la línea
+   - Máscara animada para revelar progresivamente
+
+3. **Punto Brillante Móvil**:
+   - Círculo que sigue el path usando `<animateMotion>`
+   - Radio dinámico: `strokeWidth * 1.5`
+   - Opacidad pulsante: 1 → 0.5 → 1 (1s)
+
+4. **Efecto de Resplandor**:
+   - Div de fondo con `blur-xl` y `opacity-50`
+   - Animación `pulse` de Tailwind
+   - Color del glow coincide con variante
+
+5. **Puntos de Carga**:
+   - 3 puntos debajo del texto
+   - Animación escalonada (0s, 0.2s, 0.4s)
+   - Efecto visual de "cargando"
+
+#### Configuración de Tamaños
+
+```typescript
+const sizeConfig = {
+  sm: { width: 60, height: 30, strokeWidth: 2, fontSize: 'text-xs' },
+  md: { width: 100, height: 50, strokeWidth: 2.5, fontSize: 'text-sm' },
+  lg: { width: 140, height: 70, strokeWidth: 3, fontSize: 'text-base' },
+  xl: { width: 180, height: 90, strokeWidth: 3.5, fontSize: 'text-lg' },
+};
+```
+
+**Uso**:
+- `sm`: Botones, inline con texto
+- `md`: Default, cards y secciones
+- `lg`: Tablas y páginas completas
+- `xl`: Overlays de pantalla completa
+
+#### Configuración de Variantes
+
+```typescript
+const colorConfig = {
+  primary: { stroke: '#3B82F6', text: 'text-blue-500', bg: 'bg-blue-500/10' },
+  success: { stroke: '#10B981', text: 'text-green-500', bg: 'bg-green-500/10' },
+  warning: { stroke: '#F59E0B', text: 'text-amber-500', bg: 'bg-amber-500/10' },
+  danger: { stroke: '#EF4444', text: 'text-red-500', bg: 'bg-red-500/10' },
+  white: { stroke: '#FFFFFF', text: 'text-white', bg: 'bg-white/10' },
+};
+```
+
+**Uso semántico**:
+- `primary` (azul): Loading general, métricas, datos
+- `success` (verde): Registros, confirmaciones
+- `warning` (ámbar): Recursos, validaciones
+- `danger` (rojo): Eliminaciones, operaciones críticas
+- `white`: Dentro de botones, sobre fondos oscuros
+
+#### Path del Electrocardiograma
+
+```typescript
+const ecgPath = `
+  M 0,${height / 2}
+  L ${width * 0.2},${height / 2}        // Línea base
+  L ${width * 0.25},${height * 0.8}     // Pico hacia abajo
+  L ${width * 0.3},${height * 0.1}      // Pico grande hacia arriba (QRS)
+  L ${width * 0.35},${height * 0.9}     // Pico hacia abajo
+  L ${width * 0.4},${height / 2}        // Retorno a línea base
+  L ${width * 0.55},${height / 2}       // Línea base
+  L ${width * 0.6},${height * 0.3}      // Pequeña elevación (onda T)
+  L ${width * 0.65},${height * 0.7}     // Pequeña depresión
+  L ${width * 0.7},${height / 2}        // Retorno final
+  L ${width},${height / 2}              // Línea base final
+`;
+```
+
+### Tres Modos de Uso
+
+#### 1. PulseLoader (Base)
+
+```typescript
+<PulseLoader 
+  size="lg" 
+  variant="primary" 
+  text="Cargando métricas..."
+  showText={true}
+  fullScreen={false}
+/>
+```
+
+**Props**:
+- `size`: sm | md | lg | xl
+- `variant`: primary | success | warning | danger | white
+- `text`: string (opcional)
+- `showText`: boolean (default: true)
+- `fullScreen`: boolean (default: false)
+
+#### 2. PulseLoaderOverlay (Pantalla completa)
+
+```typescript
+<PulseLoaderOverlay 
+  size="xl" 
+  variant="primary" 
+  text="Procesando datos..."
+/>
+```
+
+**Características**:
+- Fondo semi-transparente con blur: `bg-gray-900/90 backdrop-blur-sm`
+- Centered con `flex items-center justify-center`
+- z-index: 50 para estar sobre todo
+- Omite prop `fullScreen` (siempre true)
+
+#### 3. PulseLoaderInline (Sin texto, inline)
+
+```typescript
+<PulseLoaderInline 
+  size="sm" 
+  variant="white"
+/>
+```
+
+**Características**:
+- Sin texto ni puntos de carga
+- Solo animación SVG
+- Ideal para botones y espacios reducidos
+- Omite props `fullScreen` y `showText`
+
+### Integración en la Aplicación
+
+#### 1. MetricsPage
+
+**Antes**:
+```tsx
+{loading && <TableSkeleton columns={5} rows={6} showActions={true} />}
+```
+
+**Después**:
+```tsx
+{loading && (
+  <div className="p-12">
+    <PulseLoader size="lg" variant="primary" text="Cargando métricas..." />
+  </div>
+)}
+```
+
+**Beneficio**: Loader personalizado, más llamativo que skeleton
+
+#### 2. ResourcesPage
+
+**Antes**:
+```tsx
+{loading && (
+  <div className="p-8 text-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+    <p className="mt-4 text-gray-400">Cargando recursos...</p>
+  </div>
+)}
+```
+
+**Después**:
+```tsx
+{loading && (
+  <div className="p-12">
+    <PulseLoader size="lg" variant="warning" text="Cargando recursos..." />
+  </div>
+)}
+```
+
+**Beneficio**: Variante warning (ámbar) diferencia de otras páginas
+
+#### 3. RecordsPage
+
+**Antes**:
+```tsx
+{loading && (
+  <div className="p-8 text-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+    <p className="mt-4 text-gray-400">Cargando registros...</p>
+  </div>
+)}
+```
+
+**Después**:
+```tsx
+{loading && (
+  <div className="p-12">
+    <PulseLoader size="lg" variant="success" text="Cargando registros..." />
+  </div>
+)}
+```
+
+**Beneficio**: Variante success (verde) para datos exitosos
+
+#### 4. LoadingButton
+
+**Antes**:
+```tsx
+{loading && (
+  <svg className="animate-spin h-5 w-5" ...>
+    <circle ... />
+    <path ... />
+  </svg>
+)}
+```
+
+**Después**:
+```tsx
+{loading && <PulseLoaderInline size="sm" variant="white" />}
+```
+
+**Beneficio**: Animación ECG consistente incluso en botones
+
+### Archivos modificados/creados
+
+**Nuevos (2)**:
+```
+apps/frontend/src/components/PulseLoader.tsx    (225 líneas)
+PULSE_LOADER.md                                  (487 líneas)
+```
+
+**Modificados (4)**:
+```
+apps/frontend/src/pages/MetricsPage.tsx        (+2 líneas: import + uso)
+apps/frontend/src/pages/ResourcesPage.tsx      (+2 líneas: import + uso)
+apps/frontend/src/pages/RecordsPage.tsx        (+2 líneas: import + uso)
+apps/frontend/src/components/LoadingButton.tsx (+5 líneas: import + mapeo)
+```
+
+### Validación
+
+**Build frontend**:
+```bash
+✓ 877 modules transformed
+dist/assets/index-DJ9C18iU.js  690.57 kB │ gzip: 200.25 kB
+✓ built in 4.74s
+```
+
+**Commits**:
+```
+058f55b - feat: implementar PulseLoader - loading animado tipo electrocardiograma
+```
+
+**Funcionalidad validada**:
+- ✅ Animación de ECG fluida y realista
+- ✅ Gradientes funcionando correctamente
+- ✅ Punto brillante recorre todo el path
+- ✅ Resplandor de fondo visible
+- ✅ Todos los tamaños (sm, md, lg, xl) renderizan correctamente
+- ✅ Todas las variantes con colores apropiados
+- ✅ PulseLoaderInline funciona en LoadingButton
+- ✅ PulseLoaderOverlay cubre pantalla completa
+
+### Beneficios obtenidos
+
+#### 1. Consistencia Visual
+
+**Antes**:
+- TableSkeleton en MetricsPage
+- Spinner circular en ResourcesPage
+- Spinner circular diferente en RecordsPage
+- SVG spinner en LoadingButton
+
+**Después**:
+- PulseLoader en todas las páginas
+- Variantes de color para diferenciar contextos
+- Animación consistente incluso en botones
+
+#### 2. Identidad de Marca
+
+**Concepto "Pulse"**:
+- Electrocardiograma representa monitoreo continuo
+- Pulso cardíaco = rendimiento del equipo
+- Alineado con nombre "PulseOps"
+- Visual memorable y único
+
+#### 3. UX Mejorada
+
+**Características**:
+- Animación fluida y profesional
+- Efecto de resplandor llama la atención
+- Punto brillante da sensación de progreso
+- Texto descriptivo contextual
+- Puntos de carga adicionales
+
+#### 4. Extensibilidad
+
+**Fácil agregar variantes**:
+```typescript
+// Agregar nueva variante "info"
+const colorConfig = {
+  // ... existentes
+  info: {
+    stroke: '#06B6D4',
+    glow: '#06B6D4',
+    text: 'text-cyan-500',
+    bg: 'bg-cyan-500/10',
+  },
+};
+```
+
+**Fácil ajustar animación**:
+```typescript
+// Cambiar velocidad
+<animate dur="3s" /> // Más lento
+<animate dur="1s" /> // Más rápido
+```
+
+### Casos de uso adicionales
+
+#### 1. Overlay de procesamiento
+
+```tsx
+const [processing, setProcessing] = useState(false);
+
+const handleAnalysis = async () => {
+  setProcessing(true);
+  await runAnalysis();
+  setProcessing(false);
+};
+
+return (
+  <>
+    {processing && (
+      <PulseLoaderOverlay 
+        size="xl" 
+        variant="primary" 
+        text="Analizando tendencias..."
+      />
+    )}
+    <button onClick={handleAnalysis}>Analizar</button>
+  </>
+);
+```
+
+#### 2. Loading en cards
+
+```tsx
+<Card>
+  {loading ? (
+    <PulseLoader size="md" variant="primary" text="Cargando datos..." />
+  ) : (
+    <ChartData data={data} />
+  )}
+</Card>
+```
+
+#### 3. Estados de error con danger
+
+```tsx
+{error && (
+  <div className="p-8">
+    <PulseLoader 
+      size="md" 
+      variant="danger" 
+      text="Error al conectar..."
+      showText={true}
+    />
+  </div>
+)}
+```
+
+### Documentación
+
+Archivo **PULSE_LOADER.md** (487 líneas):
+
+**Contenido**:
+1. Propósito y características
+2. API completa con TypeScript
+3. Configuración de tamaños y colores
+4. Tres modos de uso con ejemplos
+5. Detalles técnicos de animación
+6. Path del ECG explicado
+7. Casos de uso reales
+8. Guía de personalización
+9. Estándares de uso
+10. Ejemplos completos
+
+### Próximos pasos
+
+1. **Aplicar en AnalysisPage** (cuando se cree):
+   - PulseLoader durante análisis de tendencias
+   - Variante primary o success según resultado
+
+2. **Estados de error mejorados**:
+   - Usar PulseLoader variant="danger" durante retry
+   - Mostrar mientras se recupera de error
+
+3. **Integrar con ErrorHandler**:
+   - Callback onNetworkError muestra PulseLoader con retry
+   - Loading states durante reconexión
+
+4. **Storybook** (opcional):
+   - Documentar todas las variantes
+   - Playground interactivo
+   - Tests visuales
+
+5. **Optimización de rendimiento**:
+   - Lazy load del SVG
+   - Memoización del path
+   - RequestAnimationFrame para animaciones
+
+### Lecciones aprendidas
+
+1. **SVG es poderoso**: Animaciones complejas sin librerías externas
+2. **Identidad visual importa**: Loading personalizado refuerza marca
+3. **Consistencia > Variedad**: Un componente bien hecho > múltiples mediocres
+4. **Parametrización es clave**: Props permiten reutilización total
+5. **Documentación facilita adopción**: PULSE_LOADER.md asegura uso correcto
+
+### Impacto en arquitectura
+
+**Antes**: Loading inconsistente entre páginas
+**Después**: Componente único de loading en toda la app
+
+**Beneficios a largo plazo**:
+- ✅ Identidad visual fuerte (ECG = Pulse)
+- ✅ Fácil mantener una sola implementación
+- ✅ UX profesional y consistente
+- ✅ Extensible sin romper existente
+- ✅ Preparado para demo live impactante
+
+

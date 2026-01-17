@@ -13,7 +13,7 @@ interface PulseLoaderProps {
 }
 
 const sizeConfig = {
-  sm: { width: 60, height: 30, strokeWidth: 2, fontSize: 'text-xs' },
+  sm: { width: 50, height: 20, strokeWidth: 1.8, fontSize: 'text-xs' },
   md: { width: 100, height: 50, strokeWidth: 2.5, fontSize: 'text-sm' },
   lg: { width: 140, height: 70, strokeWidth: 3, fontSize: 'text-base' },
   xl: { width: 180, height: 90, strokeWidth: 3.5, fontSize: 'text-lg' },
