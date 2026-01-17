@@ -24,6 +24,9 @@ export class Metric {
   @Prop({ default: 'WEEK' })
   periodType: string;
 
+  @Prop({ type: [String], default: [] })
+  resourceIds: string[];
+
   @Prop({ required: true })
   createdBy: string;
 }

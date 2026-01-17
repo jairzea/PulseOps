@@ -25,6 +25,7 @@ export interface Metric {
   description?: string;
   unit?: string;
   periodType?: string;
+  resourceIds?: string[];
   createdBy: string;
   createdAt: string;
   updatedAt: string;

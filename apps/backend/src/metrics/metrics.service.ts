@@ -34,7 +34,16 @@ export class MetricsService {
   }
 
   async findByResource(resourceId: string): Promise<Metric[]> {
-    // Obtener métricas únicas que tiene este recurso
+    // Buscar métricas que tienen este recurso asociado
+    const metricsWithResource = await this.metricModel
+      .find({ resourceIds: resourceId })
+      .exec();
+
+    if (metricsWithResource.length > 0) {
+      return metricsWithResource;
+    }
+
+    // Fallback: obtener métricas únicas que tiene este recurso (basado en records)
     const records = await this.recordsService.findByResource(resourceId);
     const metricKeys = [...new Set(records.map((r) => r.metricKey))];
 

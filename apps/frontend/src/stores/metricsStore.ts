@@ -82,7 +82,7 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
         description: data.description,
         unit: data.unit,
         periodType: data.periodType,
-        // TODO: Manejar resourceIds - puede requerir endpoint adicional
+        resourceIds: data.resourceIds,
       });
       
       // Auto-refetch después de crear
@@ -106,7 +106,7 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
         description: data.description,
         unit: data.unit,
         periodType: data.periodType,
-        // TODO: Manejar resourceIds - puede requerir endpoint adicional
+        resourceIds: data.resourceIds,
       });
       
       // Auto-refetch después de actualizar

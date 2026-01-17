@@ -122,13 +122,13 @@ export const MetricsPage: React.FC = () => {
                                             <div className="text-sm text-gray-400">{metric.unit || '-'}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                            <button 
+                                            <button
                                                 onClick={() => handleEdit(metric)}
                                                 className="text-blue-500 hover:text-blue-400 mr-4"
                                             >
                                                 Editar
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => handleDelete(metric.id)}
                                                 className="text-red-500 hover:text-red-400"
                                             >
