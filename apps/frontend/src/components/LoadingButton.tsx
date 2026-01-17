@@ -27,17 +27,26 @@ export const LoadingButton: React.FC<LoadingButtonProps> = ({
         danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
     };
 
+    // Clases cuando está loading (fondo blanco para danger)
+    const loadingClasses = {
+        primary: variantClasses.primary,
+        secondary: variantClasses.secondary,
+        danger: 'bg-white hover:bg-white focus:ring-red-500', // Fondo blanco cuando está eliminando
+    };
+
     // Renderizar loader apropiado según variante
     const renderLoader = () => {
         if (variant === 'danger') {
-            return <ShredderLoaderInline size="sm" variant="white" />;
+            return <ShredderLoaderInline size="sm" variant="danger" />;
         }
         return <PulseLoaderInline size="sm" variant="white" />;
     };
 
+    const currentVariantClasses = loading && variant === 'danger' ? loadingClasses[variant] : variantClasses[variant];
+
     return (
         <button
-            className={`${baseClasses} ${variantClasses[variant]} ${loading ? 'opacity-90' : disabled ? 'opacity-50' : ''} ${className}`}
+            className={`${baseClasses} ${currentVariantClasses} ${loading ? 'opacity-90' : disabled ? 'opacity-50' : ''} ${className}`}
             disabled={disabled || loading}
             {...props}
         >

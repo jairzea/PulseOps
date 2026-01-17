@@ -40,10 +40,7 @@ export const ShredderLoader: React.FC<ShredderLoaderProps> = ({
 
   return (
     <div className="flex flex-col items-center justify-center gap-2">
-      <div 
-        style={{ width: `${width}px`, height: `${height}px` }}
-        className={variant === 'danger' ? 'bg-white rounded-lg p-1' : ''}
-      >
+      <div style={{ width: `${width}px`, height: `${height}px` }}>
         <Lottie
           animationData={deleteAnimation}
           loop={true}
