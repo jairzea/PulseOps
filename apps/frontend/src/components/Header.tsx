@@ -35,9 +35,14 @@ export const Header: React.FC = () => {
                         <svg className="w-8 h-8 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
-                        <div className="flex flex-col leading-none">
-                            <span className="text-xl font-bold text-white">PulseOps</span>
-                            <small className="text-[9px] text-gray-400/60">By Unlimitech</small>
+                        <div className="flex items-center gap-2">
+                            <div className="flex flex-col items-end leading-none">
+                                <span className="text-xl font-bold text-white">PulseOps</span>
+                                <small className="text-[9px] text-gray-400/60">
+                                    By Unlimitech
+                                </small>
+                            </div>
+                            <span className="text-xs text-gray-400 uppercase tracking-wider">Live</span>
                         </div>
                     </div>
 
@@ -77,9 +82,8 @@ export const Header: React.FC = () => {
                                                 navigate('/');
                                                 setIsMenuOpen(false);
                                             }}
-                                            className={`w-full px-4 py-2 text-left transition-colors flex items-center gap-3 ${
-                                                isActive('/') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                                            }`}
+                                            className={`w-full px-4 py-2 text-left transition-colors flex items-center gap-3 ${isActive('/') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                                                }`}
                                         >
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -91,9 +95,8 @@ export const Header: React.FC = () => {
                                                 navigate('/resources');
                                                 setIsMenuOpen(false);
                                             }}
-                                            className={`w-full px-4 py-2 text-left transition-colors flex items-center gap-3 ${
-                                                isActive('/resources') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                                            }`}
+                                            className={`w-full px-4 py-2 text-left transition-colors flex items-center gap-3 ${isActive('/resources') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                                                }`}
                                         >
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -105,9 +108,8 @@ export const Header: React.FC = () => {
                                                 navigate('/metrics');
                                                 setIsMenuOpen(false);
                                             }}
-                                            className={`w-full px-4 py-2 text-left transition-colors flex items-center gap-3 ${
-                                                isActive('/metrics') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                                            }`}
+                                            className={`w-full px-4 py-2 text-left transition-colors flex items-center gap-3 ${isActive('/metrics') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                                                }`}
                                         >
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
@@ -119,9 +121,8 @@ export const Header: React.FC = () => {
                                                 navigate('/records');
                                                 setIsMenuOpen(false);
                                             }}
-                                            className={`w-full px-4 py-2 text-left transition-colors flex items-center gap-3 ${
-                                                isActive('/records') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                                            }`}
+                                            className={`w-full px-4 py-2 text-left transition-colors flex items-center gap-3 ${isActive('/records') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                                                }`}
                                         >
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

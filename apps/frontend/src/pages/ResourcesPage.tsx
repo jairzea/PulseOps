@@ -1,14 +1,87 @@
 /**
  * ResourcesPage - Gestión de recursos (desarrolladores, líderes técnicos, etc.)
+ * CRUD completo con componentes reutilizables
  */
-import { useState } from 'react';
-import { useResources } from '../hooks/useResources';
-import { PulseLoader } from '../components/PulseLoader';
+import { useEffect } from 'react';
+import { useResourcesStore } from '../stores/resourcesStore';
+import { useMetricsStore } from '../stores/metricsStore';
+import { useConfirmModal } from '../hooks/useConfirmModal';
 import { PageHeader } from '../components/PageHeader';
+import { ResourceModal } from '../components/ResourceModal';
+import { ConfirmModal } from '../components/ConfirmModal';
+import { TableSkeleton } from '../components/TableSkeleton';
+import { ResourceFormData } from '../schemas/resourceFormSchema';
+import { Resource } from '../services/apiClient';
+
+const ROLE_TYPE_LABELS: Record<string, string> = {
+    DEV: 'Desarrollador',
+    TL: 'Líder Técnico',
+    OTHER: 'Otro',
+};
 
 export const ResourcesPage: React.FC = () => {
-    const { resources, loading, error } = useResources();
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const {
+        resources,
+        loading,
+        error,
+        isModalOpen,
+        editingResource,
+        fetchResources,
+        createResource,
+        updateResource,
+        deleteResource,
+        setModalOpen,
+        setEditingResource,
+    } = useResourcesStore();
+
+    const { metrics, fetchMetrics } = useMetricsStore();
+    const { confirm, ...confirmModalProps } = useConfirmModal();
+
+    useEffect(() => {
+        fetchResources();
+        fetchMetrics();
+    }, [fetchResources, fetchMetrics]);
+
+    const handleOpenModal = (resource?: Resource) => {
+        setEditingResource(resource || null);
+        setModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setModalOpen(false);
+        setEditingResource(null);
+    };
+
+    const handleSubmit = async (data: ResourceFormData) => {
+        try {
+            if (editingResource) {
+                await updateResource(editingResource.id, data);
+            } else {
+                await createResource(data);
+            }
+            handleCloseModal();
+        } catch (err) {
+            console.error('Error al guardar recurso:', err);
+        }
+    };
+
+    const handleDelete = async (resource: Resource) => {
+        const confirmed = await confirm({
+            title: '¿Eliminar recurso?',
+            message: `¿Estás seguro de que deseas eliminar a "${resource.name}"? Esta acción no se puede deshacer.`,
+            variant: 'danger',
+            confirmText: 'Eliminar',
+            cancelText: 'Cancelar',
+        });
+
+        if (confirmed) {
+            await deleteResource(resource.id);
+        }
+    };
+
+    const activeResources = resources.filter((r) => r.isActive);
+    const devResources = resources.filter((r) => r.roleType === 'DEV');
+    const tlResources = resources.filter((r) => r.roleType === 'TL');
 
     return (
         <div className="min-h-screen bg-gray-950 text-white">
@@ -18,30 +91,85 @@ export const ResourcesPage: React.FC = () => {
                     description="Gestiona los recursos del equipo (desarrolladores, líderes técnicos, etc.)"
                     action={{
                         label: 'Crear Recurso',
-                        onClick: () => setIsModalOpen(true),
+                        onClick: () => handleOpenModal(),
                     }}
                 />
 
+                {/* Estadísticas */}
+                {!loading && !error && resources.length > 0 && (
+                    <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="bg-gradient-to-br from-blue-900/50 to-blue-800/30 rounded-lg border border-blue-700/50 p-4">
+                            <p className="text-blue-300 text-sm font-medium">Total de Recursos</p>
+                            <p className="text-3xl font-bold text-white mt-2">{resources.length}</p>
+                        </div>
+                        <div className="bg-gradient-to-br from-green-900/50 to-green-800/30 rounded-lg border border-green-700/50 p-4">
+                            <p className="text-green-300 text-sm font-medium">Recursos Activos</p>
+                            <p className="text-3xl font-bold text-white mt-2">{activeResources.length}</p>
+                        </div>
+                        <div className="bg-gradient-to-br from-purple-900/50 to-purple-800/30 rounded-lg border border-purple-700/50 p-4">
+                            <p className="text-purple-300 text-sm font-medium">Desarrolladores</p>
+                            <p className="text-3xl font-bold text-white mt-2">{devResources.length}</p>
+                        </div>
+                        <div className="bg-gradient-to-br from-orange-900/50 to-orange-800/30 rounded-lg border border-orange-700/50 p-4">
+                            <p className="text-orange-300 text-sm font-medium">Líderes Técnicos</p>
+                            <p className="text-3xl font-bold text-white mt-2">{tlResources.length}</p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Tabla de recursos */}
                 <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
-                    {loading && (
-                        <div className="p-12">
-                            <PulseLoader size="lg" variant="warning" text="Cargando recursos..." />
-                        </div>
-                    )}
+                    {loading && <TableSkeleton rows={5} columns={5} />}
 
                     {error && (
                         <div className="p-8 text-center">
-                            <p className="text-red-500">Error al cargar recursos: {error?.message || 'Error desconocido'}</p>
+                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-900/20 mb-4">
+                                <svg
+                                    className="w-8 h-8 text-red-500"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                </svg>
+                            </div>
+                            <p className="text-red-500 font-medium mb-2">Error al cargar recursos</p>
+                            <p className="text-gray-400 text-sm">{error?.message || 'Error desconocido'}</p>
+                            <button
+                                onClick={() => fetchResources()}
+                                className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors"
+                            >
+                                Reintentar
+                            </button>
                         </div>
                     )}
 
                     {!loading && !error && resources.length === 0 && (
-                        <div className="p-8 text-center">
-                            <p className="text-gray-400">No hay recursos registrados</p>
+                        <div className="p-12 text-center">
+                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-800 mb-4">
+                                <svg
+                                    className="w-8 h-8 text-gray-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                                    />
+                                </svg>
+                            </div>
+                            <p className="text-gray-400 mb-4">No hay recursos registrados</p>
                             <button
-                                onClick={() => setIsModalOpen(true)}
-                                className="mt-4 text-blue-500 hover:text-blue-400 transition-colors"
+                                onClick={() => handleOpenModal()}
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
                             >
                                 Crear el primer recurso
                             </button>
@@ -59,6 +187,9 @@ export const ResourcesPage: React.FC = () => {
                                         Rol
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                        Estado
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                                         ID
                                     </th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
@@ -70,21 +201,60 @@ export const ResourcesPage: React.FC = () => {
                                 {resources.map((resource) => (
                                     <tr key={resource.id} className="hover:bg-gray-800/50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-white">{resource.name}</div>
+                                            <div className="flex items-center">
+                                                <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                                                    <span className="text-white font-bold text-sm">
+                                                        {resource.name
+                                                            .split(' ')
+                                                            .map((n) => n[0])
+                                                            .join('')
+                                                            .toUpperCase()
+                                                            .slice(0, 2)}
+                                                    </span>
+                                                </div>
+                                                <div className="ml-4">
+                                                    <div className="text-sm font-medium text-white">{resource.name}</div>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-900/50 text-blue-300">
-                                                {resource.roleType}
+                                            <span
+                                                className={`px-3 py-1 text-xs font-medium rounded-full ${
+                                                    resource.roleType === 'DEV'
+                                                        ? 'bg-blue-900/50 text-blue-300'
+                                                        : resource.roleType === 'TL'
+                                                        ? 'bg-purple-900/50 text-purple-300'
+                                                        : 'bg-gray-700/50 text-gray-300'
+                                                }`}
+                                            >
+                                                {ROLE_TYPE_LABELS[resource.roleType] || resource.roleType}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-400 font-mono">{resource.id}</div>
+                                            <span
+                                                className={`px-3 py-1 text-xs font-medium rounded-full ${
+                                                    resource.isActive
+                                                        ? 'bg-green-900/50 text-green-300'
+                                                        : 'bg-gray-700/50 text-gray-400'
+                                                }`}
+                                            >
+                                                {resource.isActive ? 'Activo' : 'Inactivo'}
+                                            </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                            <button className="text-blue-500 hover:text-blue-400 mr-4">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-xs text-gray-400 font-mono">{resource.id}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm space-x-3">
+                                            <button
+                                                onClick={() => handleOpenModal(resource)}
+                                                className="text-blue-500 hover:text-blue-400 transition-colors"
+                                            >
                                                 Editar
                                             </button>
-                                            <button className="text-red-500 hover:text-red-400">
+                                            <button
+                                                onClick={() => handleDelete(resource)}
+                                                className="text-red-500 hover:text-red-400 transition-colors"
+                                            >
                                                 Eliminar
                                             </button>
                                         </td>
@@ -94,45 +264,20 @@ export const ResourcesPage: React.FC = () => {
                         </table>
                     )}
                 </div>
-
-                {/* Estadísticas */}
-                {!loading && !error && resources.length > 0 && (
-                    <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-                            <p className="text-gray-400 text-sm">Total de Recursos</p>
-                            <p className="text-2xl font-bold text-white mt-1">{resources.length}</p>
-                        </div>
-                        <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-                            <p className="text-gray-400 text-sm">Desarrolladores</p>
-                            <p className="text-2xl font-bold text-white mt-1">
-                                {resources.filter((r) => r.roleType === 'DEV').length}
-                            </p>
-                        </div>
-                        <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-                            <p className="text-gray-400 text-sm">Líderes Técnicos</p>
-                            <p className="text-2xl font-bold text-white mt-1">
-                                {resources.filter((r) => r.roleType === 'TL').length}
-                            </p>
-                        </div>
-                    </div>
-                )}
             </div>
 
-            {/* TODO: Modal de formulario (ResourceForm + ResourceModal) */}
-            {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full">
-                        <h2 className="text-xl font-bold mb-4">Crear Recurso</h2>
-                        <p className="text-gray-400">Formulario pendiente de implementación</p>
-                        <button
-                            onClick={() => setIsModalOpen(false)}
-                            className="mt-4 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-                        >
-                            Cerrar
-                        </button>
-                    </div>
-                </div>
-            )}
+            {/* Modal de Crear/Editar */}
+            <ResourceModal
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                resource={editingResource}
+                onSubmit={handleSubmit}
+                isSubmitting={loading}
+                metrics={metrics}
+            />
+
+            {/* Modal de Confirmación (reutilizable) */}
+            <ConfirmModal {...confirmModalProps} />
         </div>
     );
 };
