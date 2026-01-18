@@ -30,7 +30,7 @@ export function ConditionFormula({ analysis, loading = false }: ConditionFormula
                     <span>📋</span>
                     <span>{analysis.playbook.title}</span>
                 </h3>
-                <p className="text-sm text-gray-400 mt-1">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Fórmula aplicada para la condición: <span className="text-blue-400 font-semibold">{analysis.playbook.condition}</span>
                 </p>
             </div>
@@ -44,7 +44,7 @@ export function ConditionFormula({ analysis, loading = false }: ConditionFormula
                         <div className="flex-shrink-0 w-8 h-8 bg-blue-900/30 text-blue-400 rounded-full flex items-center justify-center font-semibold text-sm">
                             {index + 1}
                         </div>
-                        <p className="text-gray-300 flex-1 pt-1">{step}</p>
+                        <p className="text-gray-600 dark:text-gray-300 flex-1 pt-1">{step}</p>
                     </div>
                 ))}
             </div>

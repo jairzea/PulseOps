@@ -79,7 +79,7 @@ export function UsersAdminPage() {
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors duration-300">
-                <div className="text-gray-400">Cargando usuarios...</div>
+                <div className="text-gray-600 dark:text-gray-400">Cargando usuarios...</div>
             </div>
         );
     }
@@ -116,19 +116,19 @@ export function UsersAdminPage() {
                     <table className="w-full">
                         <thead className="bg-gray-100 dark:bg-gray-700 transition-colors duration-300">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                                     Usuario
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                                     Rol
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                                     Estado
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                                     Último acceso
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                                     Acciones
                                 </th>
                             </tr>
@@ -143,15 +143,15 @@ export function UsersAdminPage() {
                                             </div>
                                             <div>
                                                 <div className="text-white font-medium">{user.name}</div>
-                                                <div className="text-gray-400 text-sm">{user.email}</div>
+                                                <div className="text-gray-600 dark:text-gray-400 text-sm">{user.email}</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <span
                                             className={`px-2 py-1 text-xs rounded-full ${user.role === 'admin'
-                                                    ? 'bg-purple-600 text-white'
-                                                    : 'bg-gray-600 text-gray-200'
+                                                    ? 'bg-purple-100 dark:bg-purple-600 text-purple-700 dark:text-white'
+                                                    : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200'
                                                 }`}
                                         >
                                             {user.role === 'admin' ? 'Admin' : 'Usuario'}
@@ -160,14 +160,14 @@ export function UsersAdminPage() {
                                     <td className="px-6 py-4">
                                         <span
                                             className={`px-2 py-1 text-xs rounded-full ${user.isActive
-                                                    ? 'bg-green-600 text-white'
-                                                    : 'bg-red-600 text-white'
+                                                    ? 'bg-green-100 dark:bg-green-600 text-green-700 dark:text-white'
+                                                    : 'bg-red-100 dark:bg-red-600 text-red-700 dark:text-white'
                                                 }`}
                                         >
                                             {user.isActive ? 'Activo' : 'Inactivo'}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-gray-300 text-sm">
+                                    <td className="px-6 py-4 text-gray-600 dark:text-gray-300 text-sm">
                                         {user.lastLogin
                                             ? new Date(user.lastLogin).toLocaleDateString()
                                             : 'Nunca'}
@@ -201,7 +201,7 @@ export function UsersAdminPage() {
                 </div>
 
                 {filteredUsers.length === 0 && (
-                    <div className="text-center py-12 text-gray-400">
+                    <div className="text-center py-12 text-gray-600 dark:text-gray-400">
                         {searchTerm ? 'No se encontraron usuarios' : 'No hay usuarios registrados'}
                     </div>
                 )}
@@ -214,7 +214,7 @@ export function UsersAdminPage() {
                         <h2 className="text-2xl font-bold text-white mb-6">Nuevo Usuario</h2>
                         <form onSubmit={handleCreateUser} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">
+                                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                                     Nombre
                                 </label>
                                 <input
@@ -226,7 +226,7 @@ export function UsersAdminPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">
+                                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                                     Email
                                 </label>
                                 <input
@@ -238,7 +238,7 @@ export function UsersAdminPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">
+                                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                                     Contraseña
                                 </label>
                                 <input
@@ -251,7 +251,7 @@ export function UsersAdminPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">
+                                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                                     Rol
                                 </label>
                                 <select

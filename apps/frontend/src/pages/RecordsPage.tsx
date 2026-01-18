@@ -103,7 +103,7 @@ export const RecordsPage: React.FC = () => {
                 <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
                     {!selectedResourceId || !selectedMetricKey ? (
                         <div className="p-8 text-center">
-                            <p className="text-gray-400">Selecciona un recurso y una métrica para ver los registros</p>
+                            <p className="text-gray-600 dark:text-gray-400">Selecciona un recurso y una métrica para ver los registros</p>
                         </div>
                     ) : loading ? (
                         <div className="p-12">
@@ -115,7 +115,7 @@ export const RecordsPage: React.FC = () => {
                         </div>
                     ) : records.length === 0 ? (
                         <div className="p-8 text-center">
-                            <p className="text-gray-400">No hay registros para esta combinación</p>
+                            <p className="text-gray-600 dark:text-gray-400">No hay registros para esta combinación</p>
                             <button
                                 onClick={() => setModalOpen(true)}
                                 className="mt-4 text-blue-500 hover:text-blue-400 transition-colors"
@@ -127,19 +127,19 @@ export const RecordsPage: React.FC = () => {
                         <table className="w-full">
                             <thead className="bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
                                         Semana
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
                                         Valor
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
                                         Fuente
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
                                         Timestamp
                                     </th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
                                         Acciones
                                     </th>
                                 </tr>
@@ -148,7 +148,7 @@ export const RecordsPage: React.FC = () => {
                                 {records.map((record) => (
                                     <tr key={record.id} className="hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="px-2 py-1 text-xs font-mono rounded bg-blue-900/50 text-blue-300">
+                                            <span className="px-2 py-1 text-xs font-mono rounded bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
                                                 {formatWeek(record.week)}
                                             </span>
                                         </td>
@@ -161,7 +161,7 @@ export const RecordsPage: React.FC = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-400">{formatTimestamp(record.timestamp)}</div>
+                                            <div className="text-sm text-gray-600 dark:text-gray-400">{formatTimestamp(record.timestamp)}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                                             <button className="text-blue-500 hover:text-blue-400 mr-4">
@@ -182,17 +182,17 @@ export const RecordsPage: React.FC = () => {
                 {records.length > 0 && (
                     <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-                            <p className="text-gray-400 text-sm">Total de Registros</p>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm">Total de Registros</p>
                             <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{records.length}</p>
                         </div>
                         <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-                            <p className="text-gray-400 text-sm">Valor Promedio</p>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm">Valor Promedio</p>
                             <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                 {(records.reduce((acc, r) => acc + r.value, 0) / records.length).toFixed(1)}
                             </p>
                         </div>
                         <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
-                            <p className="text-gray-400 text-sm">Último Valor</p>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm">Último Valor</p>
                             <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                 {records[records.length - 1]?.value || 0}
                             </p>

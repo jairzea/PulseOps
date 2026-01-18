@@ -159,7 +159,7 @@ export const ResourcesPage: React.FC = () => {
                                 </svg>
                             </div>
                             <p className="text-red-500 font-medium mb-2">Error al cargar recursos</p>
-                            <p className="text-gray-400 text-sm">{error || 'Error desconocido'}</p>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm">{error || 'Error desconocido'}</p>
                             <button
                                 onClick={() => fetchResources()}
                                 className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors"
@@ -173,7 +173,7 @@ export const ResourcesPage: React.FC = () => {
                         <div className="p-12 text-center">
                             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-800 mb-4">
                                 <svg
-                                    className="w-8 h-8 text-gray-400"
+                                    className="w-8 h-8 text-gray-600 dark:text-gray-400"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -186,7 +186,7 @@ export const ResourcesPage: React.FC = () => {
                                     />
                                 </svg>
                             </div>
-                            <p className="text-gray-400 mb-4">No hay recursos registrados</p>
+                            <p className="text-gray-600 dark:text-gray-400 mb-4">No hay recursos registrados</p>
                             <button
                                 onClick={() => handleOpenModal()}
                                 className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
@@ -200,19 +200,19 @@ export const ResourcesPage: React.FC = () => {
                         <table className="w-full">
                             <thead className="bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
                                         Nombre
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
                                         Rol
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
                                         Estado
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
                                         ID
                                     </th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
                                         Acciones
                                     </th>
                                 </tr>
@@ -240,9 +240,9 @@ export const ResourcesPage: React.FC = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span
                                                 className={`px-3 py-1 text-xs font-medium rounded-full ${resource.roleType === 'DEV'
-                                                    ? 'bg-blue-900/50 text-blue-300'
+                                                    ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'
                                                     : resource.roleType === 'TL'
-                                                        ? 'bg-purple-900/50 text-purple-300'
+                                                        ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300'
                                                         : 'bg-gray-700/50 text-gray-300'
                                                     }`}
                                             >
@@ -252,15 +252,15 @@ export const ResourcesPage: React.FC = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span
                                                 className={`px-3 py-1 text-xs font-medium rounded-full ${resource.isActive
-                                                    ? 'bg-green-900/50 text-green-300'
-                                                    : 'bg-gray-700/50 text-gray-400'
+                                                    ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
+                                                    : 'bg-gray-700/50 text-gray-600 dark:text-gray-400'
                                                     }`}
                                             >
                                                 {resource.isActive ? 'Activo' : 'Inactivo'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-xs text-gray-400 font-mono">{resource.id}</div>
+                                            <div className="text-xs text-gray-600 dark:text-gray-400 font-mono">{resource.id}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                                             <div className="flex items-center justify-end gap-2">

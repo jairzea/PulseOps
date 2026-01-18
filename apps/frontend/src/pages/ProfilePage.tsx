@@ -86,7 +86,7 @@ export function ProfilePage() {
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors duration-300">
-                <div className="text-gray-400">Cargando perfil...</div>
+                <div className="text-gray-600 dark:text-gray-400">Cargando perfil...</div>
             </div>
         );
     }
@@ -104,7 +104,7 @@ export function ProfilePage() {
                                 {profile?.name.substring(0, 2).toUpperCase()}
                             </div>
                             <h2 className="text-xl font-bold text-white mb-1">{profile?.name}</h2>
-                            <p className="text-gray-400 text-sm mb-4">{profile?.email}</p>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{profile?.email}</p>
                             {profile?.role === 'admin' && (
                                 <span className="px-3 py-1 bg-purple-600 text-white text-xs rounded-full mb-4">
                                     Administrador
@@ -113,23 +113,23 @@ export function ProfilePage() {
 
                             <div className="w-full border-t border-gray-700 pt-4 mt-4 space-y-2 text-sm">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-400">Estado:</span>
+                                    <span className="text-gray-600 dark:text-gray-400">Estado:</span>
                                     <span className={profile?.isActive ? 'text-green-400' : 'text-red-400'}>
                                         {profile?.isActive ? 'Activo' : 'Inactivo'}
                                     </span>
                                 </div>
                                 {profile?.lastLogin && (
                                     <div className="flex justify-between">
-                                        <span className="text-gray-400">Último acceso:</span>
-                                        <span className="text-gray-300">
+                                        <span className="text-gray-600 dark:text-gray-400">Último acceso:</span>
+                                        <span className="text-gray-600 dark:text-gray-300">
                                             {new Date(profile.lastLogin).toLocaleDateString()}
                                         </span>
                                     </div>
                                 )}
                                 {profile?.createdAt && (
                                     <div className="flex justify-between">
-                                        <span className="text-gray-400">Miembro desde:</span>
-                                        <span className="text-gray-300">
+                                        <span className="text-gray-600 dark:text-gray-400">Miembro desde:</span>
+                                        <span className="text-gray-600 dark:text-gray-300">
                                             {new Date(profile.createdAt).toLocaleDateString()}
                                         </span>
                                     </div>
@@ -157,7 +157,7 @@ export function ProfilePage() {
                             {isEditing ? (
                                 <form onSubmit={handleUpdateProfile} className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                                             Nombre
                                         </label>
                                         <input
@@ -169,7 +169,7 @@ export function ProfilePage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                                             Email
                                         </label>
                                         <input
@@ -203,15 +203,15 @@ export function ProfilePage() {
                             ) : (
                                 <div className="space-y-3">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-1">Nombre</label>
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Nombre</label>
                                         <p className="text-gray-900 dark:text-white">{profile?.name}</p>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Email</label>
                                         <p className="text-gray-900 dark:text-white">{profile?.email}</p>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-1">Rol</label>
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Rol</label>
                                         <p className="text-white capitalize">{profile?.role}</p>
                                     </div>
                                 </div>
@@ -235,7 +235,7 @@ export function ProfilePage() {
                             {isChangingPassword ? (
                                 <form onSubmit={handleChangePassword} className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                                             Contraseña Actual
                                         </label>
                                         <input
@@ -247,7 +247,7 @@ export function ProfilePage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                                             Nueva Contraseña
                                         </label>
                                         <input
@@ -260,7 +260,7 @@ export function ProfilePage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                                             Confirmar Nueva Contraseña
                                         </label>
                                         <input
@@ -294,7 +294,7 @@ export function ProfilePage() {
                                     </div>
                                 </form>
                             ) : (
-                                <p className="text-gray-400 text-sm">
+                                <p className="text-gray-600 dark:text-gray-400 text-sm">
                                     Mantén tu cuenta segura actualizando tu contraseña regularmente.
                                 </p>
                             )}

@@ -18,7 +18,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ title, description, acti
         <div className="flex items-center justify-between mb-8">
             <div>
                 <h1 className="text-3xl font-bold">{title}</h1>
-                {description && <p className="text-gray-400 mt-1">{description}</p>}
+                {description && <p className="text-gray-600 dark:text-gray-400 mt-1">{description}</p>}
             </div>
             {action && (
                 <button

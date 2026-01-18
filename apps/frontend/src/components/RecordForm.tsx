@@ -140,7 +140,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
             {/* Paso 1: Selección de Recurso */}
             <div>
-                <label htmlFor="resourceId" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="resourceId" className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                     1. Selecciona el Recurso *
                 </label>
                 <select
@@ -170,7 +170,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
             {selectedResourceId && (
                 <div className="space-y-4 animate-fade-in">
                     <div>
-                        <label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-2">
+                        <label htmlFor="date" className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                             2. Selecciona la Fecha del Registro *
                         </label>
                         <input
@@ -214,14 +214,14 @@ export const RecordForm: React.FC<RecordFormProps> = ({
 
                     {/* Paso 3: Valores de Métricas */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-3">
+                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-3">
                             3. Ingresa los Valores de las Métricas
                         </label>
 
                         {loadingMetrics ? (
                             <div className="flex items-center justify-center p-8">
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                                <span className="ml-3 text-gray-400">Cargando métricas...</span>
+                                <span className="ml-3 text-gray-600 dark:text-gray-400">Cargando métricas...</span>
                             </div>
                         ) : resourceMetrics.length === 0 ? (
                             <div className="p-6 bg-yellow-900/20 border border-yellow-700/50 rounded-lg">
@@ -249,7 +249,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                                         <div className="flex-1">
                                             <label
                                                 htmlFor={`metric-${metric.key}`}
-                                                className="block text-sm font-medium text-gray-300 mb-1"
+                                                className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1"
                                             >
                                                 {metric.label}
                                                 {metric.description && (
@@ -271,7 +271,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                                                     className="flex-1 px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                                                 />
                                                 {metric.unit && (
-                                                    <span className="text-sm text-gray-400 min-w-[60px]">
+                                                    <span className="text-sm text-gray-600 dark:text-gray-400 min-w-[60px]">
                                                         {metric.unit}
                                                     </span>
                                                 )}
@@ -293,7 +293,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                     <div className="p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
                         <div className="flex items-center gap-2">
                             <svg
-                                className="w-5 h-5 text-gray-400"
+                                className="w-5 h-5 text-gray-600 dark:text-gray-400"
                                 fill="none"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
@@ -303,7 +303,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                             >
                                 <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                             </svg>
-                            <span className="text-sm text-gray-400">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
                                 Fuente: <span className="font-medium text-white">Manual</span>
                             </span>
                         </div>
