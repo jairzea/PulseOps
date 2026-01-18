@@ -102,6 +102,17 @@ export interface ConditionMetadata {
   category: 'superior' | 'normal' | 'crisis' | 'technical';
 }
 
+export interface Playbook {
+  _id?: string;
+  condition: string;
+  title: string;
+  steps: string[];
+  version: number;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 // ============================================================================
 // Utilidades HTTP
 // ============================================================================
@@ -286,5 +297,35 @@ export const apiClient = {
 
   async getConditionsMetadata(): Promise<ConditionMetadata[]> {
     return fetchJSON<ConditionMetadata[]>('/conditions/metadata');
+  },
+
+  // --------------------------------------------------------------------------
+  // Playbooks
+  // --------------------------------------------------------------------------
+
+  async getAllPlaybooks(): Promise<Playbook[]> {
+    return fetchJSON<Playbook[]>('/playbooks');
+  },
+
+  async getPlaybookByCondition(condition: string): Promise<Playbook | null> {
+    return fetchJSON<Playbook | null>(`/playbooks/${condition}`);
+  },
+
+  async updatePlaybook(condition: string, data: {
+    title: string;
+    steps: string[];
+    version?: number;
+    isActive?: boolean;
+  }): Promise<Playbook> {
+    return fetchJSON<Playbook>(`/playbooks/${condition}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async seedPlaybooks(): Promise<{ message: string; created: number }> {
+    return fetchJSON<{ message: string; created: number }>('/playbooks/seed', {
+      method: 'POST',
+    });
   },
 };

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { configurationApi } from '../services/configurationApi';
+import { apiClient, Playbook } from '../services/apiClient';
 import type {
     AnalysisConfiguration,
     ConditionThresholds,
@@ -14,15 +15,20 @@ interface StepProps {
     getValue: (path: string[]) => any;
 }
 
-// Paso 1: Fórmulas de Condiciones
-function Step1Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
+// Paso 1: Fórmulas de Condiciones (Playbooks)
+function Step1Formulas() {
+    const [playbooks, setPlaybooks] = useState<Playbook[]>([]);
+    const [editedPlaybooks, setEditedPlaybooks] = useState<Record<string, Playbook>>({});
+    const [loading, setLoading] = useState(true);
+    const { success, error: showError } = useToast();
+
     const conditions = [
-        { key: 'afluencia', name: 'AFLUENCIA', color: 'purple' },
-        { key: 'normal', name: 'NORMAL', color: 'green' },
-        { key: 'emergencia', name: 'EMERGENCIA', color: 'yellow' },
-        { key: 'peligro', name: 'PELIGRO', color: 'red' },
-        { key: 'poder', name: 'PODER', color: 'cyan' },
-        { key: 'inexistencia', name: 'INEXISTENCIA', color: 'gray' },
+        { key: 'AFLUENCIA', name: 'AFLUENCIA', color: 'purple' },
+        { key: 'NORMAL', name: 'NORMAL', color: 'green' },
+        { key: 'EMERGENCIA', name: 'EMERGENCIA', color: 'yellow' },
+        { key: 'PELIGRO', name: 'PELIGRO', color: 'red' },
+        { key: 'PODER', name: 'PODER', color: 'cyan' },
+        { key: 'INEXISTENCIA', name: 'INEXISTENCIA', color: 'gray' },
     ];
 
     const colorClasses = {
@@ -34,22 +40,120 @@ function Step1Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
         gray: { border: 'border-gray-600/30', text: 'text-gray-400', bg: 'bg-gray-500' },
     };
 
+    useEffect(() => {
+        loadPlaybooks();
+    }, []);
+
+    const loadPlaybooks = async () => {
+        try {
+            setLoading(true);
+            const data = await apiClient.getAllPlaybooks();
+            setPlaybooks(data);
+            // Inicializar editedPlaybooks con los datos cargados
+            const edited: Record<string, Playbook> = {};
+            data.forEach(pb => {
+                edited[pb.condition] = { ...pb };
+            });
+            setEditedPlaybooks(edited);
+        } catch (error) {
+            console.error('Error loading playbooks:', error);
+            showError('No se pudieron cargar las fórmulas');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const updatePlaybook = (condition: string, field: keyof Playbook, value: any) => {
+        setEditedPlaybooks(prev => ({
+            ...prev,
+            [condition]: {
+                ...prev[condition],
+                [field]: value
+            }
+        }));
+    };
+
+    const updateStep = (condition: string, stepIndex: number, value: string) => {
+        setEditedPlaybooks(prev => {
+            const pb = prev[condition];
+            if (!pb) return prev;
+            const newSteps = [...pb.steps];
+            newSteps[stepIndex] = value;
+            return {
+                ...prev,
+                [condition]: {
+                    ...pb,
+                    steps: newSteps
+                }
+            };
+        });
+    };
+
+    const addStep = (condition: string) => {
+        setEditedPlaybooks(prev => {
+            const pb = prev[condition];
+            if (!pb) return prev;
+            return {
+                ...prev,
+                [condition]: {
+                    ...pb,
+                    steps: [...pb.steps, '']
+                }
+            };
+        });
+    };
+
+    const removeStep = (condition: string, stepIndex: number) => {
+        setEditedPlaybooks(prev => {
+            const pb = prev[condition];
+            if (!pb) return prev;
+            return {
+                ...prev,
+                [condition]: {
+                    ...pb,
+                    steps: pb.steps.filter((_, i) => i !== stepIndex)
+                }
+            };
+        });
+    };
+
+    const savePlaybook = async (condition: string) => {
+        const pb = editedPlaybooks[condition];
+        if (!pb) return;
+
+        try {
+            await apiClient.updatePlaybook(condition, {
+                title: pb.title,
+                steps: pb.steps.filter(s => s.trim() !== ''), // Filtrar pasos vacíos
+                isActive: pb.isActive
+            });
+            success(`Fórmula de ${condition} guardada correctamente`);
+            await loadPlaybooks(); // Recargar para obtener versión actualizada
+        } catch (error) {
+            console.error('Error saving playbook:', error);
+            showError(`No se pudo guardar la fórmula de ${condition}`);
+        }
+    };
+
+    if (loading) {
+        return <PulseLoader size="md" variant="primary" text="Cargando fórmulas..." />;
+    }
+
     return (
         <div className="space-y-8">
             <div>
                 <h2 className="text-2xl font-bold text-white mb-6">Fórmulas de Condiciones</h2>
                 <p className="text-gray-400 mb-8">
-                    Define los pasos de acción para cada condición operativa
+                    Define los pasos de acción para cada condición operativa (Playbooks Hubbard)
                 </p>
             </div>
 
             <div className="grid grid-cols-1 gap-6">
                 {conditions.map(({ key, name, color }) => {
-                    const formula = getValue([key, 'formula']);
+                    const playbook = editedPlaybooks[key];
                     const colors = colorClasses[color as keyof typeof colorClasses];
                     
-                    // Verificar si la fórmula tiene pasos configurados
-                    const hasFormula = formula && formula.steps && formula.steps.length > 0;
+                    if (!playbook) return null;
 
                     return (
                         <div key={key} className={`bg-gray-800 rounded-lg p-6 border ${colors.border}`}>
@@ -59,88 +163,69 @@ function Step1Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
                                     <h3 className={`text-lg font-semibold ${colors.text}`}>
                                         {name}
                                     </h3>
-                                    {!hasFormula && (
-                                        <span className="text-xs bg-yellow-600/20 text-yellow-400 px-2 py-1 rounded">
-                                            Sin fórmula
-                                        </span>
-                                    )}
+                                    <span className="text-xs bg-blue-600/20 text-blue-400 px-2 py-1 rounded">
+                                        v{playbook.version}
+                                    </span>
                                 </div>
-                                {hasFormula && (
+                                <div className="flex items-center gap-3">
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input
                                             type="checkbox"
-                                            checked={formula.enabled ?? true}
-                                            onChange={(e) => updateThreshold([key, 'formula', 'enabled'], e.target.checked)}
+                                            checked={playbook.isActive}
+                                            onChange={(e) => updatePlaybook(key, 'isActive', e.target.checked)}
                                             className="w-4 h-4 rounded border-gray-700 bg-gray-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
                                         />
-                                        <span className="text-sm text-gray-300">Fórmula activa</span>
+                                        <span className="text-sm text-gray-300">Activa</span>
                                     </label>
-                                )}
+                                    <button
+                                        onClick={() => savePlaybook(key)}
+                                        className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded transition-colors"
+                                    >
+                                        💾 Guardar
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Descripción de la fórmula
+                                    Título de la fórmula
                                 </label>
-                                <textarea
-                                    value={formula?.description || ''}
-                                    onChange={(e) => updateThreshold([key, 'formula', 'description'], e.target.value)}
-                                    className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
-                                    rows={2}
-                                    placeholder="Describe el propósito de esta fórmula..."
+                                <input
+                                    type="text"
+                                    value={playbook.title}
+                                    onChange={(e) => updatePlaybook(key, 'title', e.target.value)}
+                                    className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                    placeholder="Título de la fórmula..."
                                 />
                             </div>
 
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between mb-3">
                                     <h4 className="text-sm font-medium text-gray-300">
-                                        Pasos de la fórmula
+                                        Pasos de la fórmula ({playbook.steps.length})
                                     </h4>
                                     <button
-                                        onClick={() => {
-                                            const currentSteps = formula?.steps || [];
-                                            const newStep = {
-                                                order: currentSteps.length + 1,
-                                                description: '',
-                                                enabled: true
-                                            };
-                                            updateThreshold([key, 'formula', 'steps'], [...currentSteps, newStep]);
-                                            // Activar la fórmula si se añade el primer paso
-                                            if (!formula || !formula.enabled) {
-                                                updateThreshold([key, 'formula', 'enabled'], true);
-                                            }
-                                        }}
+                                        onClick={() => addStep(key)}
                                         className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
                                     >
                                         + Agregar paso
                                     </button>
                                 </div>
-                                {formula?.steps && formula.steps.length > 0 ? (
-                                    formula.steps.map((step: any, index: number) => (
+                                {playbook.steps.length > 0 ? (
+                                    playbook.steps.map((step, index) => (
                                         <div key={index} className="flex items-start gap-3 bg-gray-900/50 rounded-lg p-3">
-                                            <div className="flex items-center gap-2 min-w-[80px]">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={step.enabled ?? true}
-                                                    onChange={(e) => updateThreshold([key, 'formula', 'steps', index.toString(), 'enabled'], e.target.checked)}
-                                                    className="w-4 h-4 rounded border-gray-700 bg-gray-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
-                                                />
-                                                <span className="text-sm font-medium text-gray-400">
-                                                    Paso {step.order}
-                                                </span>
+                                            <div className="flex-shrink-0 w-8 h-8 bg-blue-900/30 text-blue-400 rounded-full flex items-center justify-center font-semibold text-sm">
+                                                {index + 1}
                                             </div>
                                             <input
                                                 type="text"
-                                                value={step.description || ''}
-                                                onChange={(e) => updateThreshold([key, 'formula', 'steps', index.toString(), 'description'], e.target.value)}
+                                                value={step}
+                                                onChange={(e) => updateStep(key, index, e.target.value)}
                                                 className="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                                placeholder={`Descripción del paso ${step.order}`}
+                                                placeholder={`Paso ${index + 1}...`}
                                             />
                                             <button
-                                                onClick={() => {
-                                                    const newSteps = formula.steps.filter((_: any, i: number) => i !== index);
-                                                    updateThreshold([key, 'formula', 'steps'], newSteps);
-                                                }}
+                                                onClick={() => removeStep(key, index)}
                                                 className="px-2 py-1 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded transition-colors"
                                                 title="Eliminar paso"
                                             >
@@ -1059,12 +1144,8 @@ export function ConfigurationPage() {
 
                         {/* Step Content */}
                         <div className="bg-gray-800/30 rounded-lg p-8 border border-gray-700/50 min-h-[500px]">
-                            {currentStep === 1 && thresholds && (
-                                <Step1Formulas
-                                    thresholds={thresholds}
-                                    updateThreshold={updateThreshold}
-                                    getValue={getValue}
-                                />
+                            {currentStep === 1 && (
+                                <Step1Formulas />
                             )}
                             {currentStep === 2 && thresholds && (
                                 <Step2Conditions
