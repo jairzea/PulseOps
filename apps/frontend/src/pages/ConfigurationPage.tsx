@@ -14,7 +14,110 @@ interface StepProps {
     getValue: (path: string[]) => any;
 }
 
-function Step1ConditionsMain({ thresholds, updateThreshold, getValue }: StepProps) {
+// Paso 1: Fórmulas de Condiciones
+function Step1Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
+    const conditions = [
+        { key: 'afluencia', name: 'AFLUENCIA', color: 'purple' },
+        { key: 'normal', name: 'NORMAL', color: 'green' },
+        { key: 'emergencia', name: 'EMERGENCIA', color: 'yellow' },
+        { key: 'peligro', name: 'PELIGRO', color: 'red' },
+        { key: 'poder', name: 'PODER', color: 'cyan' },
+        { key: 'inexistencia', name: 'INEXISTENCIA', color: 'gray' },
+    ];
+
+    const colorClasses = {
+        purple: { border: 'border-purple-600/30', text: 'text-purple-400', bg: 'bg-purple-500' },
+        green: { border: 'border-green-600/30', text: 'text-green-400', bg: 'bg-green-500' },
+        yellow: { border: 'border-yellow-600/30', text: 'text-yellow-400', bg: 'bg-yellow-500' },
+        red: { border: 'border-red-600/30', text: 'text-red-400', bg: 'bg-red-500' },
+        cyan: { border: 'border-cyan-600/30', text: 'text-cyan-400', bg: 'bg-cyan-500' },
+        gray: { border: 'border-gray-600/30', text: 'text-gray-400', bg: 'bg-gray-500' },
+    };
+
+    return (
+        <div className="space-y-8">
+            <div>
+                <h2 className="text-2xl font-bold text-white mb-6">Fórmulas de Condiciones</h2>
+                <p className="text-gray-400 mb-8">
+                    Define los pasos de acción para cada condición operativa
+                </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6">
+                {conditions.map(({ key, name, color }) => {
+                    const formula = getValue([key, 'formula']);
+                    const colors = colorClasses[color as keyof typeof colorClasses];
+                    
+                    if (!formula) return null;
+
+                    return (
+                        <div key={key} className={`bg-gray-800 rounded-lg p-6 border ${colors.border}`}>
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-3 h-3 ${colors.bg} rounded-full`}></div>
+                                    <h3 className={`text-lg font-semibold ${colors.text}`}>
+                                        {name}
+                                    </h3>
+                                </div>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={formula.enabled ?? true}
+                                        onChange={(e) => updateThreshold([key, 'formula', 'enabled'], e.target.checked)}
+                                        className="w-4 h-4 rounded border-gray-700 bg-gray-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
+                                    />
+                                    <span className="text-sm text-gray-300">Fórmula activa</span>
+                                </label>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Descripción de la fórmula
+                                </label>
+                                <textarea
+                                    value={formula.description || ''}
+                                    onChange={(e) => updateThreshold([key, 'formula', 'description'], e.target.value)}
+                                    className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                                    rows={2}
+                                />
+                            </div>
+
+                            <div className="space-y-3">
+                                <h4 className="text-sm font-medium text-gray-300 mb-3">
+                                    Pasos de la fórmula
+                                </h4>
+                                {formula.steps?.map((step: any, index: number) => (
+                                    <div key={index} className="flex items-start gap-3 bg-gray-900/50 rounded-lg p-3">
+                                        <div className="flex items-center gap-2 min-w-[80px]">
+                                            <input
+                                                type="checkbox"
+                                                checked={step.enabled ?? true}
+                                                onChange={(e) => updateThreshold([key, 'formula', 'steps', index.toString(), 'enabled'], e.target.checked)}
+                                                className="w-4 h-4 rounded border-gray-700 bg-gray-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
+                                            />
+                                            <span className="text-sm font-medium text-gray-400">
+                                                Paso {step.order}
+                                            </span>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={step.description || ''}
+                                            onChange={(e) => updateThreshold([key, 'formula', 'steps', index.toString(), 'description'], e.target.value)}
+                                            className="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+// Paso 2: Condiciones Principales
+function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
     return (
         <div className="space-y-8">
             <div>
@@ -249,7 +352,8 @@ function Step1ConditionsMain({ thresholds, updateThreshold, getValue }: StepProp
     );
 }
 
-function Step2Signals({ thresholds, updateThreshold, getValue }: StepProps) {
+// Paso 3: Configuración de Señales
+function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
     return (
         <div className="space-y-8">
             <div>
@@ -442,12 +546,13 @@ function Step2Signals({ thresholds, updateThreshold, getValue }: StepProps) {
     );
 }
 
-interface Step3ReviewProps {
+// Paso 4: Revisión Final
+interface Step4ReviewProps {
     thresholds: ConditionThresholds;
     configName: string;
 }
 
-function Step3Review({ thresholds, configName }: Step3ReviewProps) {
+function Step4Review({ thresholds, configName }: Step4ReviewProps) {
     return (
         <div className="space-y-8">
             <div>
@@ -895,9 +1000,9 @@ export function ConfigurationPage() {
                             </div>
                             <div className="flex justify-center mt-4">
                                 <p className="text-sm text-gray-400">
-                                    {currentStep === 1 && 'Paso 1: Condiciones Principales'}
-                                    {currentStep === 2 && 'Paso 2: Configuración de Señales'}
-                                    {currentStep === 3 && 'Paso 3: Fórmulas de Condiciones'}
+                                    {currentStep === 1 && 'Paso 1: Fórmulas de Condiciones'}
+                                    {currentStep === 2 && 'Paso 2: Condiciones Principales'}
+                                    {currentStep === 3 && 'Paso 3: Configuración de Señales'}
                                     {currentStep === 4 && 'Paso 4: Revisión Final'}
                                 </p>
                             </div>
@@ -906,28 +1011,28 @@ export function ConfigurationPage() {
                         {/* Step Content */}
                         <div className="bg-gray-800/30 rounded-lg p-8 border border-gray-700/50 min-h-[500px]">
                             {currentStep === 1 && thresholds && (
-                                <Step1ConditionsMain
+                                <Step1Formulas
                                     thresholds={thresholds}
                                     updateThreshold={updateThreshold}
                                     getValue={getValue}
                                 />
                             )}
                             {currentStep === 2 && thresholds && (
-                                <Step2Signals
+                                <Step2Conditions
                                     thresholds={thresholds}
                                     updateThreshold={updateThreshold}
                                     getValue={getValue}
                                 />
                             )}
                             {currentStep === 3 && thresholds && (
-                                <Step4Formulas
+                                <Step3Signals
                                     thresholds={thresholds}
                                     updateThreshold={updateThreshold}
                                     getValue={getValue}
                                 />
                             )}
                             {currentStep === 4 && thresholds && activeConfig && (
-                                <Step3Review
+                                <Step4Review
                                     thresholds={thresholds}
                                     configName={activeConfig.name}
                                 />
