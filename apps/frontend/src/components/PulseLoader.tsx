@@ -6,7 +6,7 @@ import React from 'react';
 
 interface PulseLoaderProps {
     size?: 'sm' | 'md' | 'lg' | 'xl';
-    variant?: 'primary' | 'success' | 'warning' | 'danger' | 'white';
+    variant?: 'primary' | 'success' | 'warning' | 'danger' | 'white' | 'transparent';
     text?: string;
     fullScreen?: boolean;
     showText?: boolean;
@@ -46,6 +46,12 @@ const colorConfig = {
     },
     white: {
         stroke: '#FFFFFF',
+        glow: '#FFFFFF',
+        text: 'text-white',
+        bg: 'bg-white/10',
+    },
+    transparent: {
+        stroke: '#3B82F6',
         glow: '#FFFFFF',
         text: 'text-white',
         bg: 'bg-white/10',

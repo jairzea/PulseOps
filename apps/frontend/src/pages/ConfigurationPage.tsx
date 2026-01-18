@@ -20,6 +20,7 @@ function Step1Formulas() {
     const [playbooks, setPlaybooks] = useState<Playbook[]>([]);
     const [editedPlaybooks, setEditedPlaybooks] = useState<Record<string, Playbook>>({});
     const [loading, setLoading] = useState(true);
+    const [expandedCondition, setExpandedCondition] = useState<string | null>('AFLUENCIA');
     const { success, error: showError } = useToast();
 
     const conditions = [
@@ -135,6 +136,10 @@ function Step1Formulas() {
         }
     };
 
+    const toggleCondition = (condition: string) => {
+        setExpandedCondition(prev => prev === condition ? null : condition);
+    };
+
     if (loading) {
         return <PulseLoader size="md" variant="primary" text="Cargando fórmulas..." />;
     }
@@ -152,93 +157,128 @@ function Step1Formulas() {
                 {conditions.map(({ key, name, color }) => {
                     const playbook = editedPlaybooks[key];
                     const colors = colorClasses[color as keyof typeof colorClasses];
-                    
+                    const isExpanded = expandedCondition === key;
+
                     if (!playbook) return null;
 
                     return (
-                        <div key={key} className={`bg-gray-800 rounded-lg p-6 border ${colors.border}`}>
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-3 h-3 ${colors.bg} rounded-full`}></div>
-                                    <h3 className={`text-lg font-semibold ${colors.text}`}>
-                                        {name}
-                                    </h3>
-                                    <span className="text-xs bg-blue-600/20 text-blue-400 px-2 py-1 rounded">
-                                        v{playbook.version}
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <label className="flex items-center gap-2 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={playbook.isActive}
-                                            onChange={(e) => updatePlaybook(key, 'isActive', e.target.checked)}
-                                            className="w-4 h-4 rounded border-gray-700 bg-gray-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
-                                        />
-                                        <span className="text-sm text-gray-300">Activa</span>
-                                    </label>
-                                    <button
-                                        onClick={() => savePlaybook(key)}
-                                        className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded transition-colors"
-                                    >
-                                        💾 Guardar
-                                    </button>
+                        <div key={key} className={`bg-gray-800 rounded-lg border ${colors.border} transition-all`}>
+                            {/* Header - Siempre visible */}
+                            <div
+                                className="p-6 cursor-pointer select-none"
+                                onClick={() => toggleCondition(key)}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-3 h-3 ${colors.bg} rounded-full`}></div>
+                                        <h3 className={`text-lg font-semibold ${colors.text}`}>
+                                            {name}
+                                        </h3>
+                                        <span className="text-xs bg-blue-600/20 text-blue-400 px-2 py-1 rounded">
+                                            v{playbook.version}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-xs text-gray-400">
+                                            {playbook.steps.length} paso{playbook.steps.length !== 1 ? 's' : ''}
+                                        </span>
+                                        <svg
+                                            className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Título de la fórmula
-                                </label>
-                                <input
-                                    type="text"
-                                    value={playbook.title}
-                                    onChange={(e) => updatePlaybook(key, 'title', e.target.value)}
-                                    className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                    placeholder="Título de la fórmula..."
-                                />
-                            </div>
-
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between mb-3">
-                                    <h4 className="text-sm font-medium text-gray-300">
-                                        Pasos de la fórmula ({playbook.steps.length})
-                                    </h4>
-                                    <button
-                                        onClick={() => addStep(key)}
-                                        className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
-                                    >
-                                        + Agregar paso
-                                    </button>
-                                </div>
-                                {playbook.steps.length > 0 ? (
-                                    playbook.steps.map((step, index) => (
-                                        <div key={index} className="flex items-start gap-3 bg-gray-900/50 rounded-lg p-3">
-                                            <div className="flex-shrink-0 w-8 h-8 bg-blue-900/30 text-blue-400 rounded-full flex items-center justify-center font-semibold text-sm">
-                                                {index + 1}
-                                            </div>
+                            {/* Contenido colapsable */}
+                            {isExpanded && (
+                                <div className="px-6 pb-6 space-y-4 border-t border-gray-700/50">
+                                    <div className="flex items-center justify-end gap-3 pt-4">
+                                        <label className="flex items-center gap-2 cursor-pointer">
                                             <input
-                                                type="text"
-                                                value={step}
-                                                onChange={(e) => updateStep(key, index, e.target.value)}
-                                                className="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                                placeholder={`Paso ${index + 1}...`}
+                                                type="checkbox"
+                                                checked={playbook.isActive}
+                                                onChange={(e) => updatePlaybook(key, 'isActive', e.target.checked)}
+                                                className="w-4 h-4 rounded border-gray-700 bg-gray-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
                                             />
+                                            <span className="text-sm text-gray-300">Activa</span>
+                                        </label>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                savePlaybook(key);
+                                            }}
+                                            className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded transition-colors"
+                                        >
+                                            💾 Guardar
+                                        </button>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                                            Título de la fórmula
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={playbook.title}
+                                            onChange={(e) => updatePlaybook(key, 'title', e.target.value)}
+                                            className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                            placeholder="Título de la fórmula..."
+                                        />
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="text-sm font-medium text-gray-300">
+                                                Pasos de la fórmula ({playbook.steps.length})
+                                            </h4>
                                             <button
-                                                onClick={() => removeStep(key, index)}
-                                                className="px-2 py-1 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded transition-colors"
-                                                title="Eliminar paso"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    addStep(key);
+                                                }}
+                                                className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
                                             >
-                                                ×
+                                                + Agregar paso
                                             </button>
                                         </div>
-                                    ))
-                                ) : (
-                                    <div className="text-sm text-gray-500 bg-gray-900/30 rounded-lg p-4 text-center">
-                                        No hay pasos definidos. Haz clic en "+ Agregar paso" para comenzar.
+                                        {playbook.steps.length > 0 ? (
+                                            playbook.steps.map((step, index) => (
+                                                <div key={index} className="flex items-start gap-3 bg-gray-900/50 rounded-lg p-3">
+                                                    <div className="flex-shrink-0 w-8 h-8 bg-blue-900/30 text-blue-400 rounded-full flex items-center justify-center font-semibold text-sm">
+                                                        {index + 1}
+                                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        value={step}
+                                                        onChange={(e) => updateStep(key, index, e.target.value)}
+                                                        className="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                                        placeholder={`Paso ${index + 1}...`}
+                                                    />
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            removeStep(key, index);
+                                                        }}
+                                                        className="px-2 py-1 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded transition-colors"
+                                                        title="Eliminar paso"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-sm text-gray-500 bg-gray-900/30 rounded-lg p-4 text-center">
+                                                No hay pasos definidos. Haz clic en "+ Agregar paso" para comenzar.
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
                         </div>
                     );
                 })}
@@ -822,7 +862,7 @@ function Step4Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
                 {conditions.map(({ key, name, color }) => {
                     const formula = getValue([key, 'formula']);
                     const colors = colorClasses[color as keyof typeof colorClasses];
-                    
+
                     if (!formula) return null;
 
                     return (
@@ -1105,14 +1145,14 @@ export function ConfigurationPage() {
                         {/* Progress Indicator */}
                         <div className="mb-8">
                             <div className="flex items-center justify-center">
-                                {[1, 2, 3].map((step) => (
+                                {[1, 2, 3, 4].map((step) => (
                                     <div key={step} className="flex items-center">
                                         <div
                                             className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${step === currentStep
-                                                    ? 'border-blue-500 bg-blue-500 text-white'
-                                                    : step < currentStep
-                                                        ? 'border-green-500 bg-green-500 text-white'
-                                                        : 'border-gray-600 bg-gray-800 text-gray-400'
+                                                ? 'border-blue-500 bg-blue-500 text-white'
+                                                : step < currentStep
+                                                    ? 'border-green-500 bg-green-500 text-white'
+                                                    : 'border-gray-600 bg-gray-800 text-gray-400'
                                                 }`}
                                         >
                                             {step < currentStep ? (
@@ -1123,7 +1163,7 @@ export function ConfigurationPage() {
                                                 <span className="font-semibold">{step}</span>
                                             )}
                                         </div>
-                                        {step < 3 && (
+                                        {step < 4 && (
                                             <div
                                                 className={`w-32 h-0.5 mx-2 transition-all ${step < currentStep ? 'bg-green-500' : 'bg-gray-700'
                                                     }`}
@@ -1175,8 +1215,8 @@ export function ConfigurationPage() {
                                 onClick={prevStep}
                                 disabled={currentStep === 1}
                                 className={`px-6 py-3 rounded-lg font-medium transition-all ${currentStep === 1
-                                        ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
-                                        : 'bg-gray-700 hover:bg-gray-600 text-white'
+                                    ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                                    : 'bg-gray-700 hover:bg-gray-600 text-white'
                                     }`}
                             >
                                 ← Anterior

@@ -4,22 +4,9 @@ import {
   IsOptional,
   IsBoolean,
   IsNumber,
-  IsEnum,
 } from 'class-validator';
 
 export class UpsertPlaybookDto {
-  @IsEnum([
-    'PODER',
-    'CAMBIO_DE_PODER',
-    'AFLUENCIA',
-    'NORMAL',
-    'EMERGENCIA',
-    'PELIGRO',
-    'INEXISTENCIA',
-    'SIN_DATOS',
-  ])
-  condition: string;
-
   @IsString()
   title: string;
 

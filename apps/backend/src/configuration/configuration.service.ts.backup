@@ -133,26 +133,93 @@ export class ConfigurationService {
       thresholds: {
         afluencia: {
           minInclination: 50,
+          formula: {
+            name: 'Fórmula de Afluencia',
+            description: 'Pasos para gestionar crecimiento pronunciado',
+            enabled: true,
+            steps: [
+              { order: 1, description: 'Economiza - No compromisos futuros en compras o contratación', enabled: true },
+              { order: 2, description: 'Paga todas las facturas y deudas pendientes', enabled: true },
+              { order: 3, description: 'Invierte el resto en recursos para dar servicio', enabled: true },
+              { order: 4, description: 'Descubre qué causó la Afluencia y refuérzalo', enabled: true },
+            ],
+          },
         },
         normal: {
           minInclination: 5,
           maxInclination: 50,
+          formula: {
+            name: 'Fórmula de Normal',
+            description: 'Pasos para mantener crecimiento gradual habitual',
+            enabled: true,
+            steps: [
+              { order: 1, description: 'No cambies nada - mantén lo que funciona', enabled: true },
+              { order: 2, description: 'Ética leve y justicia razonable', enabled: true },
+              { order: 3, description: 'Cuando mejore una estadística, averigua qué la mejoró y hazlo más', enabled: true },
+              { order: 4, description: 'Cuando empeore, encuentra rápidamente por qué y remédialo', enabled: true },
+            ],
+          },
         },
         emergencia: {
           minInclination: -5,
           maxInclination: 5,
+          formula: {
+            name: 'Fórmula de Emergencia',
+            description: 'Pasos para recuperarse de estancamiento',
+            enabled: true,
+            steps: [
+              { order: 1, description: 'Promociona (para individual: Produce)', enabled: true },
+              { order: 2, description: 'Cambia tu forma de actuar', enabled: true },
+              { order: 3, description: 'Economiza en recursos', enabled: true },
+              { order: 4, description: 'Prepárate para entregar servicio', enabled: true },
+              { order: 5, description: 'Endurece la disciplina', enabled: true },
+            ],
+          },
         },
         peligro: {
           minInclination: -80,
           maxInclination: -50,
+          formula: {
+            name: 'Fórmula de Peligro',
+            description: 'Pasos para recuperarse de caída pronunciada',
+            enabled: true,
+            steps: [
+              { order: 1, description: 'Pasa por alto - Ignora rutinas normales y maneja personalmente', enabled: true },
+              { order: 2, description: 'Resuelve la situación y cualquier peligro inmediato', enabled: true },
+              { order: 3, description: 'Asigna Condición de Peligro al área afectada', enabled: true },
+              { order: 4, description: 'Pon en orden tu ética personal y usa autodisciplina', enabled: true },
+              { order: 5, description: 'Reorganiza para que la situación no se repita', enabled: true },
+              { order: 6, description: 'Formula política que detecte e impida la recurrencia', enabled: true },
+            ],
+          },
         },
         poder: {
           minConsecutivePeriods: 3,
           minInclination: -5,
           stabilityThreshold: 0.1,
+          formula: {
+            name: 'Fórmula de Poder',
+            description: 'Pasos para mantener Normal en nivel estelar',
+            enabled: true,
+            steps: [
+              { order: 1, description: 'No te desconectes - Mantén el nivel alcanzado', enabled: true },
+              { order: 2, description: 'Deja por escrito tu propio puesto y responsabilidades', enabled: true },
+            ],
+          },
         },
         inexistencia: {
           threshold: 0.01,
+          formula: {
+            name: 'Fórmula de Inexistencia',
+            description: 'Pasos para establecer existencia desde cero o colapso',
+            enabled: true,
+            steps: [
+              { order: 1, description: 'Encuentra una línea de comunicación', enabled: true },
+              { order: 2, description: 'Date a conocer', enabled: true },
+              { order: 3, description: 'Descubre lo que se necesita o se desea', enabled: true },
+              { order: 4, description: 'Hazlo, prodúcelo y/o preséntalo', enabled: true },
+            ],
+          },
         },
         signals: {
           volatility: {
