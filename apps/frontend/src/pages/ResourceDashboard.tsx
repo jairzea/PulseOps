@@ -227,7 +227,7 @@ export function ResourceDashboard() {
                   <div>
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Inclinación</div>
                     <div className="flex items-baseline gap-2">
-                      <span className={`text-3xl font-bold ${analysis.evaluation.inclination.value > 0 ? 'text-green-400' : analysis.evaluation.inclination.value < 0 ? 'text-red-400' : 'text-yellow-400'
+                      <span className={`text-3xl font-bold ${analysis.evaluation.inclination.value > 0 ? 'text-green-600 dark:text-green-400' : analysis.evaluation.inclination.value < 0 ? 'text-red-600 dark:text-red-400' : 'text-yellow-600 dark:text-yellow-400'
                         }`}>
                         {analysis.evaluation.inclination.value > 0 ? '+' : ''}{analysis.evaluation.inclination.value.toFixed(1)}%
                       </span>
@@ -242,7 +242,7 @@ export function ResourceDashboard() {
                       {records.length >= 2 ? (
                         <>
                           {records[records.length - 2].value} → {records[records.length - 1].value}
-                          <span className="text-blue-400 ml-2">
+                          <span className="text-blue-600 dark:text-blue-400 ml-2">
                             ({records[records.length - 1].value > records[records.length - 2].value ? '+' : ''}
                             {(records[records.length - 1].value - records[records.length - 2].value).toFixed(0)})
                           </span>
@@ -258,9 +258,9 @@ export function ResourceDashboard() {
                       {analysis.evaluation?.signals && analysis.evaluation.signals.length > 0 ? (
                         analysis.evaluation.signals.slice(0, 2).map((signal, idx) => (
                           <div key={idx} className="flex items-center gap-2">
-                            <span className={`px-2 py-1 rounded text-xs font-semibold ${signal.severity === 'HIGH' ? 'bg-red-900/50 text-red-600 dark:text-red-300' :
-                              signal.severity === 'MEDIUM' ? 'bg-orange-900/50 text-orange-600 dark:text-orange-300' :
-                                'bg-yellow-900/50 text-yellow-600 dark:text-yellow-300'
+                            <span className={`px-2 py-1 rounded text-xs font-semibold ${signal.severity === 'HIGH' ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
+                              signal.severity === 'MEDIUM' ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300' :
+                                'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300'
                               }`}>
                               {signal.severity || 'INFO'}
                             </span>
@@ -268,13 +268,13 @@ export function ResourceDashboard() {
                           </div>
                         ))
                       ) : (
-                        <div className="text-sm text-gray-500">No alerts</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-500">No alerts</div>
                       )}
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="text-center text-gray-500 py-8">
+                <div className="text-center text-gray-600 dark:text-gray-500 py-8">
                   Select a resource and metric to view analysis
                 </div>
               )}

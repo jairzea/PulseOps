@@ -11,7 +11,7 @@ const conditionColors: Record<string, { bg: string; text: string; badge: string;
     NORMAL: { bg: 'bg-yellow-900/30', text: 'text-yellow-400', badge: 'bg-yellow-500', icon: '↔️' },
     EMERGENCIA: { bg: 'bg-orange-900/30', text: 'text-orange-400', badge: 'bg-orange-500', icon: '⚠️' },
     PELIGRO: { bg: 'bg-red-900/30', text: 'text-red-400', badge: 'bg-red-500', icon: '🔴' },
-    SIN_DATOS: { bg: 'bg-gray-900/30', text: 'text-gray-600 dark:text-gray-400', badge: 'bg-gray-500', icon: '❓' },
+    SIN_DATOS: { bg: 'bg-gray-100 dark:bg-gray-900/30', text: 'text-gray-600 dark:text-gray-400', badge: 'bg-gray-500', icon: '❓' },
 };
 
 export function ConditionSummary({ analysis, loading = false }: ConditionSummaryProps) {

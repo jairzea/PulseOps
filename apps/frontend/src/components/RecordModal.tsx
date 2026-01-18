@@ -108,7 +108,7 @@ export const RecordModal: React.FC<RecordModalProps> = ({
             onClick={handleBackdropClick}
         >
             <div
-                className="bg-white dark:bg-gray-900 rounded-xl transition-colors duration-300 shadow-2xl w-full max-w-lg mx-4 border border-gray-700 transform transition-all duration-300 scale-100"
+                className="bg-white dark:bg-gray-900 rounded-xl transition-colors duration-300 shadow-2xl w-full max-w-lg mx-4 border border-gray-200 dark:border-gray-700 transform transition-all duration-300 scale-100"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}

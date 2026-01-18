@@ -60,7 +60,7 @@ export const MetricModal: React.FC<MetricModalProps> = ({ isOpen, onClose, editi
             onClick={handleBackdropClick}
         >
             <div
-                className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-700 transform transition-all duration-300 scale-100"
+                className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700 transition-colors duration-300 transform transition-all duration-300 scale-100"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}

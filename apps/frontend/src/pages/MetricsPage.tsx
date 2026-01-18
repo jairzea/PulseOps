@@ -97,7 +97,7 @@ export const MetricsPage: React.FC = () => {
 
                     {!loading && !error && metrics.length > 0 && (
                         <table className="w-full">
-                            <thead className="bg-gray-800">
+                            <thead className="bg-gray-100 dark:bg-gray-800">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                                         Etiqueta
@@ -116,14 +116,14 @@ export const MetricsPage: React.FC = () => {
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-800">
+                            <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                                 {metrics.map((metric) => (
                                     <tr key={metric.id} className="hover:bg-gray-800/50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm font-medium text-gray-900 dark:text-white">{metric.label}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="px-2 py-1 text-xs font-mono rounded bg-purple-900/50 text-purple-300">
+                                            <span className="px-2 py-1 text-xs font-mono rounded bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">
                                                 {metric.key}
                                             </span>
                                         </td>
@@ -183,11 +183,11 @@ export const MetricsPage: React.FC = () => {
                 {/* Estadísticas */}
                 {!loading && !error && metrics.length > 0 && (
                     <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
+                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 transition-colors duration-300">
                             <p className="text-gray-400 text-sm">Total de Métricas</p>
                             <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{metrics.length}</p>
                         </div>
-                        <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
+                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 transition-colors duration-300">
                             <p className="text-gray-400 text-sm">Métricas Configuradas</p>
                             <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                 {metrics.filter((m) => m.description).length}

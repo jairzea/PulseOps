@@ -217,7 +217,7 @@ export const ResourcesPage: React.FC = () => {
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-800">
+                            <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                                 {resources.map((resource) => (
                                     <tr key={resource.id} className="hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap">
@@ -233,16 +233,16 @@ export const ResourcesPage: React.FC = () => {
                                                     </span>
                                                 </div>
                                                 <div className="ml-4">
-                                                    <div className="text-sm font-medium text-white">{resource.name}</div>
+                                                    <div className="text-sm font-medium text-gray-900 dark:text-white">{resource.name}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span
                                                 className={`px-3 py-1 text-xs font-medium rounded-full ${resource.roleType === 'DEV'
-                                                    ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-600 dark:text-blue-300'
+                                                    ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'
                                                     : resource.roleType === 'TL'
-                                                        ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-600 dark:text-purple-300'
+                                                        ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300'
                                                         : 'bg-gray-700/50 text-gray-300'
                                                     }`}
                                             >
@@ -252,7 +252,7 @@ export const ResourcesPage: React.FC = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span
                                                 className={`px-3 py-1 text-xs font-medium rounded-full ${resource.isActive
-                                                    ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-600 dark:text-green-300'
+                                                    ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
                                                     : 'bg-gray-700/50 text-gray-600 dark:text-gray-400'
                                                     }`}
                                             >

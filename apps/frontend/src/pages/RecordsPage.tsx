@@ -42,7 +42,7 @@ export const RecordsPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-900 dark:text-white transition-colors duration-300">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <PageHeader
                     title="Registros"
@@ -54,7 +54,7 @@ export const RecordsPage: React.FC = () => {
                 />
 
                 {/* Filtros */}
-                <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 mb-6">
+                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6 transition-colors duration-300 mb-6">
                     <h2 className="text-lg font-semibold mb-4">Filtros</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Selector de Recurso */}
@@ -66,7 +66,7 @@ export const RecordsPage: React.FC = () => {
                                 id="resource"
                                 value={selectedResourceId}
                                 onChange={(e) => setSelectedResourceId(e.target.value)}
-                                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
                                 <option value="">Seleccionar recurso...</option>
                                 {resources.map((resource) => (
@@ -86,7 +86,7 @@ export const RecordsPage: React.FC = () => {
                                 id="metric"
                                 value={selectedMetricKey}
                                 onChange={(e) => setSelectedMetricKey(e.target.value)}
-                                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
                                 <option value="">Seleccionar métrica...</option>
                                 {metrics.map((metric) => (
@@ -100,7 +100,7 @@ export const RecordsPage: React.FC = () => {
                 </div>
 
                 {/* Tabla de registros */}
-                <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
+                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
                     {!selectedResourceId || !selectedMetricKey ? (
                         <div className="p-8 text-center">
                             <p className="text-gray-600 dark:text-gray-400">Selecciona un recurso y una métrica para ver los registros</p>
@@ -153,7 +153,7 @@ export const RecordsPage: React.FC = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-bold text-gray-900 dark:text-gray-900 dark:text-white">{record.value}</div>
+                                            <div className="text-sm font-bold text-gray-900 dark:text-white">{record.value}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className="px-2 py-1 text-xs rounded bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors duration-300">
@@ -183,17 +183,17 @@ export const RecordsPage: React.FC = () => {
                     <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
                             <p className="text-gray-600 dark:text-gray-400 text-sm">Total de Registros</p>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-gray-900 dark:text-white mt-1">{records.length}</p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{records.length}</p>
                         </div>
                         <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
                             <p className="text-gray-600 dark:text-gray-400 text-sm">Valor Promedio</p>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-gray-900 dark:text-white mt-1">
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                 {(records.reduce((acc, r) => acc + r.value, 0) / records.length).toFixed(1)}
                             </p>
                         </div>
                         <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
                             <p className="text-gray-600 dark:text-gray-400 text-sm">Último Valor</p>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-gray-900 dark:text-white mt-1">
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                 {records[records.length - 1]?.value || 0}
                             </p>
                         </div>
