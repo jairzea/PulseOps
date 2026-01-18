@@ -3,18 +3,25 @@
  */
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Header: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const { user, logout } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const userMenuRef = useRef<HTMLDivElement>(null);
 
     // Cerrar menú al hacer clic fuera
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
                 setIsMenuOpen(false);
+            }
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+                setIsUserMenuOpen(false);
             }
         };
 
@@ -144,14 +151,74 @@ export const Header: React.FC = () => {
                                             </svg>
                                             Configuración
                                         </button>
+                                        {user?.role === 'admin' && (
+                                            <button
+                                                onClick={() => {
+                                                    navigate('/users');
+                                                    setIsMenuOpen(false);
+                                                }}
+                                                className={`w-full px-4 py-2 text-left transition-colors flex items-center gap-3 ${isActive('/users') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                                                    }`}
+                                            >
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                                </svg>
+                                                Usuarios
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             )}
                         </div>
 
-                        {/* Avatar */}
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center font-semibold text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
-                            JZ
+                        {/* Avatar with dropdown */}
+                        <div className="relative" ref={userMenuRef}>
+                            <button
+                                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                                className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center font-semibold text-white shadow-lg hover:shadow-xl transition-shadow"
+                            >
+                                {user?.name.substring(0, 2).toUpperCase() || 'US'}
+                            </button>
+
+                            {/* User Dropdown Menu */}
+                            {isUserMenuOpen && (
+                                <div className="absolute right-0 mt-2 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
+                                    <div className="px-4 py-3 border-b border-gray-700">
+                                        <p className="text-sm text-white font-medium">{user?.name}</p>
+                                        <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                                        {user?.role === 'admin' && (
+                                            <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-purple-600 text-white rounded">Admin</span>
+                                        )}
+                                    </div>
+                                    <div className="py-2">
+                                        <button
+                                            onClick={() => {
+                                                navigate('/profile');
+                                                setIsUserMenuOpen(false);
+                                            }}
+                                            className="w-full px-4 py-2 text-left text-gray-300 hover:bg-gray-700 hover:text-white transition-colors flex items-center gap-3"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                            </svg>
+                                            Mi Perfil
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                logout();
+                                                setIsUserMenuOpen(false);
+                                                navigate('/login');
+                                            }}
+                                            className="w-full px-4 py-2 text-left text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors flex items-center gap-3"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                            Cerrar Sesión
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

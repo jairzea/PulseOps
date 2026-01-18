@@ -4,38 +4,100 @@ import { ResourcesPage } from './pages/ResourcesPage';
 import { MetricsPage } from './pages/MetricsPage';
 import { RecordsPage } from './pages/RecordsPage';
 import { ConfigurationPage } from './pages/ConfigurationPage';
-import { LoginPage2 } from './pages/LoginPage2';
+import { LoginPage } from './pages/LoginPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { UsersAdminPage } from './pages/UsersAdminPage';
 import { Layout } from './components/Layout';
 import { ToastContainer } from './components/ToastContainer';
+import { AuthProvider } from './contexts/AuthContext';
+import { PrivateRoute } from './components/PrivateRoute';
 
 function App() {
-    // Para desarrollo, comentar esta línea para ir directo al dashboard
-    // Para producción, descomentar para requerir login
-    const isAuthenticated = false; // Cambiar a true para saltarse el login
-
     return (
-        <BrowserRouter>
-            {!isAuthenticated ? (
+        <AuthProvider>
+            <BrowserRouter>
                 <Routes>
-                    <Route path="/login" element={<LoginPage2 />} />
-                    <Route path="*" element={<Navigate to="/login" replace />} />
+                    {/* Public route */}
+                    <Route path="/login" element={<LoginPage />} />
+
+                    {/* Protected routes */}
+                    <Route
+                        path="/"
+                        element={
+                            <PrivateRoute>
+                                <Layout>
+                                    <ResourceDashboard />
+                                </Layout>
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/resources"
+                        element={
+                            <PrivateRoute>
+                                <Layout>
+                                    <ResourcesPage />
+                                </Layout>
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/metrics"
+                        element={
+                            <PrivateRoute>
+                                <Layout>
+                                    <MetricsPage />
+                                </Layout>
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/records"
+                        element={
+                            <PrivateRoute>
+                                <Layout>
+                                    <RecordsPage />
+                                </Layout>
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/configuration"
+                        element={
+                            <PrivateRoute>
+                                <Layout>
+                                    <ConfigurationPage />
+                                </Layout>
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/profile"
+                        element={
+                            <PrivateRoute>
+                                <Layout>
+                                    <ProfilePage />
+                                </Layout>
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/users"
+                        element={
+                            <PrivateRoute requireAdmin>
+                                <Layout>
+                                    <UsersAdminPage />
+                                </Layout>
+                            </PrivateRoute>
+                        }
+                    />
+
+                    {/* Fallback */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
-            ) : (
-                <>
-                    <Layout>
-                        <Routes>
-                            <Route path="/" element={<ResourceDashboard />} />
-                            <Route path="/resources" element={<ResourcesPage />} />
-                            <Route path="/metrics" element={<MetricsPage />} />
-                            <Route path="/records" element={<RecordsPage />} />
-                            <Route path="/configuration" element={<ConfigurationPage />} />
-                            <Route path="*" element={<Navigate to="/" replace />} />
-                        </Routes>
-                    </Layout>
-                    <ToastContainer />
-                </>
-            )}
-        </BrowserRouter>
+                <ToastContainer />
+            </BrowserRouter>
+        </AuthProvider>
     );
 }
 

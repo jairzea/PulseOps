@@ -12,6 +12,8 @@ import { AnalysisModule } from './analysis/analysis.module';
 import { PlaybooksModule } from './playbooks/playbooks.module';
 import { ConditionsModule } from './conditions/conditions.module';
 import { ConfigurationModule } from './configuration/configuration.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { ConfigurationModule } from './configuration/configuration.module';
     MongooseModule.forRoot(
       process.env.MONGODB_URI || 'mongodb://localhost:27017/pulseops',
     ),
+    AuthModule,
+    UsersModule,
     ResourcesModule,
     MetricsModule,
     ChartsModule,

@@ -9,7 +9,7 @@ import eyeAnimation from '../assets/eye-opening.json';
 import { PulseLoader } from '../components/PulseLoader';
 import { useAuth } from '../contexts/AuthContext';
 
-export function LoginPage2() {
+export function LoginPage() {
     const navigate = useNavigate();
     const { login, isAuthenticated } = useAuth();
     const [email, setEmail] = useState('');
