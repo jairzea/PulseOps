@@ -133,7 +133,7 @@ export function ResourceDashboard() {
             {/* Add Record Button */}
             <button
               onClick={() => setModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-gray-900 dark:text-white rounded-lg transition-colors font-medium"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -206,9 +206,9 @@ export function ResourceDashboard() {
           {/* Analysis Panel - 4 columns */}
           <div className="col-span-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 h-full transition-colors duration-300">
-              <h3 className="text-lg font-semibold text-white mb-6 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center justify-between">
                 <span>Análisis</span>
-                <button className="text-gray-400 hover:text-white">
+                <button className="text-gray-400 hover:text-gray-900 dark:text-white">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
@@ -238,7 +238,7 @@ export function ResourceDashboard() {
                   {/* Cambio */}
                   <div>
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Cambio</div>
-                    <div className="text-xl font-semibold text-white">
+                    <div className="text-xl font-semibold text-gray-900 dark:text-white">
                       {records.length >= 2 ? (
                         <>
                           {records[records.length - 2].value} → {records[records.length - 1].value}
@@ -258,9 +258,9 @@ export function ResourceDashboard() {
                       {analysis.evaluation?.signals && analysis.evaluation.signals.length > 0 ? (
                         analysis.evaluation.signals.slice(0, 2).map((signal, idx) => (
                           <div key={idx} className="flex items-center gap-2">
-                            <span className={`px-2 py-1 rounded text-xs font-semibold ${signal.severity === 'HIGH' ? 'bg-red-900/50 text-red-300' :
-                              signal.severity === 'MEDIUM' ? 'bg-orange-900/50 text-orange-300' :
-                                'bg-yellow-900/50 text-yellow-300'
+                            <span className={`px-2 py-1 rounded text-xs font-semibold ${signal.severity === 'HIGH' ? 'bg-red-900/50 text-red-600 dark:text-red-300' :
+                              signal.severity === 'MEDIUM' ? 'bg-orange-900/50 text-orange-600 dark:text-orange-300' :
+                                'bg-yellow-900/50 text-yellow-600 dark:text-yellow-300'
                               }`}>
                               {signal.severity || 'INFO'}
                             </span>

@@ -105,7 +105,7 @@ export const Header: React.FC = () => {
     };
 
     return (
-        <header className="bg-gray-800 dark:bg-gray-950 border-b border-gray-700 dark:border-gray-800 transition-colors duration-300">
+        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
             <div className="max-w-[1800px] mx-auto px-6 py-4">
                 <div className="flex items-center justify-between">
                     {/* Left side: Logo */}
@@ -115,7 +115,7 @@ export const Header: React.FC = () => {
                         </svg>
                         <div className="flex items-center gap-2">
                             <div className="flex flex-col items-end leading-none">
-                                <span className="text-xl font-bold text-white">PulseOps</span>
+                                <span className="text-xl font-bold text-gray-900 dark:text-white">PulseOps</span>
                                 <small className="text-[9px] text-gray-600 dark:text-gray-400/60">
                                     By Unlimitech
                                 </small>

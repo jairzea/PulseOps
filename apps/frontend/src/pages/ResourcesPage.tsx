@@ -118,21 +118,21 @@ export const ResourcesPage: React.FC = () => {
                 {/* Estadísticas */}
                 {!loading && !error && resources.length > 0 && (
                     <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="bg-gradient-to-br from-blue-900/50 to-blue-800/30 rounded-lg border border-blue-700/50 p-4">
-                            <p className="text-blue-300 text-sm font-medium">Total de Recursos</p>
-                            <p className="text-3xl font-bold text-white mt-2">{resources.length}</p>
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/50 dark:to-blue-800/30 rounded-lg border border-blue-200 dark:border-blue-700/50 p-4">
+                            <p className="text-blue-600 dark:text-blue-300 text-sm font-medium">Total de Recursos</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{resources.length}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-green-900/50 to-green-800/30 rounded-lg border border-green-700/50 p-4">
-                            <p className="text-green-300 text-sm font-medium">Recursos Activos</p>
-                            <p className="text-3xl font-bold text-white mt-2">{activeResources.length}</p>
+                        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/50 dark:to-green-800/30 rounded-lg border border-green-200 dark:border-green-700/50 p-4">
+                            <p className="text-green-600 dark:text-green-300 text-sm font-medium">Recursos Activos</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{activeResources.length}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-purple-900/50 to-purple-800/30 rounded-lg border border-purple-700/50 p-4">
-                            <p className="text-purple-300 text-sm font-medium">Desarrolladores</p>
-                            <p className="text-3xl font-bold text-white mt-2">{devResources.length}</p>
+                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/50 dark:to-purple-800/30 rounded-lg border border-purple-200 dark:border-purple-700/50 p-4">
+                            <p className="text-purple-600 dark:text-purple-300 text-sm font-medium">Desarrolladores</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{devResources.length}</p>
                         </div>
                         <div className="bg-gradient-to-br from-orange-900/50 to-orange-800/30 rounded-lg border border-orange-700/50 p-4">
-                            <p className="text-orange-300 text-sm font-medium">Líderes Técnicos</p>
-                            <p className="text-3xl font-bold text-white mt-2">{tlResources.length}</p>
+                            <p className="text-orange-600 dark:text-orange-300 text-sm font-medium">Líderes Técnicos</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{tlResources.length}</p>
                         </div>
                     </div>
                 )}
@@ -240,9 +240,9 @@ export const ResourcesPage: React.FC = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span
                                                 className={`px-3 py-1 text-xs font-medium rounded-full ${resource.roleType === 'DEV'
-                                                    ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'
+                                                    ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-600 dark:text-blue-300'
                                                     : resource.roleType === 'TL'
-                                                        ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300'
+                                                        ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-600 dark:text-purple-300'
                                                         : 'bg-gray-700/50 text-gray-300'
                                                     }`}
                                             >
@@ -252,7 +252,7 @@ export const ResourcesPage: React.FC = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span
                                                 className={`px-3 py-1 text-xs font-medium rounded-full ${resource.isActive
-                                                    ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
+                                                    ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-600 dark:text-green-300'
                                                     : 'bg-gray-700/50 text-gray-600 dark:text-gray-400'
                                                     }`}
                                             >

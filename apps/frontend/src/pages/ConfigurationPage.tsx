@@ -147,7 +147,7 @@ function Step1Formulas() {
     return (
         <div className="space-y-8">
             <div>
-                <h2 className="text-2xl font-bold text-white mb-6">Fórmulas de Condiciones</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Fórmulas de Condiciones</h2>
                 <p className="text-gray-400 mb-8">
                     Define los pasos de acción para cada condición operativa (Playbooks Hubbard)
                 </p>
@@ -212,7 +212,7 @@ function Step1Formulas() {
                                                 e.stopPropagation();
                                                 savePlaybook(key);
                                             }}
-                                            className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded transition-colors"
+                                            className="text-xs bg-green-600 hover:bg-green-700 text-gray-900 dark:text-white px-3 py-1 rounded transition-colors"
                                         >
                                             💾 Guardar
                                         </button>
@@ -226,7 +226,7 @@ function Step1Formulas() {
                                             type="text"
                                             value={playbook.title}
                                             onChange={(e) => updatePlaybook(key, 'title', e.target.value)}
-                                            className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                            className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                             placeholder="Título de la fórmula..."
                                         />
                                     </div>
@@ -241,7 +241,7 @@ function Step1Formulas() {
                                                     e.stopPropagation();
                                                     addStep(key);
                                                 }}
-                                                className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
+                                                className="text-xs bg-blue-600 hover:bg-blue-700 text-gray-900 dark:text-white px-3 py-1 rounded transition-colors"
                                             >
                                                 + Agregar paso
                                             </button>
@@ -256,7 +256,7 @@ function Step1Formulas() {
                                                         type="text"
                                                         value={step}
                                                         onChange={(e) => updateStep(key, index, e.target.value)}
-                                                        className="flex-1 px-3 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                                        className="flex-1 px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                                         placeholder={`Paso ${index + 1}...`}
                                                     />
                                                     <button
@@ -272,7 +272,7 @@ function Step1Formulas() {
                                                 </div>
                                             ))
                                         ) : (
-                                            <div className="text-sm text-gray-500 bg-gray-900/30 rounded-lg p-4 text-center">
+                                            <div className="text-sm text-gray-600 dark:text-gray-500 bg-gray-100 dark:bg-gray-900/30 rounded-lg p-4 text-center">
                                                 No hay pasos definidos. Haz clic en "+ Agregar paso" para comenzar.
                                             </div>
                                         )}
@@ -292,7 +292,7 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
     return (
         <div className="space-y-8">
             <div>
-                <h2 className="text-2xl font-bold text-white mb-6">Condiciones Principales</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Condiciones Principales</h2>
                 <p className="text-gray-400 mb-8">
                     Define los umbrales de inclinación para cada condición operativa
                 </p>
@@ -313,7 +313,7 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                             type="number"
                             value={getValue(['afluencia', 'minInclination'])}
                             onChange={(e) => updateThreshold(['afluencia', 'minInclination'], Number(e.target.value))}
-                            className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                            className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                             step="0.1"
                         />
                         <p className="text-xs text-gray-400 mt-1">
@@ -337,7 +337,7 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['normal', 'minInclination'])}
                                 onChange={(e) => updateThreshold(['normal', 'minInclination'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -352,7 +352,7 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['normal', 'maxInclination'])}
                                 onChange={(e) => updateThreshold(['normal', 'maxInclination'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -377,7 +377,7 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['emergencia', 'minInclination'])}
                                 onChange={(e) => updateThreshold(['emergencia', 'minInclination'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -392,7 +392,7 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['emergencia', 'maxInclination'])}
                                 onChange={(e) => updateThreshold(['emergencia', 'maxInclination'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -417,7 +417,7 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['peligro', 'minInclination'])}
                                 onChange={(e) => updateThreshold(['peligro', 'minInclination'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-red-500 focus:ring-1 focus:ring-red-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -432,7 +432,7 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['peligro', 'maxInclination'])}
                                 onChange={(e) => updateThreshold(['peligro', 'maxInclination'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-red-500 focus:ring-1 focus:ring-red-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -457,7 +457,7 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['poder', 'minConsecutivePeriods'])}
                                 onChange={(e) => updateThreshold(['poder', 'minConsecutivePeriods'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                             />
                             <p className="text-xs text-gray-400 mt-1">
                                 Cantidad de períodos consecutivos necesarios para confirmar PODER (default: 3)
@@ -471,7 +471,7 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['poder', 'minInclination'])}
                                 onChange={(e) => updateThreshold(['poder', 'minInclination'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -486,7 +486,7 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['poder', 'stabilityThreshold'])}
                                 onChange={(e) => updateThreshold(['poder', 'stabilityThreshold'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -510,7 +510,7 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                             type="number"
                             value={getValue(['inexistencia', 'threshold'])}
                             onChange={(e) => updateThreshold(['inexistencia', 'threshold'], Number(e.target.value))}
-                            className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                            className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
                             step="0.1"
                         />
                         <p className="text-xs text-gray-400 mt-1">
@@ -528,7 +528,7 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
     return (
         <div className="space-y-8">
             <div>
-                <h2 className="text-2xl font-bold text-white mb-6">Configuración de Señales</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Configuración de Señales</h2>
                 <p className="text-gray-400 mb-8">
                     Ajusta los parámetros de detección de señales de alerta
                 </p>
@@ -547,7 +547,7 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['signals', 'volatility', 'minDirectionChanges'])}
                                 onChange={(e) => updateThreshold(['signals', 'volatility', 'minDirectionChanges'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                             />
                             <p className="text-xs text-gray-400 mt-1">
                                 Cantidad mínima de cambios de tendencia para detectar volatilidad (default: 3)
@@ -561,7 +561,7 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['signals', 'volatility', 'minWindowSize'])}
                                 onChange={(e) => updateThreshold(['signals', 'volatility', 'minWindowSize'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                             />
                             <p className="text-xs text-gray-400 mt-1">
                                 Períodos necesarios para analizar volatilidad (default: 5)
@@ -582,7 +582,7 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['signals', 'slowDecline', 'minConsecutiveDeclines'])}
                                 onChange={(e) => updateThreshold(['signals', 'slowDecline', 'minConsecutiveDeclines'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                             />
                             <p className="text-xs text-gray-400 mt-1">
                                 Períodos consecutivos de declive para detectar tendencia lenta (default: 3)
@@ -596,7 +596,7 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['signals', 'slowDecline', 'maxInclinationPerPeriod'])}
                                 onChange={(e) => updateThreshold(['signals', 'slowDecline', 'maxInclinationPerPeriod'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -618,7 +618,7 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['signals', 'dataGaps', 'expectedDaysBetweenPoints'])}
                                 onChange={(e) => updateThreshold(['signals', 'dataGaps', 'expectedDaysBetweenPoints'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                             />
                             <p className="text-xs text-gray-400 mt-1">
                                 Frecuencia normal de registros de datos: 7 = semanal (default: 7)
@@ -632,7 +632,7 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['signals', 'dataGaps', 'toleranceDays'])}
                                 onChange={(e) => updateThreshold(['signals', 'dataGaps', 'toleranceDays'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                             />
                             <p className="text-xs text-gray-400 mt-1">
                                 Días de retraso permitidos antes de considerar un gap (default: 2)
@@ -653,7 +653,7 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['signals', 'recoverySpike', 'minPriorDeclines'])}
                                 onChange={(e) => updateThreshold(['signals', 'recoverySpike', 'minPriorDeclines'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
                             />
                             <p className="text-xs text-gray-400 mt-1">
                                 Número de declives previos necesarios para detectar recuperación (default: 2)
@@ -667,7 +667,7 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['signals', 'recoverySpike', 'minRecoveryInclination'])}
                                 onChange={(e) => updateThreshold(['signals', 'recoverySpike', 'minRecoveryInclination'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -689,7 +689,7 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['signals', 'noise', 'maxInclinationVariation'])}
                                 onChange={(e) => updateThreshold(['signals', 'noise', 'maxInclinationVariation'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -704,7 +704,7 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
                                 type="number"
                                 value={getValue(['signals', 'noise', 'minWindowSize'])}
                                 onChange={(e) => updateThreshold(['signals', 'noise', 'minWindowSize'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
                             />
                             <p className="text-xs text-gray-400 mt-1">
                                 Períodos necesarios para analizar ruido en la señal (default: 4)
@@ -727,7 +727,7 @@ function Step4Review({ thresholds, configName }: Step4ReviewProps) {
     return (
         <div className="space-y-8">
             <div>
-                <h2 className="text-2xl font-bold text-white mb-6">Revisión Final</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Revisión Final</h2>
                 <p className="text-gray-400 mb-8">
                     Revisa los cambios antes de guardar la configuración
                 </p>
@@ -797,7 +797,7 @@ function Step4Review({ thresholds, configName }: Step4ReviewProps) {
             </div>
 
             <div className="mt-8 pt-6 border-t border-gray-700">
-                <h3 className="text-lg font-semibold text-white mb-4">Señales Configuradas</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Señales Configuradas</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                         <h4 className="text-sm font-medium text-orange-600 dark:text-orange-400 mb-2">Volatilidad</h4>
@@ -852,7 +852,7 @@ function Step4Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
     return (
         <div className="space-y-8">
             <div>
-                <h2 className="text-2xl font-bold text-white mb-6">Fórmulas de Condiciones</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Fórmulas de Condiciones</h2>
                 <p className="text-gray-400 mb-8">
                     Define los pasos de acción para cada condición operativa
                 </p>
@@ -892,7 +892,7 @@ function Step4Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
                                 <textarea
                                     value={formula.description || ''}
                                     onChange={(e) => updateThreshold([key, 'formula', 'description'], e.target.value)}
-                                    className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                                    className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
                                     rows={2}
                                 />
                             </div>
@@ -918,7 +918,7 @@ function Step4Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
                                             type="text"
                                             value={step.description || ''}
                                             onChange={(e) => updateThreshold([key, 'formula', 'steps', index.toString(), 'description'], e.target.value)}
-                                            className="flex-1 px-3 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                            className="flex-1 px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                         />
                                     </div>
                                 ))}
@@ -965,7 +965,7 @@ function SummaryCard({ title, color, items }: SummaryCardProps) {
                 {items.map((item, idx) => (
                     <div key={idx} className="flex justify-between text-xs">
                         <span className="text-gray-400">{item.label}:</span>
-                        <span className="text-white font-medium">{item.value}</span>
+                        <span className="text-gray-900 dark:text-white font-medium">{item.value}</span>
                     </div>
                 ))}
             </div>
@@ -1087,7 +1087,7 @@ export function ConfigurationPage() {
             <div className="max-w-7xl mx-auto px-8 py-8">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-white mb-2">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                         Configuración de Umbrales
                     </h1>
                     <p className="text-gray-400">
@@ -1100,13 +1100,13 @@ export function ConfigurationPage() {
                     <div className="bg-gray-800/50 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h2 className="text-xl font-semibold text-white mb-1">
+                                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
                                     {activeConfig.name}
                                 </h2>
                                 {activeConfig.description && (
                                     <p className="text-gray-400 text-sm">{activeConfig.description}</p>
                                 )}
-                                <div className="mt-3 text-xs text-gray-500">
+                                <div className="mt-3 text-xs text-gray-600 dark:text-gray-500">
                                     <span>Versión: {activeConfig.version}</span>
                                     <span className="mx-3">•</span>
                                     <span>
@@ -1122,14 +1122,14 @@ export function ConfigurationPage() {
                                 {!isEditing ? (
                                     <button
                                         onClick={handleEdit}
-                                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-gray-900 dark:text-white rounded-lg transition-colors"
                                     >
                                         Editar Configuración
                                     </button>
                                 ) : (
                                     <button
                                         onClick={handleCancel}
-                                        className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                                        className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
                                     >
                                         Cancelar
                                     </button>
@@ -1225,14 +1225,14 @@ export function ConfigurationPage() {
                             {currentStep < 4 ? (
                                 <button
                                     onClick={nextStep}
-                                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
                                 >
                                     Siguiente →
                                 </button>
                             ) : (
                                 <button
                                     onClick={handleSave}
-                                    className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                                    className="px-8 py-3 bg-green-600 hover:bg-green-700 text-gray-900 dark:text-white rounded-lg font-medium transition-colors flex items-center gap-2"
                                 >
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

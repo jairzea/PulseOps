@@ -120,7 +120,7 @@ export const MetricsPage: React.FC = () => {
                                 {metrics.map((metric) => (
                                     <tr key={metric.id} className="hover:bg-gray-800/50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-white">{metric.label}</div>
+                                            <div className="text-sm font-medium text-gray-900 dark:text-white">{metric.label}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className="px-2 py-1 text-xs font-mono rounded bg-purple-900/50 text-purple-300">
@@ -185,11 +185,11 @@ export const MetricsPage: React.FC = () => {
                     <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
                             <p className="text-gray-400 text-sm">Total de Métricas</p>
-                            <p className="text-2xl font-bold text-white mt-1">{metrics.length}</p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{metrics.length}</p>
                         </div>
                         <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
                             <p className="text-gray-400 text-sm">Métricas Configuradas</p>
-                            <p className="text-2xl font-bold text-white mt-1">
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                 {metrics.filter((m) => m.description).length}
                             </p>
                         </div>

@@ -94,19 +94,19 @@ export function ProfilePage() {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-20 px-6 transition-colors duration-300">
             <div className="max-w-4xl mx-auto">
-                <h1 className="text-3xl font-bold text-white mb-8">Mi Perfil</h1>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Mi Perfil</h1>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Sidebar - Info del usuario */}
                     <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
                         <div className="flex flex-col items-center">
-                            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-3xl text-white mb-4">
+                            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-3xl text-gray-900 dark:text-white mb-4">
                                 {profile?.name.substring(0, 2).toUpperCase()}
                             </div>
-                            <h2 className="text-xl font-bold text-white mb-1">{profile?.name}</h2>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{profile?.name}</h2>
                             <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{profile?.email}</p>
                             {profile?.role === 'admin' && (
-                                <span className="px-3 py-1 bg-purple-600 text-white text-xs rounded-full mb-4">
+                                <span className="px-3 py-1 bg-purple-600 text-gray-900 dark:text-white text-xs rounded-full mb-4">
                                     Administrador
                                 </span>
                             )}
@@ -147,7 +147,7 @@ export function ProfilePage() {
                                 {!isEditing && (
                                     <button
                                         onClick={() => setIsEditing(true)}
-                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
+                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-gray-900 dark:text-white rounded-lg transition-colors text-sm"
                                     >
                                         Editar
                                     </button>
@@ -164,7 +164,7 @@ export function ProfilePage() {
                                             type="text"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
-                                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             required
                                         />
                                     </div>
@@ -176,14 +176,14 @@ export function ProfilePage() {
                                             type="email"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
-                                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             required
                                         />
                                     </div>
                                     <div className="flex gap-3">
                                         <button
                                             type="submit"
-                                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-gray-900 dark:text-white rounded-lg transition-colors"
                                         >
                                             Guardar Cambios
                                         </button>
@@ -194,7 +194,7 @@ export function ProfilePage() {
                                                 setName(profile?.name || '');
                                                 setEmail(profile?.email || '');
                                             }}
-                                            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                                            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
                                         >
                                             Cancelar
                                         </button>
@@ -212,7 +212,7 @@ export function ProfilePage() {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Rol</label>
-                                        <p className="text-white capitalize">{profile?.role}</p>
+                                        <p className="text-gray-900 dark:text-white capitalize">{profile?.role}</p>
                                     </div>
                                 </div>
                             )}
@@ -225,7 +225,7 @@ export function ProfilePage() {
                                 {!isChangingPassword && (
                                     <button
                                         onClick={() => setIsChangingPassword(true)}
-                                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm"
+                                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-gray-900 dark:text-white rounded-lg transition-colors text-sm"
                                     >
                                         Cambiar Contraseña
                                     </button>
@@ -242,7 +242,7 @@ export function ProfilePage() {
                                             type="password"
                                             value={currentPassword}
                                             onChange={(e) => setCurrentPassword(e.target.value)}
-                                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                                             required
                                         />
                                     </div>
@@ -254,7 +254,7 @@ export function ProfilePage() {
                                             type="password"
                                             value={newPassword}
                                             onChange={(e) => setNewPassword(e.target.value)}
-                                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                                             required
                                             minLength={6}
                                         />
@@ -267,7 +267,7 @@ export function ProfilePage() {
                                             type="password"
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
-                                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                                             required
                                             minLength={6}
                                         />
@@ -275,7 +275,7 @@ export function ProfilePage() {
                                     <div className="flex gap-3">
                                         <button
                                             type="submit"
-                                            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                                            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-gray-900 dark:text-white rounded-lg transition-colors"
                                         >
                                             Cambiar Contraseña
                                         </button>
@@ -287,7 +287,7 @@ export function ProfilePage() {
                                                 setNewPassword('');
                                                 setConfirmPassword('');
                                             }}
-                                            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                                            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
                                         >
                                             Cancelar
                                         </button>
