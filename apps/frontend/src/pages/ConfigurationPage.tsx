@@ -48,7 +48,8 @@ function Step1Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
                     const formula = getValue([key, 'formula']);
                     const colors = colorClasses[color as keyof typeof colorClasses];
                     
-                    if (!formula) return null;
+                    // Verificar si la fórmula tiene pasos configurados
+                    const hasFormula = formula && formula.steps && formula.steps.length > 0;
 
                     return (
                         <div key={key} className={`bg-gray-800 rounded-lg p-6 border ${colors.border}`}>
@@ -58,16 +59,23 @@ function Step1Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
                                     <h3 className={`text-lg font-semibold ${colors.text}`}>
                                         {name}
                                     </h3>
+                                    {!hasFormula && (
+                                        <span className="text-xs bg-yellow-600/20 text-yellow-400 px-2 py-1 rounded">
+                                            Sin fórmula
+                                        </span>
+                                    )}
                                 </div>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={formula.enabled ?? true}
-                                        onChange={(e) => updateThreshold([key, 'formula', 'enabled'], e.target.checked)}
-                                        className="w-4 h-4 rounded border-gray-700 bg-gray-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
-                                    />
-                                    <span className="text-sm text-gray-300">Fórmula activa</span>
-                                </label>
+                                {hasFormula && (
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={formula.enabled ?? true}
+                                            onChange={(e) => updateThreshold([key, 'formula', 'enabled'], e.target.checked)}
+                                            className="w-4 h-4 rounded border-gray-700 bg-gray-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
+                                        />
+                                        <span className="text-sm text-gray-300">Fórmula activa</span>
+                                    </label>
+                                )}
                             </div>
 
                             <div className="mb-4">
@@ -75,38 +83,76 @@ function Step1Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
                                     Descripción de la fórmula
                                 </label>
                                 <textarea
-                                    value={formula.description || ''}
+                                    value={formula?.description || ''}
                                     onChange={(e) => updateThreshold([key, 'formula', 'description'], e.target.value)}
                                     className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
                                     rows={2}
+                                    placeholder="Describe el propósito de esta fórmula..."
                                 />
                             </div>
 
                             <div className="space-y-3">
-                                <h4 className="text-sm font-medium text-gray-300 mb-3">
-                                    Pasos de la fórmula
-                                </h4>
-                                {formula.steps?.map((step: any, index: number) => (
-                                    <div key={index} className="flex items-start gap-3 bg-gray-900/50 rounded-lg p-3">
-                                        <div className="flex items-center gap-2 min-w-[80px]">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className="text-sm font-medium text-gray-300">
+                                        Pasos de la fórmula
+                                    </h4>
+                                    <button
+                                        onClick={() => {
+                                            const currentSteps = formula?.steps || [];
+                                            const newStep = {
+                                                order: currentSteps.length + 1,
+                                                description: '',
+                                                enabled: true
+                                            };
+                                            updateThreshold([key, 'formula', 'steps'], [...currentSteps, newStep]);
+                                            // Activar la fórmula si se añade el primer paso
+                                            if (!formula || !formula.enabled) {
+                                                updateThreshold([key, 'formula', 'enabled'], true);
+                                            }
+                                        }}
+                                        className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
+                                    >
+                                        + Agregar paso
+                                    </button>
+                                </div>
+                                {formula?.steps && formula.steps.length > 0 ? (
+                                    formula.steps.map((step: any, index: number) => (
+                                        <div key={index} className="flex items-start gap-3 bg-gray-900/50 rounded-lg p-3">
+                                            <div className="flex items-center gap-2 min-w-[80px]">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={step.enabled ?? true}
+                                                    onChange={(e) => updateThreshold([key, 'formula', 'steps', index.toString(), 'enabled'], e.target.checked)}
+                                                    className="w-4 h-4 rounded border-gray-700 bg-gray-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
+                                                />
+                                                <span className="text-sm font-medium text-gray-400">
+                                                    Paso {step.order}
+                                                </span>
+                                            </div>
                                             <input
-                                                type="checkbox"
-                                                checked={step.enabled ?? true}
-                                                onChange={(e) => updateThreshold([key, 'formula', 'steps', index.toString(), 'enabled'], e.target.checked)}
-                                                className="w-4 h-4 rounded border-gray-700 bg-gray-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
+                                                type="text"
+                                                value={step.description || ''}
+                                                onChange={(e) => updateThreshold([key, 'formula', 'steps', index.toString(), 'description'], e.target.value)}
+                                                className="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                                placeholder={`Descripción del paso ${step.order}`}
                                             />
-                                            <span className="text-sm font-medium text-gray-400">
-                                                Paso {step.order}
-                                            </span>
+                                            <button
+                                                onClick={() => {
+                                                    const newSteps = formula.steps.filter((_: any, i: number) => i !== index);
+                                                    updateThreshold([key, 'formula', 'steps'], newSteps);
+                                                }}
+                                                className="px-2 py-1 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded transition-colors"
+                                                title="Eliminar paso"
+                                            >
+                                                ×
+                                            </button>
                                         </div>
-                                        <input
-                                            type="text"
-                                            value={step.description || ''}
-                                            onChange={(e) => updateThreshold([key, 'formula', 'steps', index.toString(), 'description'], e.target.value)}
-                                            className="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                        />
+                                    ))
+                                ) : (
+                                    <div className="text-sm text-gray-500 bg-gray-900/30 rounded-lg p-4 text-center">
+                                        No hay pasos definidos. Haz clic en "+ Agregar paso" para comenzar.
                                     </div>
-                                ))}
+                                )}
                             </div>
                         </div>
                     );
@@ -863,20 +909,23 @@ export function ConfigurationPage() {
     };
 
     const nextStep = () => {
-        if (currentStep < 3) setCurrentStep(currentStep + 1);
+        if (currentStep < 4) setCurrentStep(currentStep + 1);
     };
 
     const prevStep = () => {
         if (currentStep > 1) setCurrentStep(currentStep - 1);
     };
 
-    const updateThreshold = (path: string[], value: number) => {
+    const updateThreshold = (path: string[], value: any) => {
         if (!editedThresholds) return;
 
         const newThresholds = { ...editedThresholds };
         let current: any = newThresholds;
 
         for (let i = 0; i < path.length - 1; i++) {
+            if (!current[path[i]]) {
+                current[path[i]] = {};
+            }
             current[path[i]] = { ...current[path[i]] };
             current = current[path[i]];
         }
@@ -885,8 +934,8 @@ export function ConfigurationPage() {
         setEditedThresholds(newThresholds);
     };
 
-    const getValue = (path: string[]): number => {
-        if (!editedThresholds) return 0;
+    const getValue = (path: string[]): any => {
+        if (!editedThresholds) return null;
 
         let current: any = editedThresholds;
 
