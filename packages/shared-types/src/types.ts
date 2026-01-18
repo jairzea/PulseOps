@@ -167,6 +167,25 @@ export interface AnalysisSignal {
 // ============================================================================
 
 /**
+ * Paso de una fórmula de condición
+ */
+export interface FormulaStep {
+  order: number;              // Orden del paso (1, 2, 3...)
+  description: string;        // Descripción del paso
+  enabled: boolean;           // Si el paso está activo
+}
+
+/**
+ * Fórmula completa de una condición
+ */
+export interface ConditionFormula {
+  name: string;               // Nombre de la fórmula
+  description: string;        // Descripción general
+  steps: FormulaStep[];       // Pasos de la fórmula
+  enabled: boolean;           // Si la fórmula está activa
+}
+
+/**
  * Configuración de umbrales para determinar condiciones operativas
  * Permite ajustar los valores que definen cada condición
  */
@@ -174,24 +193,28 @@ export interface ConditionThresholds {
   // AFLUENCIA: Crecimiento pronunciado
   afluencia: {
     minInclination: number;     // Default: +50%
+    formula?: ConditionFormula; // Fórmula de acción
   };
   
   // NORMAL: Crecimiento positivo real
   normal: {
     minInclination: number;     // Default: +5%
     maxInclination: number;     // Default: +50%
+    formula?: ConditionFormula; // Fórmula de normal
   };
   
   // EMERGENCIA: Estancamiento o descenso leve
   emergencia: {
     minInclination: number;     // Default: -5%
     maxInclination: number;     // Default: +5%
+    formula?: ConditionFormula; // Fórmula de emergencia
   };
   
   // PELIGRO: Descenso pronunciado
   peligro: {
     minInclination: number;     // Default: -80%
     maxInclination: number;     // Default: -50%
+    formula?: ConditionFormula; // Fórmula de peligro
   };
   
   // PODER: Estado sostenido de excelencia
@@ -199,11 +222,13 @@ export interface ConditionThresholds {
     minConsecutivePeriods: number;  // Default: 3
     minInclination: number;         // Default: -5% (permite pequeñas variaciones)
     stabilityThreshold: number;     // Default: 0.1 (10% de variación máxima)
+    formula?: ConditionFormula;     // Fórmula de poder
   };
   
   // INEXISTENCIA: Valores cercanos a cero
   inexistencia: {
     threshold: number;          // Default: 0.01 (valores < 0.01 se consideran ~0)
+    formula?: ConditionFormula; // Fórmula de inexistencia
   };
   
   // Detección de señales

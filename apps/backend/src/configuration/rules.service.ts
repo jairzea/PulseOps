@@ -41,7 +41,7 @@ export class RulesService {
    */
   async getRuleById(id: string): Promise<BusinessRule> {
     const rule = await this.ruleModel.findById(id).exec();
-    
+
     if (!rule) {
       throw new NotFoundException(`Rule with ID ${id} not found`);
     }
@@ -109,9 +109,9 @@ export class RulesService {
   async getRuleVersions(ruleId: string): Promise<BusinessRule[]> {
     const rule = await this.getRuleById(ruleId);
     const versions: BusinessRule[] = [rule];
-    
+
     let currentVersionId = rule.previousVersionId;
-    
+
     while (currentVersionId) {
       const previousVersion = await this.ruleModel
         .findById(currentVersionId)
