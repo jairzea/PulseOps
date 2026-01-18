@@ -104,7 +104,7 @@ export const ResourcesPage: React.FC = () => {
     const tlResources = resources.filter((r) => r.roleType === 'TL');
 
     return (
-        <div className="min-h-screen bg-gray-950 text-white">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <PageHeader
                     title="Recursos"
@@ -138,7 +138,7 @@ export const ResourcesPage: React.FC = () => {
                 )}
 
                 {/* Tabla de recursos */}
-                <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
+                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors duration-300">
                     {loading && <TableSkeleton rows={5} columns={5} />}
 
                     {error && (
@@ -198,7 +198,7 @@ export const ResourcesPage: React.FC = () => {
 
                     {!loading && !error && resources.length > 0 && (
                         <table className="w-full">
-                            <thead className="bg-gray-800">
+                            <thead className="bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                                         Nombre
@@ -219,7 +219,7 @@ export const ResourcesPage: React.FC = () => {
                             </thead>
                             <tbody className="divide-y divide-gray-800">
                                 {resources.map((resource) => (
-                                    <tr key={resource.id} className="hover:bg-gray-800/50 transition-colors">
+                                    <tr key={resource.id} className="hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
                                                 <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">

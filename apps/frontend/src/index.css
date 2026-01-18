@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  /* Estilos base para modo claro y oscuro */
+  :root {
+    --bg-primary: #f9fafb;
+    --bg-secondary: #ffffff;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+  }
+
+  .dark {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+  }
+
+  body {
+    @apply bg-gray-50 dark:bg-slate-950 text-gray-900 dark:text-gray-100 transition-colors duration-300;
+  }
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -23,7 +44,7 @@ code {
 @layer components {
   /* Labels de formulario */
   .form-label {
-    @apply block text-sm font-medium text-gray-300 mb-2;
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors;
   }
 
   .form-label-required::after {
@@ -32,14 +53,14 @@ code {
   }
 
   .form-label-optional::after {
-    @apply text-gray-500 ml-1;
+    @apply text-gray-500 dark:text-gray-400 ml-1;
     content: '(Opcional)';
   }
 
   /* Inputs de texto */
   .form-input {
-    @apply w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg 
-           text-white placeholder-gray-400 
+    @apply w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg 
+           text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
            transition-colors
            disabled:opacity-50 disabled:cursor-not-allowed;
@@ -51,8 +72,8 @@ code {
 
   /* Textarea */
   .form-textarea {
-    @apply w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg 
-           text-white placeholder-gray-400 
+    @apply w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg 
+           text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
            transition-colors resize-none
            disabled:opacity-50 disabled:cursor-not-allowed;
@@ -64,8 +85,8 @@ code {
 
   /* Select */
   .form-select {
-    @apply w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg 
-           text-white 
+    @apply w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg 
+           text-gray-900 dark:text-white
            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
            transition-colors
            disabled:opacity-50 disabled:cursor-not-allowed;
@@ -77,42 +98,42 @@ code {
 
   /* Checkbox */
   .form-checkbox {
-    @apply w-4 h-4 text-blue-600 bg-gray-800 border-gray-700 rounded 
+    @apply w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded 
            focus:ring-blue-500 focus:ring-2
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   /* Mensajes de error */
   .form-error {
-    @apply mt-1 text-sm text-red-500;
+    @apply mt-1 text-sm text-red-500 dark:text-red-400;
   }
 
   /* Mensajes de ayuda */
   .form-help {
-    @apply mt-1 text-xs text-gray-400;
+    @apply mt-1 text-xs text-gray-500 dark:text-gray-400;
   }
 
   /* Dropdown de autocomplete */
   .form-dropdown {
-    @apply absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 
+    @apply absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 
            rounded-lg shadow-lg max-h-60 overflow-y-auto;
   }
 
   .form-dropdown-item {
-    @apply w-full px-4 py-3 text-left hover:bg-gray-700 
-           transition-colors border-b border-gray-700 last:border-b-0
+    @apply w-full px-4 py-3 text-left text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 
+           transition-colors border-b border-gray-200 dark:border-gray-700 last:border-b-0
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   /* Chips/Tags de selección */
   .form-chip {
     @apply inline-flex items-center gap-2 px-3 py-1.5 
-           bg-blue-900/30 border border-blue-700/50 rounded-lg 
-           text-sm text-blue-300;
+           bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700/50 rounded-lg 
+           text-sm text-blue-700 dark:text-blue-300;
   }
 
   .form-chip-button {
-    @apply hover:text-blue-100 transition-colors disabled:opacity-50;
+    @apply hover:text-blue-600 dark:hover:text-blue-100 transition-colors disabled:opacity-50;
   }
 
   /* Container de formulario */

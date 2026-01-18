@@ -62,7 +62,7 @@ export const MetricsPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-950 text-white">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <PageHeader
                     title="Métricas"
@@ -74,7 +74,7 @@ export const MetricsPage: React.FC = () => {
                 />
 
                 {/* Tabla de métricas */}
-                <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
+                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors duration-300">
                     {loading && <TableSkeleton columns={5} rows={6} showActions={true} />}
 
                     {error && (

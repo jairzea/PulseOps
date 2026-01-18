@@ -78,17 +78,17 @@ export function UsersAdminPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors duration-300">
                 <div className="text-gray-400">Cargando usuarios...</div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 pt-20 px-6">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-20 px-6 transition-colors duration-300">
             <div className="max-w-7xl mx-auto">
                 <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-3xl font-bold text-white">Gestión de Usuarios</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Gestión de Usuarios</h1>
                     <button
                         onClick={() => setShowCreateModal(true)}
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
@@ -107,14 +107,14 @@ export function UsersAdminPage() {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Buscar por nombre o email..."
-                        className="w-full max-w-md px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full max-w-md px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
 
                 {/* Tabla de usuarios */}
-                <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-300">
                     <table className="w-full">
-                        <thead className="bg-gray-700">
+                        <thead className="bg-gray-100 dark:bg-gray-700 transition-colors duration-300">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                                     Usuario
@@ -133,9 +133,9 @@ export function UsersAdminPage() {
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-700">
+                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700 transition-colors duration-300">
                             {filteredUsers.map((user) => (
-                                <tr key={user.id} className="hover:bg-gray-700/50 transition-colors">
+                                <tr key={user.id} className="hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center font-semibold text-white text-sm">
@@ -210,7 +210,7 @@ export function UsersAdminPage() {
             {/* Modal Crear Usuario */}
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-gray-800 rounded-lg max-w-md w-full p-6 border border-gray-700">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
                         <h2 className="text-2xl font-bold text-white mb-6">Nuevo Usuario</h2>
                         <form onSubmit={handleCreateUser} className="space-y-4">
                             <div>

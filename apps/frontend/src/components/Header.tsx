@@ -4,6 +4,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { ThemeSwitch } from './ThemeSwitch';
 
 export const Header: React.FC = () => {
     const location = useLocation();
@@ -104,7 +105,7 @@ export const Header: React.FC = () => {
     };
 
     return (
-        <header className="bg-gray-800 border-b border-gray-700">
+        <header className="bg-gray-800 dark:bg-gray-950 border-b border-gray-700 dark:border-gray-800 transition-colors duration-300">
             <div className="max-w-[1800px] mx-auto px-6 py-4">
                 <div className="flex items-center justify-between">
                     {/* Left side: Logo */}
@@ -123,21 +124,24 @@ export const Header: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Right side: Search, Notifications, Menu, Avatar */}
+                    {/* Right side: Search, Notifications, Theme Toggle, Menu, Avatar */}
                     <div className="flex items-center gap-4">
                         {/* Search Icon */}
-                        <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
-                            <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <button className="p-2 hover:bg-gray-700 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                            <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </button>
 
                         {/* Notifications Icon */}
-                        <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
-                            <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <button className="p-2 hover:bg-gray-700 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                            <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
                         </button>
+
+                        {/* Theme Toggle Switch */}
+                        <ThemeSwitch />
 
                         {/* Menu Icon (3 dots) with dropdown */}
                         <div className="relative" ref={menuRef}>

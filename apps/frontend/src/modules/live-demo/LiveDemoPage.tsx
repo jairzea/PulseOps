@@ -58,7 +58,7 @@ export function LiveDemoPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white p-6">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300 p-6">
             {/* Header */}
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
@@ -84,7 +84,7 @@ export function LiveDemoPage() {
                     <select
                         value={selectedMetricId}
                         onChange={(e) => setSelectedMetricId(e.target.value)}
-                        className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-colors duration-300 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                         {DEMO_METRICS.map(metric => (
                             <option key={metric.id} value={metric.id}>
@@ -107,7 +107,7 @@ export function LiveDemoPage() {
                     {result && (
                         <>
                             {/* Condición */}
-                            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 shadow-lg">
+                            <div className="bg-white dark:bg-gray-800 rounded-lg transition-colors duration-300 p-4 border border-gray-700 shadow-lg">
                                 <div className="text-xs font-mono text-gray-400 mb-2">CONDICIÓN OPERATIVA</div>
                                 <div className={`inline-block px-4 py-2 rounded-lg font-bold text-lg ${conditionColors[result.condition] || 'bg-gray-600 text-white'}`}>
                                     {result.condition}
@@ -121,7 +121,7 @@ export function LiveDemoPage() {
                             </div>
 
                             {/* Inclinación */}
-                            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 shadow-lg">
+                            <div className="bg-white dark:bg-gray-800 rounded-lg transition-colors duration-300 p-4 border border-gray-700 shadow-lg">
                                 <div className="text-xs font-mono text-gray-400 mb-2">INCLINACIÓN</div>
                                 <div className="text-3xl font-bold">
                                     {result.inclination.value !== null
@@ -137,7 +137,7 @@ export function LiveDemoPage() {
 
                             {/* Señales */}
                             {result.signals && result.signals.length > 0 && (
-                                <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 shadow-lg">
+                                <div className="bg-white dark:bg-gray-800 rounded-lg transition-colors duration-300 p-4 border border-gray-700 shadow-lg">
                                     <div className="text-xs font-mono text-gray-400 mb-3">SEÑALES DETECTADAS</div>
                                     <div className="space-y-3">
                                         {result.signals.map((signal, idx) => (
@@ -163,7 +163,7 @@ export function LiveDemoPage() {
                             )}
 
                             {/* Metadata */}
-                            <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 shadow-lg">
+                            <div className="bg-white dark:bg-gray-800 rounded-lg transition-colors duration-300 p-4 border border-gray-700 shadow-lg">
                                 <div className="text-xs font-mono text-gray-400 mb-2">METADATA</div>
                                 <div className="text-xs text-gray-300 space-y-1">
                                     <div>Ventana: {result.windowUsed} períodos</div>
@@ -199,7 +199,7 @@ export function LiveDemoPage() {
                     )}
 
                     {/* Grafo React Flow */}
-                    <div className="h-[550px] bg-gray-800 rounded-lg border border-gray-700 shadow-xl overflow-hidden">
+                    <div className="h-[550px] bg-white dark:bg-gray-800 rounded-lg transition-colors duration-300 border border-gray-700 shadow-xl overflow-hidden">
                         <ReactFlow
                             nodes={nodes}
                             edges={edges}
@@ -208,12 +208,12 @@ export function LiveDemoPage() {
                             minZoom={0.5}
                             maxZoom={1.5}
                             defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
-                            className="bg-gray-900"
+                            className="bg-gray-100 dark:bg-gray-900 transition-colors duration-300"
                         >
                             <Background color="#374151" gap={16} />
-                            <Controls className="bg-gray-800 border border-gray-700" />
+                            <Controls className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-colors duration-300" />
                             <MiniMap
-                                className="bg-gray-800 border border-gray-700"
+                                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-colors duration-300"
                                 nodeColor={(node) => {
                                     if (node.type === 'condition') return '#10b981';
                                     if (node.type === 'signals') return '#818cf8';

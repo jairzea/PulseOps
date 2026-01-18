@@ -42,7 +42,7 @@ export const RecordsPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-950 text-white">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <PageHeader
                     title="Registros"
@@ -59,14 +59,14 @@ export const RecordsPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Selector de Recurso */}
                         <div>
-                            <label htmlFor="resource" className="block text-sm font-medium text-gray-300 mb-2">
+                            <label htmlFor="resource" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Recurso
                             </label>
                             <select
                                 id="resource"
                                 value={selectedResourceId}
                                 onChange={(e) => setSelectedResourceId(e.target.value)}
-                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
                                 <option value="">Seleccionar recurso...</option>
                                 {resources.map((resource) => (
@@ -79,14 +79,14 @@ export const RecordsPage: React.FC = () => {
 
                         {/* Selector de Métrica */}
                         <div>
-                            <label htmlFor="metric" className="block text-sm font-medium text-gray-300 mb-2">
+                            <label htmlFor="metric" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Métrica
                             </label>
                             <select
                                 id="metric"
                                 value={selectedMetricKey}
                                 onChange={(e) => setSelectedMetricKey(e.target.value)}
-                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
                                 <option value="">Seleccionar métrica...</option>
                                 {metrics.map((metric) => (
@@ -125,7 +125,7 @@ export const RecordsPage: React.FC = () => {
                         </div>
                     ) : (
                         <table className="w-full">
-                            <thead className="bg-gray-800">
+                            <thead className="bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                                         Semana
@@ -144,19 +144,19 @@ export const RecordsPage: React.FC = () => {
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-800">
+                            <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                                 {records.map((record) => (
-                                    <tr key={record.id} className="hover:bg-gray-800/50 transition-colors">
+                                    <tr key={record.id} className="hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className="px-2 py-1 text-xs font-mono rounded bg-blue-900/50 text-blue-300">
                                                 {formatWeek(record.week)}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-bold text-white">{record.value}</div>
+                                            <div className="text-sm font-bold text-gray-900 dark:text-white">{record.value}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="px-2 py-1 text-xs rounded bg-gray-800 text-gray-300">
+                                            <span className="px-2 py-1 text-xs rounded bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors duration-300">
                                                 {record.source || 'MANUAL'}
                                             </span>
                                         </td>
@@ -183,17 +183,17 @@ export const RecordsPage: React.FC = () => {
                     <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
                             <p className="text-gray-400 text-sm">Total de Registros</p>
-                            <p className="text-2xl font-bold text-white mt-1">{records.length}</p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{records.length}</p>
                         </div>
                         <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
                             <p className="text-gray-400 text-sm">Valor Promedio</p>
-                            <p className="text-2xl font-bold text-white mt-1">
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                 {(records.reduce((acc, r) => acc + r.value, 0) / records.length).toFixed(1)}
                             </p>
                         </div>
                         <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
                             <p className="text-gray-400 text-sm">Último Valor</p>
-                            <p className="text-2xl font-bold text-white mt-1">
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                 {records[records.length - 1]?.value || 0}
                             </p>
                         </div>

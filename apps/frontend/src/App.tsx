@@ -10,12 +10,14 @@ import { UsersAdminPage } from './pages/UsersAdminPage';
 import { Layout } from './components/Layout';
 import { ToastContainer } from './components/ToastContainer';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { PrivateRoute } from './components/PrivateRoute';
 
 function App() {
     return (
-        <AuthProvider>
-            <BrowserRouter>
+        <ThemeProvider>
+            <AuthProvider>
+                <BrowserRouter>
                 <Routes>
                     {/* Public route */}
                     <Route path="/login" element={<LoginPage />} />
@@ -98,6 +100,7 @@ function App() {
                 <ToastContainer />
             </BrowserRouter>
         </AuthProvider>
+        </ThemeProvider>
     );
 }
 

@@ -38,18 +38,18 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
             onClick={handleBackdropClick}
         >
             <div
-                className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl mx-4 border border-gray-700 transform transition-all duration-300 scale-100"
+                className="bg-white dark:bg-gray-900 rounded-xl transition-colors duration-300 shadow-2xl w-full max-w-2xl mx-4 border border-gray-700 transform transition-all duration-300 scale-100"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-700">
-                    <h2 className="text-xl font-bold text-white">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                         {resource ? 'Editar Recurso' : 'Nuevo Recurso'}
                     </h2>
                     <button
                         onClick={onClose}
                         disabled={isSubmitting}
-                        className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                        className="text-gray-400 hover:text-gray-900 dark:text-white transition-colors disabled:opacity-50"
                         aria-label="Cerrar"
                     >
                         <svg

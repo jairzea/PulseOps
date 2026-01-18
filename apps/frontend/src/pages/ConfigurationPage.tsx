@@ -33,11 +33,11 @@ function Step1Formulas() {
     ];
 
     const colorClasses = {
-        purple: { border: 'border-purple-600/30', text: 'text-purple-400', bg: 'bg-purple-500' },
-        green: { border: 'border-green-600/30', text: 'text-green-400', bg: 'bg-green-500' },
-        yellow: { border: 'border-yellow-600/30', text: 'text-yellow-400', bg: 'bg-yellow-500' },
-        red: { border: 'border-red-600/30', text: 'text-red-400', bg: 'bg-red-500' },
-        cyan: { border: 'border-cyan-600/30', text: 'text-cyan-400', bg: 'bg-cyan-500' },
+        purple: { border: 'border-purple-600/30', text: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-500' },
+        green: { border: 'border-green-600/30', text: 'text-green-600 dark:text-green-400', bg: 'bg-green-500' },
+        yellow: { border: 'border-yellow-600/30', text: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-500' },
+        red: { border: 'border-red-600/30', text: 'text-red-600 dark:text-red-400', bg: 'bg-red-500' },
+        cyan: { border: 'border-cyan-600/30', text: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-500' },
         gray: { border: 'border-gray-600/30', text: 'text-gray-400', bg: 'bg-gray-500' },
     };
 
@@ -174,7 +174,7 @@ function Step1Formulas() {
                                         <h3 className={`text-lg font-semibold ${colors.text}`}>
                                             {name}
                                         </h3>
-                                        <span className="text-xs bg-blue-600/20 text-blue-400 px-2 py-1 rounded">
+                                        <span className="text-xs bg-blue-600/20 text-blue-600 dark:text-blue-400 px-2 py-1 rounded">
                                             v{playbook.version}
                                         </span>
                                     </div>
@@ -219,14 +219,14 @@ function Step1Formulas() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Título de la fórmula
                                         </label>
                                         <input
                                             type="text"
                                             value={playbook.title}
                                             onChange={(e) => updatePlaybook(key, 'title', e.target.value)}
-                                            className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                            className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                             placeholder="Título de la fórmula..."
                                         />
                                     </div>
@@ -249,14 +249,14 @@ function Step1Formulas() {
                                         {playbook.steps.length > 0 ? (
                                             playbook.steps.map((step, index) => (
                                                 <div key={index} className="flex items-start gap-3 bg-gray-900/50 rounded-lg p-3">
-                                                    <div className="flex-shrink-0 w-8 h-8 bg-blue-900/30 text-blue-400 rounded-full flex items-center justify-center font-semibold text-sm">
+                                                    <div className="flex-shrink-0 w-8 h-8 bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center font-semibold text-sm">
                                                         {index + 1}
                                                     </div>
                                                     <input
                                                         type="text"
                                                         value={step}
                                                         onChange={(e) => updateStep(key, index, e.target.value)}
-                                                        className="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                                        className="flex-1 px-3 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                                         placeholder={`Paso ${index + 1}...`}
                                                     />
                                                     <button
@@ -264,7 +264,7 @@ function Step1Formulas() {
                                                             e.stopPropagation();
                                                             removeStep(key, index);
                                                         }}
-                                                        className="px-2 py-1 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded transition-colors"
+                                                        className="px-2 py-1 text-red-600 dark:text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded transition-colors"
                                                         title="Eliminar paso"
                                                     >
                                                         ×
@@ -300,20 +300,20 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* AFLUENCIA */}
-                <div className="bg-gray-800 rounded-lg p-6 border border-purple-600/30">
-                    <h3 className="text-lg font-semibold text-purple-400 mb-4 flex items-center gap-2">
+                <div className="bg-white dark:bg-gray-800 rounded-lg transition-colors duration-300 p-6 border border-purple-200 dark:border-purple-600/30">
+                    <h3 className="text-lg font-semibold text-purple-600 dark:text-purple-400 mb-4 flex items-center gap-2">
                         <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
                         AFLUENCIA
                     </h3>
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Inclinación mínima (%)
                         </label>
                         <input
                             type="number"
                             value={getValue(['afluencia', 'minInclination'])}
                             onChange={(e) => updateThreshold(['afluencia', 'minInclination'], Number(e.target.value))}
-                            className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                            className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                             step="0.1"
                         />
                         <p className="text-xs text-gray-400 mt-1">
@@ -323,21 +323,21 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                 </div>
 
                 {/* NORMAL */}
-                <div className="bg-gray-800 rounded-lg p-6 border border-green-600/30">
-                    <h3 className="text-lg font-semibold text-green-400 mb-4 flex items-center gap-2">
+                <div className="bg-white dark:bg-gray-800 rounded-lg transition-colors duration-300 p-6 border border-green-200 dark:border-green-600/30">
+                    <h3 className="text-lg font-semibold text-green-600 dark:text-green-400 mb-4 flex items-center gap-2">
                         <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                         NORMAL
                     </h3>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Inclinación mínima (%)
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['normal', 'minInclination'])}
                                 onChange={(e) => updateThreshold(['normal', 'minInclination'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -345,14 +345,14 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                             </p>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Inclinación máxima (%)
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['normal', 'maxInclination'])}
                                 onChange={(e) => updateThreshold(['normal', 'maxInclination'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -363,21 +363,21 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                 </div>
 
                 {/* EMERGENCIA */}
-                <div className="bg-gray-800 rounded-lg p-6 border border-yellow-600/30">
-                    <h3 className="text-lg font-semibold text-yellow-400 mb-4 flex items-center gap-2">
+                <div className="bg-white dark:bg-gray-800 rounded-lg transition-colors duration-300 p-6 border border-yellow-200 dark:border-yellow-600/30">
+                    <h3 className="text-lg font-semibold text-yellow-600 dark:text-yellow-400 mb-4 flex items-center gap-2">
                         <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
                         EMERGENCIA
                     </h3>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Inclinación mínima (%)
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['emergencia', 'minInclination'])}
                                 onChange={(e) => updateThreshold(['emergencia', 'minInclination'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -385,14 +385,14 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                             </p>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Inclinación máxima (%)
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['emergencia', 'maxInclination'])}
                                 onChange={(e) => updateThreshold(['emergencia', 'maxInclination'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -403,21 +403,21 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                 </div>
 
                 {/* PELIGRO */}
-                <div className="bg-gray-800 rounded-lg p-6 border border-red-600/30">
-                    <h3 className="text-lg font-semibold text-red-400 mb-4 flex items-center gap-2">
+                <div className="bg-white dark:bg-gray-800 rounded-lg transition-colors duration-300 p-6 border border-red-200 dark:border-red-600/30">
+                    <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-4 flex items-center gap-2">
                         <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                         PELIGRO
                     </h3>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Inclinación mínima (%)
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['peligro', 'minInclination'])}
                                 onChange={(e) => updateThreshold(['peligro', 'minInclination'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-red-500 focus:ring-1 focus:ring-red-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -425,14 +425,14 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                             </p>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Inclinación máxima (%)
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['peligro', 'maxInclination'])}
                                 onChange={(e) => updateThreshold(['peligro', 'maxInclination'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-red-500 focus:ring-1 focus:ring-red-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -443,35 +443,35 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                 </div>
 
                 {/* PODER */}
-                <div className="bg-gray-800 rounded-lg p-6 border border-cyan-600/30">
-                    <h3 className="text-lg font-semibold text-cyan-400 mb-4 flex items-center gap-2">
+                <div className="bg-white dark:bg-gray-800 rounded-lg transition-colors duration-300 p-6 border border-cyan-200 dark:border-cyan-600/30">
+                    <h3 className="text-lg font-semibold text-cyan-600 dark:text-cyan-400 mb-4 flex items-center gap-2">
                         <div className="w-3 h-3 bg-cyan-500 rounded-full"></div>
                         PODER
                     </h3>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Períodos consecutivos mínimos
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['poder', 'minConsecutivePeriods'])}
                                 onChange={(e) => updateThreshold(['poder', 'minConsecutivePeriods'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                             />
                             <p className="text-xs text-gray-400 mt-1">
                                 Cantidad de períodos consecutivos necesarios para confirmar PODER (default: 3)
                             </p>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Inclinación mínima (%)
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['poder', 'minInclination'])}
                                 onChange={(e) => updateThreshold(['poder', 'minInclination'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -479,14 +479,14 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                             </p>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Umbral de estabilidad
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['poder', 'stabilityThreshold'])}
                                 onChange={(e) => updateThreshold(['poder', 'stabilityThreshold'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -497,20 +497,20 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                 </div>
 
                 {/* INEXISTENCIA */}
-                <div className="bg-gray-800 rounded-lg p-6 border border-gray-600/30">
+                <div className="bg-white dark:bg-gray-800 rounded-lg transition-colors duration-300 p-6 border border-gray-600/30">
                     <h3 className="text-lg font-semibold text-gray-400 mb-4 flex items-center gap-2">
                         <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
                         INEXISTENCIA
                     </h3>
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Umbral
                         </label>
                         <input
                             type="number"
                             value={getValue(['inexistencia', 'threshold'])}
                             onChange={(e) => updateThreshold(['inexistencia', 'threshold'], Number(e.target.value))}
-                            className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                            className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
                             step="0.1"
                         />
                         <p className="text-xs text-gray-400 mt-1">
@@ -536,32 +536,32 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Volatility */}
-                <div className="bg-gray-800 rounded-lg p-6 border border-orange-600/30">
-                    <h3 className="text-lg font-semibold text-orange-400 mb-4">Volatilidad</h3>
+                <div className="bg-white dark:bg-gray-800 rounded-lg transition-colors duration-300 p-6 border border-orange-200 dark:border-orange-600/30">
+                    <h3 className="text-lg font-semibold text-orange-600 dark:text-orange-400 mb-4">Volatilidad</h3>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Cambios de dirección mínimos
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['signals', 'volatility', 'minDirectionChanges'])}
                                 onChange={(e) => updateThreshold(['signals', 'volatility', 'minDirectionChanges'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                             />
                             <p className="text-xs text-gray-400 mt-1">
                                 Cantidad mínima de cambios de tendencia para detectar volatilidad (default: 3)
                             </p>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Tamaño mínimo de ventana
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['signals', 'volatility', 'minWindowSize'])}
                                 onChange={(e) => updateThreshold(['signals', 'volatility', 'minWindowSize'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                             />
                             <p className="text-xs text-gray-400 mt-1">
                                 Períodos necesarios para analizar volatilidad (default: 5)
@@ -571,32 +571,32 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
                 </div>
 
                 {/* Slow Decline */}
-                <div className="bg-gray-800 rounded-lg p-6 border border-blue-600/30">
-                    <h3 className="text-lg font-semibold text-blue-400 mb-4">Declive Lento</h3>
+                <div className="bg-white dark:bg-gray-800 rounded-lg transition-colors duration-300 p-6 border border-blue-200 dark:border-blue-600/30">
+                    <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-4">Declive Lento</h3>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Declives consecutivos mínimos
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['signals', 'slowDecline', 'minConsecutiveDeclines'])}
                                 onChange={(e) => updateThreshold(['signals', 'slowDecline', 'minConsecutiveDeclines'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                             />
                             <p className="text-xs text-gray-400 mt-1">
                                 Períodos consecutivos de declive para detectar tendencia lenta (default: 3)
                             </p>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Inclinación máxima por período (%)
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['signals', 'slowDecline', 'maxInclinationPerPeriod'])}
                                 onChange={(e) => updateThreshold(['signals', 'slowDecline', 'maxInclinationPerPeriod'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -607,32 +607,32 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
                 </div>
 
                 {/* Data Gaps */}
-                <div className="bg-gray-800 rounded-lg p-6 border border-purple-600/30">
-                    <h3 className="text-lg font-semibold text-purple-400 mb-4">Gaps de Datos</h3>
+                <div className="bg-white dark:bg-gray-800 rounded-lg transition-colors duration-300 p-6 border border-purple-200 dark:border-purple-600/30">
+                    <h3 className="text-lg font-semibold text-purple-600 dark:text-purple-400 mb-4">Gaps de Datos</h3>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Días esperados entre puntos
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['signals', 'dataGaps', 'expectedDaysBetweenPoints'])}
                                 onChange={(e) => updateThreshold(['signals', 'dataGaps', 'expectedDaysBetweenPoints'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                             />
                             <p className="text-xs text-gray-400 mt-1">
                                 Frecuencia normal de registros de datos: 7 = semanal (default: 7)
                             </p>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Tolerancia en días
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['signals', 'dataGaps', 'toleranceDays'])}
                                 onChange={(e) => updateThreshold(['signals', 'dataGaps', 'toleranceDays'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                             />
                             <p className="text-xs text-gray-400 mt-1">
                                 Días de retraso permitidos antes de considerar un gap (default: 2)
@@ -642,32 +642,32 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
                 </div>
 
                 {/* Recovery Spike */}
-                <div className="bg-gray-800 rounded-lg p-6 border border-green-600/30">
-                    <h3 className="text-lg font-semibold text-green-400 mb-4">Pico de Recuperación</h3>
+                <div className="bg-white dark:bg-gray-800 rounded-lg transition-colors duration-300 p-6 border border-green-200 dark:border-green-600/30">
+                    <h3 className="text-lg font-semibold text-green-600 dark:text-green-400 mb-4">Pico de Recuperación</h3>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Declives previos mínimos
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['signals', 'recoverySpike', 'minPriorDeclines'])}
                                 onChange={(e) => updateThreshold(['signals', 'recoverySpike', 'minPriorDeclines'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
                             />
                             <p className="text-xs text-gray-400 mt-1">
                                 Número de declives previos necesarios para detectar recuperación (default: 2)
                             </p>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Inclinación mínima de recuperación (%)
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['signals', 'recoverySpike', 'minRecoveryInclination'])}
                                 onChange={(e) => updateThreshold(['signals', 'recoverySpike', 'minRecoveryInclination'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -678,18 +678,18 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
                 </div>
 
                 {/* Noise */}
-                <div className="bg-gray-800 rounded-lg p-6 border border-yellow-600/30 md:col-span-2">
-                    <h3 className="text-lg font-semibold text-yellow-400 mb-4">Ruido</h3>
+                <div className="bg-white dark:bg-gray-800 rounded-lg transition-colors duration-300 p-6 border border-yellow-200 dark:border-yellow-600/30 md:col-span-2">
+                    <h3 className="text-lg font-semibold text-yellow-600 dark:text-yellow-400 mb-4">Ruido</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Variación máxima de inclinación (%)
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['signals', 'noise', 'maxInclinationVariation'])}
                                 onChange={(e) => updateThreshold(['signals', 'noise', 'maxInclinationVariation'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
                                 step="0.1"
                             />
                             <p className="text-xs text-gray-400 mt-1">
@@ -697,14 +697,14 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
                             </p>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Tamaño mínimo de ventana
                             </label>
                             <input
                                 type="number"
                                 value={getValue(['signals', 'noise', 'minWindowSize'])}
                                 onChange={(e) => updateThreshold(['signals', 'noise', 'minWindowSize'], Number(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
+                                className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
                             />
                             <p className="text-xs text-gray-400 mt-1">
                                 Períodos necesarios para analizar ruido en la señal (default: 4)
@@ -733,13 +733,13 @@ function Step4Review({ thresholds, configName }: Step4ReviewProps) {
                 </p>
             </div>
 
-            <div className="bg-blue-600/10 border border-blue-600/30 rounded-lg p-6 mb-8">
+            <div className="bg-blue-600/10 border border-blue-200 dark:border-blue-600/30 rounded-lg p-6 mb-8">
                 <div className="flex items-start gap-3">
-                    <svg className="w-6 h-6 text-blue-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-6 h-6 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
-                        <h3 className="text-lg font-semibold text-blue-400 mb-2">
+                        <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-2">
                             Información Importante
                         </h3>
                         <p className="text-gray-300 text-sm">
@@ -799,26 +799,26 @@ function Step4Review({ thresholds, configName }: Step4ReviewProps) {
             <div className="mt-8 pt-6 border-t border-gray-700">
                 <h3 className="text-lg font-semibold text-white mb-4">Señales Configuradas</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                        <h4 className="text-sm font-medium text-orange-400 mb-2">Volatilidad</h4>
+                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                        <h4 className="text-sm font-medium text-orange-600 dark:text-orange-400 mb-2">Volatilidad</h4>
                         <p className="text-xs text-gray-400">
                             Cambios de dirección: {thresholds.signals.volatility.minDirectionChanges} • Ventana: {thresholds.signals.volatility.minWindowSize}
                         </p>
                     </div>
-                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                        <h4 className="text-sm font-medium text-blue-400 mb-2">Declive Lento</h4>
+                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                        <h4 className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2">Declive Lento</h4>
                         <p className="text-xs text-gray-400">
                             Min: {thresholds.signals.slowDecline.minConsecutiveDeclines} períodos • Máx: {thresholds.signals.slowDecline.maxInclinationPerPeriod}%
                         </p>
                     </div>
-                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                        <h4 className="text-sm font-medium text-purple-400 mb-2">Gaps de Datos</h4>
+                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                        <h4 className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-2">Gaps de Datos</h4>
                         <p className="text-xs text-gray-400">
                             Días esperados: {thresholds.signals.dataGaps.expectedDaysBetweenPoints} • Tolerancia: {thresholds.signals.dataGaps.toleranceDays}
                         </p>
                     </div>
-                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                        <h4 className="text-sm font-medium text-green-400 mb-2">Pico de Recuperación</h4>
+                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                        <h4 className="text-sm font-medium text-green-600 dark:text-green-400 mb-2">Pico de Recuperación</h4>
                         <p className="text-xs text-gray-400">
                             Declives previos: {thresholds.signals.recoverySpike.minPriorDeclines} • Inclinación: {thresholds.signals.recoverySpike.minRecoveryInclination}%
                         </p>
@@ -841,11 +841,11 @@ function Step4Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
     ];
 
     const colorClasses = {
-        purple: { border: 'border-purple-600/30', text: 'text-purple-400', bg: 'bg-purple-500' },
-        green: { border: 'border-green-600/30', text: 'text-green-400', bg: 'bg-green-500' },
-        yellow: { border: 'border-yellow-600/30', text: 'text-yellow-400', bg: 'bg-yellow-500' },
-        red: { border: 'border-red-600/30', text: 'text-red-400', bg: 'bg-red-500' },
-        cyan: { border: 'border-cyan-600/30', text: 'text-cyan-400', bg: 'bg-cyan-500' },
+        purple: { border: 'border-purple-600/30', text: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-500' },
+        green: { border: 'border-green-600/30', text: 'text-green-600 dark:text-green-400', bg: 'bg-green-500' },
+        yellow: { border: 'border-yellow-600/30', text: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-500' },
+        red: { border: 'border-red-600/30', text: 'text-red-600 dark:text-red-400', bg: 'bg-red-500' },
+        cyan: { border: 'border-cyan-600/30', text: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-500' },
         gray: { border: 'border-gray-600/30', text: 'text-gray-400', bg: 'bg-gray-500' },
     };
 
@@ -886,13 +886,13 @@ function Step4Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
                             </div>
 
                             <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Descripción de la fórmula
                                 </label>
                                 <textarea
                                     value={formula.description || ''}
                                     onChange={(e) => updateThreshold([key, 'formula', 'description'], e.target.value)}
-                                    className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                                    className="w-full px-4 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
                                     rows={2}
                                 />
                             </div>
@@ -918,7 +918,7 @@ function Step4Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
                                             type="text"
                                             value={step.description || ''}
                                             onChange={(e) => updateThreshold([key, 'formula', 'steps', index.toString(), 'description'], e.target.value)}
-                                            className="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                            className="flex-1 px-3 py-2 bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                         />
                                     </div>
                                 ))}
@@ -948,11 +948,11 @@ function SummaryCard({ title, color, items }: SummaryCardProps) {
     };
 
     const textColorClasses = {
-        purple: 'text-purple-400',
-        green: 'text-green-400',
-        yellow: 'text-yellow-400',
-        red: 'text-red-400',
-        cyan: 'text-cyan-400',
+        purple: 'text-purple-600 dark:text-purple-400',
+        green: 'text-green-600 dark:text-green-400',
+        yellow: 'text-yellow-600 dark:text-yellow-400',
+        red: 'text-red-600 dark:text-red-400',
+        cyan: 'text-cyan-600 dark:text-cyan-400',
         gray: 'text-gray-400',
     };
 
@@ -1083,7 +1083,7 @@ export function ConfigurationPage() {
     const thresholds = isEditing ? editedThresholds : activeConfig?.thresholds;
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-8 py-8">
                 {/* Header */}
                 <div className="mb-8">
@@ -1097,7 +1097,7 @@ export function ConfigurationPage() {
 
                 {/* Active Configuration Info */}
                 {activeConfig && (
-                    <div className="bg-gray-800/50 rounded-lg p-6 mb-8 border border-gray-700">
+                    <div className="bg-gray-800/50 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700">
                         <div className="flex items-center justify-between">
                             <div>
                                 <h2 className="text-xl font-semibold text-white mb-1">
@@ -1116,7 +1116,7 @@ export function ConfigurationPage() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
-                                <span className="px-3 py-1 bg-green-600/20 text-green-400 text-sm rounded-full border border-green-600/30">
+                                <span className="px-3 py-1 bg-green-600/20 text-green-600 dark:text-green-400 text-sm rounded-full border border-green-200 dark:border-green-600/30">
                                     Activa
                                 </span>
                                 {!isEditing ? (
@@ -1183,7 +1183,7 @@ export function ConfigurationPage() {
                         </div>
 
                         {/* Step Content */}
-                        <div className="bg-gray-800/30 rounded-lg p-8 border border-gray-700/50 min-h-[500px]">
+                        <div className="bg-gray-800/30 rounded-lg p-8 border border-gray-200 dark:border-gray-700/50 min-h-[500px]">
                             {currentStep === 1 && (
                                 <Step1Formulas />
                             )}

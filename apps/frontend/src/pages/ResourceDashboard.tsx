@@ -109,9 +109,9 @@ export function ResourceDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
       {/* Dashboard Controls */}
-      <div className="bg-gray-800 border-b border-gray-700">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
         <div className="max-w-[1800px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Selectors */}
@@ -158,10 +158,10 @@ export function ResourceDashboard() {
               Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
-                  className="flex-shrink-0 w-64 bg-gray-800 border-2 border-gray-700 rounded-lg p-6 animate-pulse"
+                  className="flex-shrink-0 w-64 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6 animate-pulse transition-colors duration-300"
                 >
-                  <div className="h-6 bg-gray-700 rounded w-3/4 mb-4"></div>
-                  <div className="h-10 bg-gray-700 rounded w-1/2"></div>
+                  <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
+                  <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
                 </div>
               ))
             ) : (
@@ -205,7 +205,7 @@ export function ResourceDashboard() {
 
           {/* Analysis Panel - 4 columns */}
           <div className="col-span-4">
-            <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 h-full">
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 h-full transition-colors duration-300">
               <h3 className="text-lg font-semibold text-white mb-6 flex items-center justify-between">
                 <span>Análisis</span>
                 <button className="text-gray-400 hover:text-white">
@@ -217,15 +217,15 @@ export function ResourceDashboard() {
 
               {loadingAnalysis ? (
                 <div className="space-y-4">
-                  <div className="animate-pulse h-20 bg-gray-700 rounded"></div>
-                  <div className="animate-pulse h-20 bg-gray-700 rounded"></div>
-                  <div className="animate-pulse h-20 bg-gray-700 rounded"></div>
+                  <div className="animate-pulse h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <div className="animate-pulse h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <div className="animate-pulse h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
                 </div>
               ) : analysis?.evaluation?.inclination?.value != null ? (
                 <div className="space-y-6">
                   {/* Inclinación */}
                   <div>
-                    <div className="text-sm text-gray-400 mb-1">Inclinación</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Inclinación</div>
                     <div className="flex items-baseline gap-2">
                       <span className={`text-3xl font-bold ${analysis.evaluation.inclination.value > 0 ? 'text-green-400' : analysis.evaluation.inclination.value < 0 ? 'text-red-400' : 'text-yellow-400'
                         }`}>
@@ -237,7 +237,7 @@ export function ResourceDashboard() {
 
                   {/* Cambio */}
                   <div>
-                    <div className="text-sm text-gray-400 mb-1">Cambio</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Cambio</div>
                     <div className="text-xl font-semibold text-white">
                       {records.length >= 2 ? (
                         <>
@@ -253,7 +253,7 @@ export function ResourceDashboard() {
 
                   {/* Alertas */}
                   <div>
-                    <div className="text-sm text-gray-400 mb-2">Alertas</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Alertas</div>
                     <div className="space-y-2">
                       {analysis.evaluation?.signals && analysis.evaluation.signals.length > 0 ? (
                         analysis.evaluation.signals.slice(0, 2).map((signal, idx) => (
@@ -264,7 +264,7 @@ export function ResourceDashboard() {
                               }`}>
                               {signal.severity || 'INFO'}
                             </span>
-                            <span className="text-sm text-gray-300">{signal.explanation || signal.type}</span>
+                            <span className="text-sm text-gray-700 dark:text-gray-300">{signal.explanation || signal.type}</span>
                           </div>
                         ))
                       ) : (

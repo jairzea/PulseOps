@@ -51,7 +51,7 @@ export function ConditionSummary({ analysis, loading = false }: ConditionSummary
                         </div>
                     </div>
                     <div className={`px-4 py-2 ${theme.badge} rounded-full`}>
-                        <p className="text-white font-semibold">{Math.round(analysis.evaluation.confidence * 100)}% Confianza</p>
+                        <p className="text-gray-900 dark:text-white font-semibold">{Math.round(analysis.evaluation.confidence * 100)}% Confianza</p>
                     </div>
                 </div>
                 <p className="text-gray-300 text-lg">{analysis.evaluation.reason.explanation}</p>
@@ -60,7 +60,7 @@ export function ConditionSummary({ analysis, loading = false }: ConditionSummary
             {/* Métricas Clave */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Inclinación */}
-                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 transition-all duration-300 hover:border-gray-600">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-300 transition-all duration-300 hover:border-gray-600">
                     <p className="text-sm text-gray-400 uppercase tracking-wide mb-2">Inclinación</p>
                     <div className="flex items-baseline gap-2">
                         <p className={`text-3xl font-bold ${getInclinationColor(analysis.evaluation.inclination.value)}`}>
@@ -71,7 +71,7 @@ export function ConditionSummary({ analysis, loading = false }: ConditionSummary
                 </div>
 
                 {/* Señales Detectadas */}
-                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 transition-all duration-300 hover:border-gray-600">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-300 transition-all duration-300 hover:border-gray-600">
                     <p className="text-sm text-gray-400 uppercase tracking-wide mb-2">Señales Detectadas</p>
                     <p className="text-3xl font-bold text-blue-400">{analysis.evaluation.signals.length}</p>
                     <div className="mt-2 flex flex-wrap gap-1">
@@ -87,7 +87,7 @@ export function ConditionSummary({ analysis, loading = false }: ConditionSummary
                 </div>
 
                 {/* Timestamp */}
-                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 transition-all duration-300 hover:border-gray-600">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-300 transition-all duration-300 hover:border-gray-600">
                     <p className="text-sm text-gray-400 uppercase tracking-wide mb-2">Última Evaluación</p>
                     <p className="text-lg font-semibold text-gray-300">
                         {new Date(analysis.evaluation.evaluatedAt).toLocaleString()}

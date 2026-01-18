@@ -85,14 +85,14 @@ export function ProfilePage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors duration-300">
                 <div className="text-gray-400">Cargando perfil...</div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 pt-20 px-6">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-20 px-6 transition-colors duration-300">
             <div className="max-w-4xl mx-auto">
                 <h1 className="text-3xl font-bold text-white mb-8">Mi Perfil</h1>
 
@@ -141,9 +141,9 @@ export function ProfilePage() {
                     {/* Main content */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Editar información personal */}
-                        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-semibold text-white">Información Personal</h3>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-900 dark:text-white">Información Personal</h3>
                                 {!isEditing && (
                                     <button
                                         onClick={() => setIsEditing(true)}
@@ -204,11 +204,11 @@ export function ProfilePage() {
                                 <div className="space-y-3">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-400 mb-1">Nombre</label>
-                                        <p className="text-white">{profile?.name}</p>
+                                        <p className="text-gray-900 dark:text-white">{profile?.name}</p>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
-                                        <p className="text-white">{profile?.email}</p>
+                                        <p className="text-gray-900 dark:text-white">{profile?.email}</p>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-400 mb-1">Rol</label>
@@ -219,9 +219,9 @@ export function ProfilePage() {
                         </div>
 
                         {/* Cambiar contraseña */}
-                        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-semibold text-white">Seguridad</h3>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-900 dark:text-white">Seguridad</h3>
                                 {!isChangingPassword && (
                                     <button
                                         onClick={() => setIsChangingPassword(true)}

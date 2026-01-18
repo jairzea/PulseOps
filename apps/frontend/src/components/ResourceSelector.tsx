@@ -26,7 +26,7 @@ export function ResourceSelector({
             <select
                 value={selectedId || ''}
                 onChange={(e) => onSelect(e.target.value)}
-                className="appearance-none bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:bg-gray-750 min-w-[200px]"
+                className="appearance-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 transition-colors duration-300 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:bg-gray-750 min-w-[200px]"
                 disabled={resources.length === 0}
             >
                 <option value="" disabled>
