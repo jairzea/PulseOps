@@ -11,8 +11,23 @@ export const Header: React.FC = () => {
     const { user, logout } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+    const [isAnimating, setIsAnimating] = useState(false);
+    const [showAvatar, setShowAvatar] = useState(true);
     const menuRef = useRef<HTMLDivElement>(null);
     const userMenuRef = useRef<HTMLDivElement>(null);
+    const avatarRef = useRef<HTMLButtonElement>(null);
+
+    // Detectar si venimos del login para ocultar y mostrar el avatar con fade-in
+    useEffect(() => {
+        if (location.state?.fromLogin) {
+            setShowAvatar(false);
+            // Mostrar el avatar con fade-in después de que termine la animación del clon
+            const timer = setTimeout(() => {
+                setShowAvatar(true);
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [location]);
 
     // Cerrar menú al hacer clic fuera
     useEffect(() => {
@@ -31,6 +46,61 @@ export const Header: React.FC = () => {
 
     const isActive = (path: string) => {
         return location.pathname === path;
+    };
+
+    const handleLogout = () => {
+        if (avatarRef.current && !isAnimating) {
+            setIsAnimating(true);
+
+            // Obtener posición actual del avatar
+            const avatarRect = avatarRef.current.getBoundingClientRect();
+
+            // Crear clon del avatar
+            const clone = avatarRef.current.cloneNode(true) as HTMLElement;
+            clone.style.position = 'fixed';
+            clone.style.top = `${avatarRect.top}px`;
+            clone.style.left = `${avatarRect.left}px`;
+            clone.style.width = `${avatarRect.width}px`;
+            clone.style.height = `${avatarRect.height}px`;
+            clone.style.zIndex = '9999';
+            clone.style.transition = 'all 2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            clone.style.pointerEvents = 'none';
+
+            document.body.appendChild(clone);
+
+            // Ocultar avatar original
+            if (avatarRef.current) {
+                avatarRef.current.style.opacity = '0';
+            }
+
+            // Ejecutar logout y navegar
+            logout();
+            setIsUserMenuOpen(false);
+            navigate('/login', { state: { fromLogout: true } });
+
+            // Animar al centro de la pantalla
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    // Calcular centro exacto de la pantalla
+                    const avatarSize = 80; // Tamaño final del avatar (mismo que en login)
+                    const centerX = (window.innerWidth - avatarSize) / 2;
+                    const centerY = (window.innerHeight - avatarSize) / 2;
+
+                    clone.style.top = `${centerY}px`;
+                    clone.style.left = `${centerX}px`;
+                    clone.style.width = '80px';
+                    clone.style.height = '80px';
+                });
+            });
+
+            // Remover clon después de la animación
+            setTimeout(() => {
+                if (document.body.contains(clone)) {
+                    document.body.removeChild(clone);
+                }
+                setIsAnimating(false);
+            }, 2000);
+        }
     };
 
     return (
@@ -173,11 +243,28 @@ export const Header: React.FC = () => {
 
                         {/* Avatar with dropdown */}
                         <div className="relative" ref={userMenuRef}>
+                            <style>{`
+                                @keyframes avatarFadeIn {
+                                    0% {
+                                        opacity: 0;
+                                        transform: scale(0.8);
+                                    }
+                                    100% {
+                                        opacity: 1;
+                                        transform: scale(1);
+                                    }
+                                }
+                            `}</style>
                             <button
+                                ref={avatarRef}
                                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                                 className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center font-semibold text-white shadow-lg hover:shadow-xl transition-shadow"
+                                style={{
+                                    opacity: showAvatar ? 1 : 0,
+                                    animation: showAvatar ? 'avatarFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards' : 'none'
+                                }}
                             >
-                                {user?.name.substring(0, 2).toUpperCase() || 'US'}
+                                {user?.name?.substring(0, 2).toUpperCase() || 'US'}
                             </button>
 
                             {/* User Dropdown Menu */}
@@ -204,12 +291,9 @@ export const Header: React.FC = () => {
                                             Mi Perfil
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                logout();
-                                                setIsUserMenuOpen(false);
-                                                navigate('/login');
-                                            }}
-                                            className="w-full px-4 py-2 text-left text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors flex items-center gap-3"
+                                            onClick={handleLogout}
+                                            disabled={isAnimating}
+                                            className="w-full px-4 py-2 text-left text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

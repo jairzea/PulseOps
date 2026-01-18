@@ -33,13 +33,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         try {
-            const result = await authAPI.validateToken();
-            if (result.valid && result.user) {
-                setUser(result.user);
-            } else {
-                localStorage.removeItem('auth_token');
-                setUser(null);
-            }
+            // Usar getProfile en lugar de validateToken para obtener datos completos del usuario
+            const profile = await authAPI.getProfile();
+            setUser({
+                id: profile.id,
+                email: profile.email,
+                name: profile.name,
+                role: profile.role,
+            });
         } catch (error) {
             console.error('Auth validation failed:', error);
             localStorage.removeItem('auth_token');
