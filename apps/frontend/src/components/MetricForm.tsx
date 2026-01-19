@@ -238,7 +238,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                                 >
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <div className="text-sm font-medium text-white">{resource.name}</div>
+                                            <div className="text-sm font-medium text-gray-900 dark:text-white">{resource.name}</div>
                                             <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{resource.roleType}</div>
                                         </div>
                                     </div>
