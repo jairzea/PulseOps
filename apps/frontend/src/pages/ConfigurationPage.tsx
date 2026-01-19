@@ -796,30 +796,30 @@ function Step4Review({ thresholds, configName }: Step4ReviewProps) {
                 />
             </div>
 
-            <div className="mt-8 pt-6 border-t border-gray-700">
+            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Señales Configuradas</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                    <div className="bg-white dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                         <h4 className="text-sm font-medium text-orange-600 dark:text-orange-400 mb-2">Volatilidad</h4>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
                             Cambios de dirección: {thresholds.signals.volatility.minDirectionChanges} • Ventana: {thresholds.signals.volatility.minWindowSize}
                         </p>
                     </div>
-                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                    <div className="bg-white dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                         <h4 className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2">Declive Lento</h4>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
                             Min: {thresholds.signals.slowDecline.minConsecutiveDeclines} períodos • Máx: {thresholds.signals.slowDecline.maxInclinationPerPeriod}%
                         </p>
                     </div>
-                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                    <div className="bg-white dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                         <h4 className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-2">Gaps de Datos</h4>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
                             Días esperados: {thresholds.signals.dataGaps.expectedDaysBetweenPoints} • Tolerancia: {thresholds.signals.dataGaps.toleranceDays}
                         </p>
                     </div>
-                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                    <div className="bg-white dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                         <h4 className="text-sm font-medium text-green-600 dark:text-green-400 mb-2">Pico de Recuperación</h4>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
                             Declives previos: {thresholds.signals.recoverySpike.minPriorDeclines} • Inclinación: {thresholds.signals.recoverySpike.minRecoveryInclination}%
                         </p>
                     </div>
@@ -1152,7 +1152,7 @@ export function ConfigurationPage() {
                                                 ? 'border-blue-500 bg-blue-500 text-white'
                                                 : step < currentStep
                                                     ? 'border-green-500 bg-green-500 text-white'
-                                                    : 'border-gray-600 bg-gray-800 text-gray-400'
+                                                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400'
                                                 }`}
                                         >
                                             {step < currentStep ? (
@@ -1165,7 +1165,7 @@ export function ConfigurationPage() {
                                         </div>
                                         {step < 4 && (
                                             <div
-                                                className={`w-32 h-0.5 mx-2 transition-all ${step < currentStep ? 'bg-green-500' : 'bg-gray-700'
+                                                className={`w-32 h-0.5 mx-2 transition-all ${step < currentStep ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-700'
                                                     }`}
                                             />
                                         )}
@@ -1173,7 +1173,7 @@ export function ConfigurationPage() {
                                 ))}
                             </div>
                             <div className="flex justify-center mt-4">
-                                <p className="text-sm text-gray-400">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
                                     {currentStep === 1 && 'Paso 1: Fórmulas de Condiciones'}
                                     {currentStep === 2 && 'Paso 2: Condiciones Principales'}
                                     {currentStep === 3 && 'Paso 3: Configuración de Señales'}
@@ -1183,7 +1183,7 @@ export function ConfigurationPage() {
                         </div>
 
                         {/* Step Content */}
-                        <div className="bg-gray-800/30 rounded-lg p-8 border border-gray-200 dark:border-gray-700/50 min-h-[500px]">
+                        <div className="bg-gray-100 dark:bg-gray-800/30 rounded-lg p-8 border border-gray-200 dark:border-gray-700/50 min-h-[500px] transition-colors duration-300">
                             {currentStep === 1 && (
                                 <Step1Formulas />
                             )}
@@ -1215,8 +1215,8 @@ export function ConfigurationPage() {
                                 onClick={prevStep}
                                 disabled={currentStep === 1}
                                 className={`px-6 py-3 rounded-lg font-medium transition-all ${currentStep === 1
-                                    ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
-                                    : 'bg-gray-700 hover:bg-gray-600 text-white'
+                                    ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                                    : 'bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
                                     }`}
                             >
                                 ← Anterior
@@ -1225,14 +1225,14 @@ export function ConfigurationPage() {
                             {currentStep < 4 ? (
                                 <button
                                     onClick={nextStep}
-                                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
+                                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
                                 >
                                     Siguiente →
                                 </button>
                             ) : (
                                 <button
                                     onClick={handleSave}
-                                    className="px-8 py-3 bg-green-600 hover:bg-green-700 text-gray-900 dark:text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                                    className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
                                 >
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

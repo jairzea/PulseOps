@@ -142,7 +142,7 @@ export function UsersAdminPage() {
                                                 {user.name.substring(0, 2).toUpperCase()}
                                             </div>
                                             <div>
-                                                <div className="text-white font-medium">{user.name}</div>
+                                                <div className="text-gray-900 dark:text-white font-medium">{user.name}</div>
                                                 <div className="text-gray-600 dark:text-gray-400 text-sm">{user.email}</div>
                                             </div>
                                         </div>
@@ -150,8 +150,8 @@ export function UsersAdminPage() {
                                     <td className="px-6 py-4">
                                         <span
                                             className={`px-2 py-1 text-xs rounded-full ${user.role === 'admin'
-                                                    ? 'bg-purple-100 dark:bg-purple-600 text-purple-700 dark:text-white'
-                                                    : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200'
+                                                ? 'bg-purple-100 dark:bg-purple-600 text-purple-700 dark:text-white'
+                                                : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200'
                                                 }`}
                                         >
                                             {user.role === 'admin' ? 'Admin' : 'Usuario'}
@@ -160,8 +160,8 @@ export function UsersAdminPage() {
                                     <td className="px-6 py-4">
                                         <span
                                             className={`px-2 py-1 text-xs rounded-full ${user.isActive
-                                                    ? 'bg-green-100 dark:bg-green-600 text-green-700 dark:text-white'
-                                                    : 'bg-red-100 dark:bg-red-600 text-red-700 dark:text-white'
+                                                ? 'bg-green-100 dark:bg-green-600 text-green-700 dark:text-white'
+                                                : 'bg-red-100 dark:bg-red-600 text-red-700 dark:text-white'
                                                 }`}
                                         >
                                             {user.isActive ? 'Activo' : 'Inactivo'}
@@ -176,7 +176,7 @@ export function UsersAdminPage() {
                                         <div className="flex items-center gap-2">
                                             <button
                                                 onClick={() => handleToggleActive(user.id, user.isActive)}
-                                                className="p-2 text-yellow-400 hover:bg-gray-700 rounded transition-colors"
+                                                className="p-2 text-yellow-600 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
                                                 title={user.isActive ? 'Desactivar' : 'Activar'}
                                             >
                                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -185,7 +185,7 @@ export function UsersAdminPage() {
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteUser(user.id)}
-                                                className="p-2 text-red-400 hover:bg-gray-700 rounded transition-colors"
+                                                className="p-2 text-red-600 dark:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
                                                 title="Eliminar"
                                             >
                                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -211,47 +211,47 @@ export function UsersAdminPage() {
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
-                        <h2 className="text-2xl font-bold text-white mb-6">Nuevo Usuario</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Nuevo Usuario</h2>
                         <form onSubmit={handleCreateUser} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Nombre
                                 </label>
                                 <input
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Email
                                 </label>
                                 <input
                                     type="email"
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Contraseña
                                 </label>
                                 <input
                                     type="password"
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required
                                     minLength={6}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Rol
                                 </label>
                                 <select
@@ -259,7 +259,7 @@ export function UsersAdminPage() {
                                     onChange={(e) =>
                                         setFormData({ ...formData, role: e.target.value as 'admin' | 'user' })
                                     }
-                                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value="user">Usuario</option>
                                     <option value="admin">Administrador</option>
@@ -278,7 +278,7 @@ export function UsersAdminPage() {
                                         setShowCreateModal(false);
                                         setFormData({ email: '', password: '', name: '', role: 'user' });
                                     }}
-                                    className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                                    className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
                                 >
                                     Cancelar
                                 </button>

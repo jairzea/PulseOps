@@ -57,9 +57,9 @@ export const Toast: React.FC<ToastProps> = ({ toast, onRemove }) => {
                 );
             case 'warning':
                 return (
-                    <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center bg-yellow-500/20 rounded-full">
+                    <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center bg-yellow-500/20 dark:bg-yellow-500/20 rounded-full">
                         <svg
-                            className="w-6 h-6 text-yellow-400"
+                            className="w-6 h-6 text-yellow-600 dark:text-yellow-400"
                             fill="none"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -74,9 +74,9 @@ export const Toast: React.FC<ToastProps> = ({ toast, onRemove }) => {
             case 'info':
             default:
                 return (
-                    <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center bg-blue-500/20 rounded-full">
+                    <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center bg-blue-500/20 dark:bg-blue-500/20 rounded-full">
                         <svg
-                            className="w-6 h-6 text-blue-400"
+                            className="w-6 h-6 text-blue-600 dark:text-blue-400"
                             fill="none"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -94,28 +94,28 @@ export const Toast: React.FC<ToastProps> = ({ toast, onRemove }) => {
     const getBackgroundColor = () => {
         switch (toast.type) {
             case 'success':
-                return 'bg-green-500/10 border-green-500/30';
+                return 'bg-green-50 dark:bg-green-500/10 border-green-300 dark:border-green-500/30';
             case 'error':
-                return 'bg-red-500/10 border-red-500/30';
+                return 'bg-red-50 dark:bg-red-500/10 border-red-300 dark:border-red-500/30';
             case 'warning':
-                return 'bg-yellow-500/10 border-yellow-500/30';
+                return 'bg-yellow-50 dark:bg-yellow-500/10 border-yellow-300 dark:border-yellow-500/30';
             case 'info':
             default:
-                return 'bg-blue-500/10 border-blue-500/30';
+                return 'bg-blue-50 dark:bg-blue-500/10 border-blue-300 dark:border-blue-500/30';
         }
     };
 
     const getTextColor = () => {
         switch (toast.type) {
             case 'success':
-                return 'text-green-100';
+                return 'text-green-800 dark:text-green-100';
             case 'error':
-                return 'text-red-100';
+                return 'text-red-800 dark:text-red-100';
             case 'warning':
-                return 'text-yellow-100';
+                return 'text-yellow-800 dark:text-yellow-100';
             case 'info':
             default:
-                return 'text-blue-100';
+                return 'text-blue-800 dark:text-blue-100';
         }
     };
 
@@ -143,8 +143,8 @@ export const Toast: React.FC<ToastProps> = ({ toast, onRemove }) => {
 
             <button
                 onClick={handleClose}
-                className="flex-shrink-0 text-gray-400 hover:text-white transition-colors duration-200 
-                   focus:outline-none focus:ring-2 focus:ring-white/20 rounded p-1"
+                className="flex-shrink-0 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 
+                   focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-white/20 rounded p-1"
                 aria-label="Cerrar notificación"
             >
                 <svg

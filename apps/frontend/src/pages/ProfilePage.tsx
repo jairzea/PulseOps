@@ -98,20 +98,20 @@ export function ProfilePage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Sidebar - Info del usuario */}
-                    <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
                         <div className="flex flex-col items-center">
-                            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-3xl text-gray-900 dark:text-white mb-4">
+                            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-3xl text-white mb-4">
                                 {profile?.name.substring(0, 2).toUpperCase()}
                             </div>
                             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{profile?.name}</h2>
                             <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{profile?.email}</p>
                             {profile?.role === 'admin' && (
-                                <span className="px-3 py-1 bg-purple-600 text-gray-900 dark:text-white text-xs rounded-full mb-4">
+                                <span className="px-3 py-1 bg-purple-600 text-white text-xs rounded-full mb-4">
                                     Administrador
                                 </span>
                             )}
 
-                            <div className="w-full border-t border-gray-700 pt-4 mt-4 space-y-2 text-sm">
+                            <div className="w-full border-t border-gray-200 dark:border-gray-700 pt-4 mt-4 space-y-2 text-sm">
                                 <div className="flex justify-between">
                                     <span className="text-gray-600 dark:text-gray-400">Estado:</span>
                                     <span className={profile?.isActive ? 'text-green-400' : 'text-red-400'}>
@@ -143,11 +143,11 @@ export function ProfilePage() {
                         {/* Editar información personal */}
                         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-900 dark:text-white">Información Personal</h3>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Información Personal</h3>
                                 {!isEditing && (
                                     <button
                                         onClick={() => setIsEditing(true)}
-                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-gray-900 dark:text-white rounded-lg transition-colors text-sm"
+                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
                                     >
                                         Editar
                                     </button>
@@ -157,33 +157,33 @@ export function ProfilePage() {
                             {isEditing ? (
                                 <form onSubmit={handleUpdateProfile} className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Nombre
                                         </label>
                                         <input
                                             type="text"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
-                                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             required
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Email
                                         </label>
                                         <input
                                             type="email"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
-                                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             required
                                         />
                                     </div>
                                     <div className="flex gap-3">
                                         <button
                                             type="submit"
-                                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-gray-900 dark:text-white rounded-lg transition-colors"
+                                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                                         >
                                             Guardar Cambios
                                         </button>
@@ -194,7 +194,7 @@ export function ProfilePage() {
                                                 setName(profile?.name || '');
                                                 setEmail(profile?.email || '');
                                             }}
-                                            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
+                                            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
                                         >
                                             Cancelar
                                         </button>
@@ -221,11 +221,11 @@ export function ProfilePage() {
                         {/* Cambiar contraseña */}
                         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-900 dark:text-white">Seguridad</h3>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Seguridad</h3>
                                 {!isChangingPassword && (
                                     <button
                                         onClick={() => setIsChangingPassword(true)}
-                                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-gray-900 dark:text-white rounded-lg transition-colors text-sm"
+                                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm"
                                     >
                                         Cambiar Contraseña
                                     </button>
@@ -235,39 +235,39 @@ export function ProfilePage() {
                             {isChangingPassword ? (
                                 <form onSubmit={handleChangePassword} className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Contraseña Actual
                                         </label>
                                         <input
                                             type="password"
                                             value={currentPassword}
                                             onChange={(e) => setCurrentPassword(e.target.value)}
-                                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                                             required
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Nueva Contraseña
                                         </label>
                                         <input
                                             type="password"
                                             value={newPassword}
                                             onChange={(e) => setNewPassword(e.target.value)}
-                                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                                             required
                                             minLength={6}
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Confirmar Nueva Contraseña
                                         </label>
                                         <input
                                             type="password"
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
-                                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                                             required
                                             minLength={6}
                                         />
@@ -275,7 +275,7 @@ export function ProfilePage() {
                                     <div className="flex gap-3">
                                         <button
                                             type="submit"
-                                            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-gray-900 dark:text-white rounded-lg transition-colors"
+                                            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
                                         >
                                             Cambiar Contraseña
                                         </button>
@@ -287,7 +287,7 @@ export function ProfilePage() {
                                                 setNewPassword('');
                                                 setConfirmPassword('');
                                             }}
-                                            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
+                                            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
                                         >
                                             Cancelar
                                         </button>

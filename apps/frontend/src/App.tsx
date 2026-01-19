@@ -18,88 +18,88 @@ function App() {
         <ThemeProvider>
             <AuthProvider>
                 <BrowserRouter>
-                <Routes>
-                    {/* Public route */}
-                    <Route path="/login" element={<LoginPage />} />
+                    <Routes>
+                        {/* Public route */}
+                        <Route path="/login" element={<LoginPage />} />
 
-                    {/* Protected routes */}
-                    <Route
-                        path="/"
-                        element={
-                            <PrivateRoute>
-                                <Layout>
-                                    <ResourceDashboard />
-                                </Layout>
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/resources"
-                        element={
-                            <PrivateRoute>
-                                <Layout>
-                                    <ResourcesPage />
-                                </Layout>
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/metrics"
-                        element={
-                            <PrivateRoute>
-                                <Layout>
-                                    <MetricsPage />
-                                </Layout>
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/records"
-                        element={
-                            <PrivateRoute>
-                                <Layout>
-                                    <RecordsPage />
-                                </Layout>
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/configuration"
-                        element={
-                            <PrivateRoute>
-                                <Layout>
-                                    <ConfigurationPage />
-                                </Layout>
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/profile"
-                        element={
-                            <PrivateRoute>
-                                <Layout>
-                                    <ProfilePage />
-                                </Layout>
-                            </PrivateRoute>
-                        }
-                    />
-                    <Route
-                        path="/users"
-                        element={
-                            <PrivateRoute requireAdmin>
-                                <Layout>
-                                    <UsersAdminPage />
-                                </Layout>
-                            </PrivateRoute>
-                        }
-                    />
+                        {/* Protected routes */}
+                        <Route
+                            path="/"
+                            element={
+                                <PrivateRoute>
+                                    <Layout>
+                                        <ResourceDashboard />
+                                    </Layout>
+                                </PrivateRoute>
+                            }
+                        />
+                        <Route
+                            path="/resources"
+                            element={
+                                <PrivateRoute>
+                                    <Layout>
+                                        <ResourcesPage />
+                                    </Layout>
+                                </PrivateRoute>
+                            }
+                        />
+                        <Route
+                            path="/metrics"
+                            element={
+                                <PrivateRoute>
+                                    <Layout>
+                                        <MetricsPage />
+                                    </Layout>
+                                </PrivateRoute>
+                            }
+                        />
+                        <Route
+                            path="/records"
+                            element={
+                                <PrivateRoute>
+                                    <Layout>
+                                        <RecordsPage />
+                                    </Layout>
+                                </PrivateRoute>
+                            }
+                        />
+                        <Route
+                            path="/configuration"
+                            element={
+                                <PrivateRoute>
+                                    <Layout>
+                                        <ConfigurationPage />
+                                    </Layout>
+                                </PrivateRoute>
+                            }
+                        />
+                        <Route
+                            path="/profile"
+                            element={
+                                <PrivateRoute>
+                                    <Layout>
+                                        <ProfilePage />
+                                    </Layout>
+                                </PrivateRoute>
+                            }
+                        />
+                        <Route
+                            path="/users"
+                            element={
+                                <PrivateRoute requireAdmin>
+                                    <Layout>
+                                        <UsersAdminPage />
+                                    </Layout>
+                                </PrivateRoute>
+                            }
+                        />
 
-                    {/* Fallback */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-                <ToastContainer />
-            </BrowserRouter>
-        </AuthProvider>
+                        {/* Fallback */}
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                    <ToastContainer />
+                </BrowserRouter>
+            </AuthProvider>
         </ThemeProvider>
     );
 }

@@ -127,14 +127,14 @@ export const Header: React.FC = () => {
                     {/* Right side: Search, Notifications, Theme Toggle, Menu, Avatar */}
                     <div className="flex items-center gap-4">
                         {/* Search Icon */}
-                        <button className="p-2 hover:bg-gray-700 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                        <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
                             <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </button>
 
                         {/* Notifications Icon */}
-                        <button className="p-2 hover:bg-gray-700 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                        <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
                             <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
@@ -147,7 +147,7 @@ export const Header: React.FC = () => {
                         <div className="relative" ref={menuRef}>
                             <button
                                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                             >
                                 <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
@@ -274,8 +274,8 @@ export const Header: React.FC = () => {
                             {/* User Dropdown Menu */}
                             {isUserMenuOpen && (
                                 <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 transition-colors duration-300">
-                                    <div className="px-4 py-3 border-b border-gray-700">
-                                        <p className="text-sm text-white font-medium">{user?.name}</p>
+                                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                                        <p className="text-sm text-gray-900 dark:text-white font-medium">{user?.name}</p>
                                         <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{user?.email}</p>
                                         {user?.role === 'admin' && (
                                             <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-purple-600 text-white rounded">Admin</span>
@@ -287,7 +287,7 @@ export const Header: React.FC = () => {
                                                 navigate('/profile');
                                                 setIsUserMenuOpen(false);
                                             }}
-                                            className="w-full px-4 py-2 text-left text-gray-600 dark:text-gray-300 hover:bg-gray-700 hover:text-white transition-colors flex items-center gap-3"
+                                            className="w-full px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center gap-3"
                                         >
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -297,7 +297,7 @@ export const Header: React.FC = () => {
                                         <button
                                             onClick={handleLogout}
                                             disabled={isAnimating}
-                                            className="w-full px-4 py-2 text-left text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="w-full px-4 py-2 text-left text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-red-700 dark:hover:text-red-300 transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

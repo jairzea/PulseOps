@@ -17,7 +17,7 @@ interface ChartDataPoint {
 
 export const HistoricalChart = memo(function HistoricalChart({ records, metricName, loading = false }: HistoricalChartProps) {
   const { theme } = useTheme();
-  
+
   // Solo mostrar skeleton si está loading Y no hay datos
   // Esto permite que el gráfico permanezca visible mientras carga nuevos datos
   if (loading && records.length === 0) {
@@ -80,9 +80,9 @@ export const HistoricalChart = memo(function HistoricalChart({ records, metricNa
             stroke={theme === 'dark' ? '#9CA3AF' : '#6B7280'}
             tick={{ fill: theme === 'dark' ? '#9CA3AF' : '#6B7280' }}
           />
-          <YAxis 
-            stroke={theme === 'dark' ? '#9CA3AF' : '#6B7280'} 
-            tick={{ fill: theme === 'dark' ? '#9CA3AF' : '#6B7280' }} 
+          <YAxis
+            stroke={theme === 'dark' ? '#9CA3AF' : '#6B7280'}
+            tick={{ fill: theme === 'dark' ? '#9CA3AF' : '#6B7280' }}
           />
           <Tooltip
             contentStyle={{
