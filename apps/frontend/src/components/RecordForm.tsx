@@ -198,17 +198,48 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                             className={`w-full px-4 py-2 bg-white dark:bg-gray-800 border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${errors.date ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
                                 }`}
                         />
-                        {isEditing && (
-                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                No se puede cambiar la fecha al editar un registro
-                            </p>
+                        {isEditing && initialRecord && (
+                            <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg">
+                                <div className="flex items-start gap-2">
+                                    <svg
+                                        className="w-5 h-5 text-gray-600 dark:text-gray-400 mt-0.5"
+                                        fill="none"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <div className="flex-1">
+                                        <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Información del registro original
+                                        </p>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                                            <span className="font-medium">Fecha de creación:</span>{' '}
+                                            {new Date(initialRecord.timestamp).toLocaleDateString('es-ES', {
+                                                weekday: 'long',
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </p>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                            <span className="font-medium">Semana:</span> {initialRecord.week}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         )}
                         {errors.date && (
                             <p className="mt-1 text-sm text-red-500">{errors.date.message}</p>
                         )}
 
                         {/* Información de la Semana */}
-                        {selectedDate && (
+                        {selectedDate && !isEditing && (
                             <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg">
                                 <div className="flex items-center gap-2">
                                     <svg
