@@ -63,7 +63,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
     initialRecord = null,
 }) => {
     const isEditing = !!initialRecord;
-    
+
     const [selectedResourceId, setSelectedResourceId] = useState<string>(initialRecord?.resourceId || '');
     const [resourceMetrics, setResourceMetrics] = useState<Metric[]>([]);
     const [loadingMetrics, setLoadingMetrics] = useState(false);
@@ -190,7 +190,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                             type="date"
                             id="date"
                             {...register('date')}
-                            disabled={isSubmitting || isEditing}
+                            disabled={isSubmitting}
                             onChange={(e) => {
                                 setValue('date', e.target.value);
                                 setSelectedDate(e.target.value);
@@ -198,7 +198,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                             className={`w-full px-4 py-2 bg-white dark:bg-gray-800 border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${errors.date ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
                                 }`}
                         />
-                        {isEditing && initialRecord && (
+                        {isEditing && initialRecord && initialRecord.timestamp && selectedDate !== new Date(initialRecord.timestamp).toISOString().split('T')[0] && (
                             <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg">
                                 <div className="flex items-start gap-2">
                                     <svg
@@ -214,10 +214,10 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                                     </svg>
                                     <div className="flex-1">
                                         <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            Información del registro original
+                                            Fecha original del registro
                                         </p>
                                         <p className="text-xs text-gray-600 dark:text-gray-400">
-                                            <span className="font-medium">Fecha de creación:</span>{' '}
+                                            <span className="font-medium">Fecha anterior:</span>{' '}
                                             {new Date(initialRecord.timestamp).toLocaleDateString('es-ES', {
                                                 weekday: 'long',
                                                 year: 'numeric',
@@ -234,9 +234,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                                 </div>
                             </div>
                         )}
-                        {errors.date && (
-                            <p className="mt-1 text-sm text-red-500">{errors.date.message}</p>
-                        )}
+
 
                         {/* Información de la Semana */}
                         {selectedDate && !isEditing && (
