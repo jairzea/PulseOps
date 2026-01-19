@@ -99,19 +99,19 @@ export const MetricsPage: React.FC = () => {
                         <table className="w-full">
                             <thead className="bg-gray-100 dark:bg-gray-800">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                                         Etiqueta
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                                         Clave
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                                         Descripción
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                                         Unidad
                                     </th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                                         Acciones
                                     </th>
                                 </tr>
@@ -128,12 +128,12 @@ export const MetricsPage: React.FC = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="text-sm text-gray-400 max-w-xs truncate">
+                                            <div className="text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
                                                 {metric.description || 'Sin descripción'}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-400">{metric.unit || '-'}</div>
+                                            <div className="text-sm text-gray-600 dark:text-gray-400">{metric.unit || '-'}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                                             <div className="flex items-center justify-end gap-2">
@@ -184,11 +184,11 @@ export const MetricsPage: React.FC = () => {
                 {!loading && !error && metrics.length > 0 && (
                     <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 transition-colors duration-300">
-                            <p className="text-gray-400 text-sm">Total de Métricas</p>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm">Total de Métricas</p>
                             <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{metrics.length}</p>
                         </div>
                         <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 transition-colors duration-300">
-                            <p className="text-gray-400 text-sm">Métricas Configuradas</p>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm">Métricas Configuradas</p>
                             <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                 {metrics.filter((m) => m.description).length}
                             </p>
