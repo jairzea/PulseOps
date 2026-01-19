@@ -20,8 +20,9 @@ export class RecordsController {
   constructor(private readonly recordsService: RecordsService) {}
 
   @Post()
-  upsert(@Body() dto: CreateRecordDto, @CurrentUser() user: User) {
-    return this.recordsService.upsert(dto, user.id);
+  upsert(@Body() dto: CreateRecordDto, @CurrentUser() user: User | null) {
+    const createdBy = (user && (user as any).id) ? (user as any).id : 'system';
+    return this.recordsService.upsert(dto, createdBy);
   }
 
   @Get()

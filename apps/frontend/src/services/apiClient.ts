@@ -124,12 +124,16 @@ async function fetchJSON<T>(
   const url = `${API_BASE_URL}${endpoint}`;
   
   try {
+    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(options?.headers || {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    } as HeadersInit;
+
     const response = await fetch(url, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
+      headers,
     });
 
     if (!response.ok) {

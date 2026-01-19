@@ -25,6 +25,13 @@ export class User {
     @Prop({ default: true })
     isActive: boolean;
 
+    @Prop({ type: Object, default: {} })
+    resourceProfile?: {
+        resourceType?: 'DEV' | 'TL' | 'OTHER';
+        status?: string;
+        [key: string]: any;
+    };
+
     @Prop()
     lastLogin?: Date;
 

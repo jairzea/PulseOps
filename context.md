@@ -106,6 +106,20 @@ PulseOps convierte ese proceso frágil en:
 
 ## 5. Fuentes de datos
 
+## Unificación Recursos y Usuarios (MVP)
+
+Breve decisión arquitectural tomada para el MVP:
+
+- **Un Recurso es un Usuario**: no habrá colección separada de "resources" en la capa de persistencia; la entidad única será `User`.
+- **Perfil de recurso opcional**: la entidad `User` incluye un campo opcional `resourceProfile` que contiene los datos específicos de operación (rol operativo, tipo de recurso, estado, etc.).
+- **Endpoints**: se mantiene la ruta `/resources` como *vista/proxy* sobre el servicio de usuarios. Comportamiento esperado:
+  - `GET /resources` → lista usuarios con `role === 'user'` (mapea solo campos visibles para UI).
+  - `POST /resources` → crea un `User` con `role = 'user'` y opcional `resourceProfile`.
+  - `PATCH /resources/:id` → actualiza únicamente `resourceProfile` y `isActive` (soft-delete con `isActive=false`).
+- **Motivación**: simplificar el modelo (single source of truth), evitar inconsistencias y facilitar operaciones transversales (auth, reporting, auditoría).
+- **Notas de implementación**: migración parcial posible — existe código legado (`resources.service`, `resource.schema`) que debe eliminarse o migrarse; durante MVP se implementó un proxy en `ResourcesController` que delega en `UsersService`.
+
+
 ### 5.1 Archivo (principal)
 
 * CSV o JSON exportado de Jira u otra herramienta

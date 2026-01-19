@@ -1,27 +1,24 @@
-import {
-  IsString,
-  IsEnum,
-  IsOptional,
-  IsBoolean,
-  IsArray,
-} from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsArray, IsIn } from 'class-validator';
 
 export class CreateResourceDto {
   @IsString()
   name: string;
 
-  @IsEnum(['DEV', 'TL', 'OTHER'])
-  roleType: string;
+  @IsOptional()
+  @IsIn(['DEV', 'TL', 'OTHER'])
+  roleType?: 'DEV' | 'TL' | 'OTHER';
 
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
 
-  // Relación con métricas (solo para frontend, se manejará en el servicio)
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   metricIds?: string[];
+
+  @IsOptional()
+  resourceProfile?: Record<string, any>;
 }
 
 export class UpdateResourceDto {
@@ -30,14 +27,13 @@ export class UpdateResourceDto {
   name?: string;
 
   @IsOptional()
-  @IsEnum(['DEV', 'TL', 'OTHER'])
-  roleType?: string;
+  @IsIn(['DEV', 'TL', 'OTHER'])
+  roleType?: 'DEV' | 'TL' | 'OTHER';
 
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
 
-  // Relación con métricas (solo para frontend, se manejará en el servicio)
   @IsOptional()
   @IsArray()
   @IsString({ each: true })

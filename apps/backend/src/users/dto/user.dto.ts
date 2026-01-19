@@ -32,6 +32,13 @@ export class RegisterDto {
   @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;
+
+  @IsOptional()
+  resourceProfile?: {
+    resourceType?: 'DEV' | 'TL' | 'OTHER';
+    status?: string;
+    [key: string]: any;
+  };
 }
 
 export class UpdateUserDto {
@@ -56,6 +63,13 @@ export class UpdateUserDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  resourceProfile?: {
+    resourceType?: 'DEV' | 'TL' | 'OTHER';
+    status?: string;
+    [key: string]: any;
+  };
 }
 
 export class ChangePasswordDto {

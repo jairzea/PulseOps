@@ -4,11 +4,15 @@ import { ResourcesController } from './resources.controller';
 import { ResourcesService } from './resources.service';
 import { Resource, ResourceSchema } from './schemas/resource.schema';
 import { MetricsModule } from '../metrics/metrics.module';
+import { UsersModule } from '../users/users.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Resource.name, schema: ResourceSchema }]),
     forwardRef(() => MetricsModule),
+    forwardRef(() => UsersModule),
+    forwardRef(() => AuthModule),
   ],
   controllers: [ResourcesController],
   providers: [ResourcesService],

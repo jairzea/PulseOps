@@ -135,4 +135,37 @@ export class MetricsService {
       });
     }
   }
+
+  /**
+   * Sincroniza las asociaciones entre una lista de métricas y un recurso.
+   * - Añade `resourceId` a `resourceIds` de métricas cuyo `id` está en `metricIds`.
+   * - Elimina `resourceId` de métricas cuyo `id` no está en `metricIds`.
+   */
+  async syncResourceAssociations(resourceId: string, metricIds: string[]): Promise<void> {
+    try {
+      // Añadir resourceId a métricas seleccionadas
+      if (metricIds && metricIds.length > 0) {
+        await this.metricModel
+          .updateMany(
+            { id: { $in: metricIds }, resourceIds: { $ne: resourceId } },
+            { $addToSet: { resourceIds: resourceId } },
+          )
+          .exec();
+      }
+
+      // Eliminar resourceId de métricas que ya no deben referenciar al recurso
+      await this.metricModel
+        .updateMany(
+          { id: { $nin: metricIds || [] }, resourceIds: resourceId },
+          { $pull: { resourceIds: resourceId } },
+        )
+        .exec();
+    } catch (error) {
+      throw new DatabaseException('Error sincronizando asociaciones de métricas', {
+        originalError: error instanceof Error ? error.message : String(error),
+        resourceId,
+        metricIds,
+      });
+    }
+  }
 }
