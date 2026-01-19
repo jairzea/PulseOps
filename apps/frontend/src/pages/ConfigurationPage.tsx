@@ -162,7 +162,7 @@ function Step1Formulas() {
                     if (!playbook) return null;
 
                     return (
-                        <div key={key} className={`bg-gray-800 rounded-lg border ${colors.border} transition-all`}>
+                        <div key={key} className={`bg-white dark:bg-gray-800 rounded-lg border ${colors.border} transition-all`}>
                             {/* Header - Siempre visible */}
                             <div
                                 className="p-6 cursor-pointer select-none"
@@ -179,11 +179,11 @@ function Step1Formulas() {
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <span className="text-xs text-gray-400">
+                                        <span className="text-xs text-gray-600 dark:text-gray-400">
                                             {playbook.steps.length} paso{playbook.steps.length !== 1 ? 's' : ''}
                                         </span>
                                         <svg
-                                            className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                            className={`w-5 h-5 text-gray-600 dark:text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                                             fill="none"
                                             viewBox="0 0 24 24"
                                             stroke="currentColor"
@@ -205,14 +205,14 @@ function Step1Formulas() {
                                                 onChange={(e) => updatePlaybook(key, 'isActive', e.target.checked)}
                                                 className="w-4 h-4 rounded border-gray-700 bg-gray-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900"
                                             />
-                                            <span className="text-sm text-gray-300">Activa</span>
+                                            <span className="text-sm text-gray-700 dark:text-gray-300">Activa</span>
                                         </label>
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 savePlaybook(key);
                                             }}
-                                            className="text-xs bg-green-600 hover:bg-green-700 text-gray-900 dark:text-white px-3 py-1 rounded transition-colors"
+                                            className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded transition-colors"
                                         >
                                             💾 Guardar
                                         </button>
@@ -233,7 +233,7 @@ function Step1Formulas() {
 
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between">
-                                            <h4 className="text-sm font-medium text-gray-300">
+                                            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                                 Pasos de la fórmula ({playbook.steps.length})
                                             </h4>
                                             <button
@@ -241,14 +241,14 @@ function Step1Formulas() {
                                                     e.stopPropagation();
                                                     addStep(key);
                                                 }}
-                                                className="text-xs bg-blue-600 hover:bg-blue-700 text-gray-900 dark:text-white px-3 py-1 rounded transition-colors"
+                                                className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
                                             >
                                                 + Agregar paso
                                             </button>
                                         </div>
                                         {playbook.steps.length > 0 ? (
                                             playbook.steps.map((step, index) => (
-                                                <div key={index} className="flex items-start gap-3 bg-gray-900/50 rounded-lg p-3">
+                                                <div key={index} className="flex items-start gap-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
                                                     <div className="flex-shrink-0 w-8 h-8 bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center font-semibold text-sm">
                                                         {index + 1}
                                                     </div>
@@ -293,7 +293,7 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
         <div className="space-y-8">
             <div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Condiciones Principales</h2>
-                <p className="text-gray-400 mb-8">
+                <p className="text-gray-600 dark:text-gray-400 mb-8">
                     Define los umbrales de inclinación para cada condición operativa
                 </p>
             </div>
@@ -529,7 +529,7 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
         <div className="space-y-8">
             <div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Configuración de Señales</h2>
-                <p className="text-gray-400 mb-8">
+                <p className="text-gray-600 dark:text-gray-400 mb-8">
                     Ajusta los parámetros de detección de señales de alerta
                 </p>
             </div>
@@ -728,12 +728,12 @@ function Step4Review({ thresholds, configName }: Step4ReviewProps) {
         <div className="space-y-8">
             <div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Revisión Final</h2>
-                <p className="text-gray-400 mb-8">
+                <p className="text-gray-600 dark:text-gray-400 mb-8">
                     Revisa los cambios antes de guardar la configuración
                 </p>
             </div>
 
-            <div className="bg-blue-600/10 border border-blue-200 dark:border-blue-600/30 rounded-lg p-6 mb-8">
+            <div className="bg-blue-50 dark:bg-blue-600/10 border border-blue-200 dark:border-blue-600/30 rounded-lg p-6 mb-8">
                 <div className="flex items-start gap-3">
                     <svg className="w-6 h-6 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -742,7 +742,7 @@ function Step4Review({ thresholds, configName }: Step4ReviewProps) {
                         <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-2">
                             Información Importante
                         </h3>
-                        <p className="text-gray-300 text-sm">
+                        <p className="text-gray-700 dark:text-gray-300 text-sm">
                             Al guardar, se creará una nueva versión de la configuración "{configName}".
                             Los cambios afectarán todos los análisis futuros.
                         </p>
