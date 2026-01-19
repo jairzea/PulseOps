@@ -939,12 +939,12 @@ interface SummaryCardProps {
 
 function SummaryCard({ title, color, items }: SummaryCardProps) {
     const colorClasses = {
-        purple: 'border-purple-600/30 bg-purple-600/5',
-        green: 'border-green-600/30 bg-green-600/5',
-        yellow: 'border-yellow-600/30 bg-yellow-600/5',
-        red: 'border-red-600/30 bg-red-600/5',
-        cyan: 'border-cyan-600/30 bg-cyan-600/5',
-        gray: 'border-gray-600/30 bg-gray-600/5',
+        purple: 'border-purple-200 dark:border-purple-600/30 bg-purple-50 dark:bg-purple-600/5',
+        green: 'border-green-200 dark:border-green-600/30 bg-green-50 dark:bg-green-600/5',
+        yellow: 'border-yellow-200 dark:border-yellow-600/30 bg-yellow-50 dark:bg-yellow-600/5',
+        red: 'border-red-200 dark:border-red-600/30 bg-red-50 dark:bg-red-600/5',
+        cyan: 'border-cyan-200 dark:border-cyan-600/30 bg-cyan-50 dark:bg-cyan-600/5',
+        gray: 'border-gray-200 dark:border-gray-600/30 bg-gray-50 dark:bg-gray-600/5',
     };
 
     const textColorClasses = {
@@ -964,7 +964,7 @@ function SummaryCard({ title, color, items }: SummaryCardProps) {
             <div className="space-y-2">
                 {items.map((item, idx) => (
                     <div key={idx} className="flex justify-between text-xs">
-                        <span className="text-gray-400">{item.label}:</span>
+                        <span className="text-gray-600 dark:text-gray-400">{item.label}:</span>
                         <span className="text-gray-900 dark:text-white font-medium">{item.value}</span>
                     </div>
                 ))}
@@ -1097,7 +1097,7 @@ export function ConfigurationPage() {
 
                 {/* Active Configuration Info */}
                 {activeConfig && (
-                    <div className="bg-gray-800/50 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700">
+                    <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
                         <div className="flex items-center justify-between">
                             <div>
                                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
@@ -1122,14 +1122,14 @@ export function ConfigurationPage() {
                                 {!isEditing ? (
                                     <button
                                         onClick={handleEdit}
-                                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-gray-900 dark:text-white rounded-lg transition-colors"
+                                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                                     >
                                         Editar Configuración
                                     </button>
                                 ) : (
                                     <button
                                         onClick={handleCancel}
-                                        className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
+                                        className="px-6 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
                                     >
                                         Cancelar
                                     </button>
