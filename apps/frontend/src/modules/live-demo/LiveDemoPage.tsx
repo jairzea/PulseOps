@@ -16,6 +16,7 @@ import { DEMO_METRICS, getSeriesById, getMetricInfo } from './demoData';
 import { buildGraph } from './flow/buildGraph';
 import { nodeTypes } from './flow/nodeTypes';
 import { HistoricalChart } from '../../components/HistoricalChart';
+import { Autocomplete } from '../../components/Autocomplete';
 
 export function LiveDemoPage() {
     const [selectedMetricId, setSelectedMetricId] = useState<string>(DEMO_METRICS[0].id);
@@ -80,18 +81,19 @@ export function LiveDemoPage() {
 
                 {/* Selector de métrica */}
                 <div className="flex items-center gap-4">
-                    <label className="text-gray-300 font-semibold">Métrica:</label>
-                    <select
-                        value={selectedMetricId}
-                        onChange={(e) => setSelectedMetricId(e.target.value)}
-                        className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-colors duration-300 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        {DEMO_METRICS.map(metric => (
-                            <option key={metric.id} value={metric.id}>
-                                {metric.name} ({metric.owner})
-                            </option>
-                        ))}
-                    </select>
+                    <label className="text-gray-700 dark:text-gray-300 font-semibold">Métrica:</label>
+                    <div className="min-w-[300px]">
+                        <Autocomplete
+                            options={DEMO_METRICS.map(metric => ({
+                                value: metric.id,
+                                label: metric.name,
+                                description: metric.owner
+                            }))}
+                            value={selectedMetricId}
+                            onChange={setSelectedMetricId}
+                            placeholder="Seleccionar métrica..."
+                        />
+                    </div>
                 </div>
 
                 {metricInfo && (

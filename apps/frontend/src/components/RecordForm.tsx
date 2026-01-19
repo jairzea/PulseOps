@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Resource, Metric } from '../services/apiClient';
 import { apiClient } from '../services/apiClient';
+import { Autocomplete } from './Autocomplete';
 import * as yup from 'yup';
 
 interface RecordFormProps {
@@ -143,24 +144,21 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                 <label htmlFor="resourceId" className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                     1. Selecciona el Recurso *
                 </label>
-                <select
-                    id="resourceId"
-                    {...register('resourceId')}
-                    disabled={isSubmitting}
-                    onChange={(e) => {
-                        setValue('resourceId', e.target.value);
-                        setSelectedResourceId(e.target.value);
+                <Autocomplete
+                    options={resources.filter(r => r.isActive).map(resource => ({
+                        value: resource.id,
+                        label: resource.name,
+                        description: resource.roleType
+                    }))}
+                    value={selectedResourceId}
+                    onChange={(value) => {
+                        setValue('resourceId', value);
+                        setSelectedResourceId(value);
                     }}
-                    className={`w-full px-4 py-2 bg-white dark:bg-gray-800 border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${errors.resourceId ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
-                        }`}
-                >
-                    <option value="">Seleccionar recurso...</option>
-                    {resources.filter(r => r.isActive).map((resource) => (
-                        <option key={resource.id} value={resource.id}>
-                            {resource.name} ({resource.roleType})
-                        </option>
-                    ))}
-                </select>
+                    placeholder="Seleccionar recurso..."
+                    disabled={isSubmitting}
+                    error={!!errors.resourceId}
+                />
                 {errors.resourceId && (
                     <p className="mt-1 text-sm text-red-500">{errors.resourceId.message}</p>
                 )}

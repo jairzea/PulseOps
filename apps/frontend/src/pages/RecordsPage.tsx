@@ -8,6 +8,7 @@ import { useMetrics } from '../hooks/useMetrics';
 import { RecordModal } from '../components/RecordModal';
 import { PulseLoader } from '../components/PulseLoader';
 import { PageHeader } from '../components/PageHeader';
+import { Autocomplete } from '../components/Autocomplete';
 
 export const RecordsPage: React.FC = () => {
     const { records, loading, error, fetchRecords, setModalOpen } = useRecordsStore();
@@ -62,19 +63,16 @@ export const RecordsPage: React.FC = () => {
                             <label htmlFor="resource" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Recurso
                             </label>
-                            <select
-                                id="resource"
+                            <Autocomplete
+                                options={resources.map(resource => ({
+                                    value: resource.id,
+                                    label: resource.name,
+                                    description: resource.roleType
+                                }))}
                                 value={selectedResourceId}
-                                onChange={(e) => setSelectedResourceId(e.target.value)}
-                                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="">Seleccionar recurso...</option>
-                                {resources.map((resource) => (
-                                    <option key={resource.id} value={resource.id}>
-                                        {resource.name} ({resource.roleType})
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={setSelectedResourceId}
+                                placeholder="Seleccionar recurso..."
+                            />
                         </div>
 
                         {/* Selector de Métrica */}
@@ -82,19 +80,16 @@ export const RecordsPage: React.FC = () => {
                             <label htmlFor="metric" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Métrica
                             </label>
-                            <select
-                                id="metric"
+                            <Autocomplete
+                                options={metrics.map(metric => ({
+                                    value: metric.key,
+                                    label: metric.label,
+                                    description: metric.description
+                                }))}
                                 value={selectedMetricKey}
-                                onChange={(e) => setSelectedMetricKey(e.target.value)}
-                                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="">Seleccionar métrica...</option>
-                                {metrics.map((metric) => (
-                                    <option key={metric.id} value={metric.key}>
-                                        {metric.label}
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={setSelectedMetricKey}
+                                placeholder="Seleccionar métrica..."
+                            />
                         </div>
                     </div>
                 </div>
