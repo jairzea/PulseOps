@@ -13,6 +13,7 @@ import {
 import { UsersService } from '../users/users.service';
 import { AuthService } from '../auth/auth.service';
 import { MetricsService } from '../metrics/metrics.service';
+import { AnalysisService } from '../analysis/analysis.service';
 import { RegisterDto } from '../users/dto/user.dto';
 import { UpdateResourceDto } from './dto/resource.dto';
 import { CreateResourceDto } from './dto/resource.dto';
@@ -33,6 +34,7 @@ export class ResourcesController {
     private usersService: UsersService,
     private metricsService: MetricsService,
     private authService: AuthService,
+    private analysisService: AnalysisService,
   ) {}
 
   // GET /resources -> lista usuarios con role = user
@@ -62,6 +64,35 @@ export class ResourcesController {
     if (!user || user.role !== UserRole.USER) {
       throw new NotFoundException('Resource not found');
     }
+    // Obtener métricas asociadas al recurso
+    const metrics = await this.metricsService.findByResource(id);
+
+    // Para visualización: calcular condición actual por métrica (si hay histórico)
+    const metricsWithCondition = await Promise.all(
+      metrics.map(async (m) => {
+        try {
+          const evalRes = await this.analysisService.evaluate(id, m.key);
+          return {
+            id: m.id,
+            key: m.key,
+            label: m.label,
+            resourceIds: m.resourceIds || [],
+            currentCondition: evalRes.evaluation?.condition || null,
+            confidence: evalRes.evaluation?.confidence ?? null,
+          };
+        } catch (err) {
+          // Si no hay histórico o falla el análisis, devolver sin condición
+          return {
+            id: m.id,
+            key: m.key,
+            label: m.label,
+            resourceIds: m.resourceIds || [],
+            currentCondition: null,
+            confidence: null,
+          };
+        }
+      }),
+    );
 
     return {
       id: user._id.toString(),
@@ -74,6 +105,7 @@ export class ResourcesController {
       lastLogin: user.lastLogin || null,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt || null,
+      resourceMetrics: metricsWithCondition,
     };
   }
 

@@ -4,6 +4,7 @@ import { ResourcesController } from './resources.controller';
 import { ResourcesService } from './resources.service';
 import { Resource, ResourceSchema } from './schemas/resource.schema';
 import { MetricsModule } from '../metrics/metrics.module';
+import { AnalysisModule } from '../analysis/analysis.module';
 import { UsersModule } from '../users/users.module';
 import { AuthModule } from '../auth/auth.module';
 
@@ -11,6 +12,7 @@ import { AuthModule } from '../auth/auth.module';
   imports: [
     MongooseModule.forFeature([{ name: Resource.name, schema: ResourceSchema }]),
     forwardRef(() => MetricsModule),
+    forwardRef(() => AnalysisModule),
     forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),
   ],
