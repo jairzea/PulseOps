@@ -181,17 +181,17 @@ export const RecordsPage: React.FC = () => {
                 {/* Estadísticas */}
                 {records.length > 0 && (
                     <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
+                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 transition-colors duration-300">
                             <p className="text-gray-600 dark:text-gray-400 text-sm">Total de Registros</p>
                             <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{records.length}</p>
                         </div>
-                        <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
+                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 transition-colors duration-300">
                             <p className="text-gray-600 dark:text-gray-400 text-sm">Valor Promedio</p>
                             <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                 {(records.reduce((acc, r) => acc + r.value, 0) / records.length).toFixed(1)}
                             </p>
                         </div>
-                        <div className="bg-gray-900 rounded-lg border border-gray-800 p-4">
+                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 transition-colors duration-300">
                             <p className="text-gray-600 dark:text-gray-400 text-sm">Último Valor</p>
                             <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                 {records[records.length - 1]?.value || 0}
