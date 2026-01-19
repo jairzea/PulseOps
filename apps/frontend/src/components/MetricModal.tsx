@@ -64,14 +64,14 @@ export const MetricModal: React.FC<MetricModalProps> = ({ isOpen, onClose, editi
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-700">
-                    <h2 className="text-xl font-bold text-white">
+                <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                         {editingMetric ? 'Editar Métrica' : 'Nueva Métrica'}
                     </h2>
                     <button
                         onClick={handleClose}
                         disabled={isSubmitting}
-                        className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                        className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors disabled:opacity-50"
                         aria-label="Cerrar"
                     >
                         <svg
