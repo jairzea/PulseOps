@@ -6,11 +6,11 @@ interface ConditionSummaryProps {
 }
 
 const conditionColors: Record<string, { bg: string; text: string; badge: string; icon: string }> = {
-    PODER: { bg: 'bg-green-900/30', text: 'text-green-400', badge: 'bg-green-500', icon: '⚡' },
-    AFLUENCIA: { bg: 'bg-emerald-900/30', text: 'text-emerald-400', badge: 'bg-emerald-500', icon: '📈' },
-    NORMAL: { bg: 'bg-yellow-900/30', text: 'text-yellow-400', badge: 'bg-yellow-500', icon: '↔️' },
-    EMERGENCIA: { bg: 'bg-orange-900/30', text: 'text-orange-400', badge: 'bg-orange-500', icon: '⚠️' },
-    PELIGRO: { bg: 'bg-red-900/30', text: 'text-red-400', badge: 'bg-red-500', icon: '🔴' },
+    PODER: { bg: 'bg-green-50 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400', badge: 'bg-green-500', icon: '⚡' },
+    AFLUENCIA: { bg: 'bg-emerald-50 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400', badge: 'bg-emerald-500', icon: '📈' },
+    NORMAL: { bg: 'bg-yellow-50 dark:bg-yellow-900/30', text: 'text-yellow-600 dark:text-yellow-400', badge: 'bg-yellow-500', icon: '↔️' },
+    EMERGENCIA: { bg: 'bg-orange-50 dark:bg-orange-900/30', text: 'text-orange-600 dark:text-orange-400', badge: 'bg-orange-500', icon: '⚠️' },
+    PELIGRO: { bg: 'bg-red-50 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400', badge: 'bg-red-500', icon: '🔴' },
     SIN_DATOS: { bg: 'bg-gray-100 dark:bg-gray-900/30', text: 'text-gray-600 dark:text-gray-400', badge: 'bg-gray-500', icon: '❓' },
 };
 
@@ -19,9 +19,9 @@ export function ConditionSummary({ analysis, loading = false }: ConditionSummary
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="bg-gray-800 rounded-lg p-6 animate-pulse">
-                        <div className="h-4 bg-gray-700 rounded w-24 mb-4"></div>
-                        <div className="h-8 bg-gray-700 rounded w-32"></div>
+                    <div key={i} className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 animate-pulse transition-colors duration-300">
+                        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-24 mb-4"></div>
+                        <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-32"></div>
                     </div>
                 ))}
             </div>

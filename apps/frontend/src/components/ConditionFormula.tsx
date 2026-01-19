@@ -8,11 +8,11 @@ interface ConditionFormulaProps {
 export function ConditionFormula({ analysis, loading = false }: ConditionFormulaProps) {
     if (loading) {
         return (
-            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 animate-pulse">
-                <div className="h-6 bg-gray-700 rounded w-48 mb-4"></div>
+            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 animate-pulse transition-colors duration-300">
+                <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded w-48 mb-4"></div>
                 <div className="space-y-3">
                     {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="h-4 bg-gray-700 rounded"></div>
+                        <div key={i} className="h-4 bg-gray-300 dark:bg-gray-700 rounded"></div>
                     ))}
                 </div>
             </div>
@@ -24,7 +24,7 @@ export function ConditionFormula({ analysis, loading = false }: ConditionFormula
     }
 
     return (
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 transition-all duration-300">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 transition-all duration-300">
             <div className="mb-4">
                 <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                     <span>📋</span>
@@ -39,7 +39,7 @@ export function ConditionFormula({ analysis, loading = false }: ConditionFormula
                 {analysis.playbook.steps.map((step, index) => (
                     <div
                         key={index}
-                        className="flex items-start gap-3 p-3 bg-gray-900/50 rounded-lg border border-gray-700 hover:border-gray-600 transition-all duration-200"
+                        className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors duration-300 hover:dark:border-gray-600 transition-all duration-200"
                     >
                         <div className="flex-shrink-0 w-8 h-8 bg-blue-900/30 text-blue-400 rounded-full flex items-center justify-center font-semibold text-sm">
                             {index + 1}
