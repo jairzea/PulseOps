@@ -120,9 +120,17 @@ code {
   }
 
   .form-dropdown-item {
-    @apply w-full px-4 py-3 text-left text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 
+    @apply w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 
            transition-colors border-b border-gray-200 dark:border-gray-700 last:border-b-0
            disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .form-dropdown-item .text-sm {
+    @apply text-gray-900 dark:text-white;
+  }
+
+  .form-dropdown-item .text-xs {
+    @apply text-gray-600 dark:text-gray-400;
   }
 
   /* Chips/Tags de selección */
