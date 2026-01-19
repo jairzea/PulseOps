@@ -105,11 +105,11 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
             {/* Modal */}
             <div
-                className={`relative bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl max-w-md w-full overflow-hidden transition-all duration-300 ease-out ${isAnimating ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-4'
+                className={`relative bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-2xl max-w-md w-full overflow-hidden transition-all duration-300 ease-out ${isAnimating ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-4'
                     }`}
             >
                 {/* Gradient border effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-800/50 via-transparent to-gray-800/50 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-200/50 dark:from-gray-800/50 via-transparent to-gray-200/50 dark:to-gray-800/50 pointer-events-none" />
 
                 <div className="relative p-6">
                     {/* Icon/Animation container */}
@@ -145,7 +145,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
                     {/* Title */}
                     <h3
-                        className={`text-xl font-bold text-center text-white mb-3 transition-all duration-500 delay-75 ${isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+                        className={`text-xl font-bold text-center text-gray-900 dark:text-white mb-3 transition-all duration-500 delay-75 ${isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
                             }`}
                     >
                         {isLoading ? 'Eliminando...' : title}
@@ -153,7 +153,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
                     {/* Message */}
                     <p
-                        className={`text-gray-400 text-center mb-8 transition-all duration-500 delay-100 ${isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+                        className={`text-gray-600 dark:text-gray-400 text-center mb-8 transition-all duration-500 delay-100 ${isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
                             }`}
                     >
                         {isLoading ? 'Por favor espera mientras se completa la operación...' : message}
@@ -168,7 +168,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                             <button
                                 onClick={onClose}
                                 disabled={isLoading}
-                                className="flex-1 px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 focus:ring-offset-gray-900"
+                                className="flex-1 px-4 py-3 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-700 rounded-lg transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900"
                             >
                                 {cancelText}
                             </button>

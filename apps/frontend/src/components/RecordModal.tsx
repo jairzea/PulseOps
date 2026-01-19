@@ -20,12 +20,15 @@ export const RecordModal: React.FC<RecordModalProps> = ({
 
     const {
         isModalOpen,
+        editingRecord,
         error: storeError,
         setModalOpen,
         createRecord
     } = useRecordsStore();
 
     const { success, error: showError } = useToast();
+
+    const isEditing = !!editingRecord;
 
     // Prevenir scroll del body cuando modal está abierto
     useEffect(() => {
@@ -42,32 +45,54 @@ export const RecordModal: React.FC<RecordModalProps> = ({
     const handleSubmit = async (data: any) => {
         setIsSubmitting(true);
         try {
-            // Crear múltiples registros, uno por cada métrica con valor
-            const metricValues = data.metricValues || {};
-            const promises = Object.entries(metricValues)
-                .filter(([_, value]) => value !== null && value !== undefined && value !== 0)
-                .map(([metricKey, value]) => {
-                    return createRecord({
-                        resourceId: data.resourceId,
-                        metricKey,
-                        week: data.week,
-                        timestamp: data.timestamp,
-                        value: value as number,
-                        source: 'MANUAL',
-                    });
+            if (isEditing && editingRecord) {
+                // Modo edición: actualizar solo el registro actual
+                const metricValues = data.metricValues || {};
+                const metricValue = metricValues[editingRecord.metricKey];
+                
+                if (metricValue === null || metricValue === undefined) {
+                    showError('Debes ingresar un valor para la métrica');
+                    return;
+                }
+
+                await createRecord({
+                    resourceId: data.resourceId,
+                    metricKey: editingRecord.metricKey,
+                    week: data.week,
+                    timestamp: data.timestamp,
+                    value: metricValue as number,
+                    source: 'MANUAL',
                 });
+                
+                success('Registro actualizado correctamente');
+            } else {
+                // Modo creación: crear múltiples registros, uno por cada métrica con valor
+                const metricValues = data.metricValues || {};
+                const promises = Object.entries(metricValues)
+                    .filter(([_, value]) => value !== null && value !== undefined && value !== 0)
+                    .map(([metricKey, value]) => {
+                        return createRecord({
+                            resourceId: data.resourceId,
+                            metricKey,
+                            week: data.week,
+                            timestamp: data.timestamp,
+                            value: value as number,
+                            source: 'MANUAL',
+                        });
+                    });
 
-            if (promises.length === 0) {
-                showError('Debes ingresar al menos un valor de métrica');
-                return;
+                if (promises.length === 0) {
+                    showError('Debes ingresar al menos un valor de métrica');
+                    return;
+                }
+
+                await Promise.all(promises);
+                success(`${promises.length} registro(s) creado(s) correctamente`);
             }
-
-            await Promise.all(promises);
-            success(`${promises.length} registro(s) creado(s) correctamente`);
             setModalOpen(false);
         } catch (err) {
             console.error('Error submitting record:', err);
-            showError('Error al crear los registros');
+            showError(isEditing ? 'Error al actualizar el registro' : 'Error al crear los registros');
         } finally {
             setIsSubmitting(false);
         }
@@ -108,13 +133,13 @@ export const RecordModal: React.FC<RecordModalProps> = ({
             onClick={handleBackdropClick}
         >
             <div
-                className="bg-white dark:bg-gray-900 rounded-xl transition-colors duration-300 shadow-2xl w-full max-w-lg mx-4 border border-gray-200 dark:border-gray-700 transform transition-all duration-300 scale-100"
+                className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-lg mx-4 border border-gray-200 dark:border-gray-700 transform transition-all duration-300 scale-100"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                        {title || 'Nuevo Registro Manual'}
+                        {title || (isEditing ? 'Editar Registro' : 'Nuevo Registro Manual')}
                     </h2>
                     <button
                         onClick={handleClose}
@@ -151,6 +176,7 @@ export const RecordModal: React.FC<RecordModalProps> = ({
                         onSubmit={handleSubmit}
                         onCancel={handleClose}
                         isSubmitting={isSubmitting}
+                        initialRecord={editingRecord}
                     />
                 </div>
             </div>

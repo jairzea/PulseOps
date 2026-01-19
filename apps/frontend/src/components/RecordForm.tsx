@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Resource, Metric } from '../services/apiClient';
+import { Resource, Metric, Record as MetricRecord } from '../services/apiClient';
 import { apiClient } from '../services/apiClient';
 import { Autocomplete } from './Autocomplete';
 import * as yup from 'yup';
@@ -14,6 +14,7 @@ interface RecordFormProps {
     onSubmit: (data: RecordFormData) => void;
     onCancel: () => void;
     isSubmitting?: boolean;
+    initialRecord?: MetricRecord | null;
 }
 
 interface RecordFormData {
@@ -59,12 +60,15 @@ export const RecordForm: React.FC<RecordFormProps> = ({
     onSubmit,
     onCancel,
     isSubmitting = false,
+    initialRecord = null,
 }) => {
-    const [selectedResourceId, setSelectedResourceId] = useState<string>('');
+    const isEditing = !!initialRecord;
+    
+    const [selectedResourceId, setSelectedResourceId] = useState<string>(initialRecord?.resourceId || '');
     const [resourceMetrics, setResourceMetrics] = useState<Metric[]>([]);
     const [loadingMetrics, setLoadingMetrics] = useState(false);
     const [selectedDate, setSelectedDate] = useState<string>(
-        new Date().toISOString().split('T')[0]
+        initialRecord?.timestamp ? new Date(initialRecord.timestamp).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
     );
 
     const {
@@ -73,11 +77,12 @@ export const RecordForm: React.FC<RecordFormProps> = ({
         formState: { errors },
         setValue,
         watch,
+        reset,
     } = useForm<RecordFormData>({
         resolver: yupResolver(createRecordSchema(resourceMetrics.length > 0)) as any,
         defaultValues: {
-            resourceId: '',
-            date: new Date().toISOString().split('T')[0],
+            resourceId: initialRecord?.resourceId || '',
+            date: initialRecord?.timestamp ? new Date(initialRecord.timestamp).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
             metricValues: {},
         },
     });
@@ -97,10 +102,15 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                 const metrics = await apiClient.getResourceMetrics(selectedResourceId);
                 setResourceMetrics(metrics);
 
-                // Inicializar valores de métricas en 0
+                // Inicializar valores de métricas
                 const initialValues: Record<string, number> = {};
                 metrics.forEach(metric => {
-                    initialValues[metric.key] = 0;
+                    // Si estamos editando y la métrica coincide con el registro, usar su valor
+                    if (isEditing && initialRecord && metric.key === initialRecord.metricKey) {
+                        initialValues[metric.key] = initialRecord.value;
+                    } else {
+                        initialValues[metric.key] = 0;
+                    }
                 });
                 setValue('metricValues', initialValues);
             } catch (error) {
@@ -112,7 +122,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
         };
 
         loadResourceMetrics();
-    }, [selectedResourceId, setValue]);
+    }, [selectedResourceId, setValue, isEditing, initialRecord]);
 
     // Actualizar selectedResourceId cuando cambia en el formulario
     useEffect(() => {
@@ -156,9 +166,14 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                         setSelectedResourceId(value);
                     }}
                     placeholder="Seleccionar recurso..."
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isEditing}
                     error={!!errors.resourceId}
                 />
+                {isEditing && (
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        No se puede cambiar el recurso al editar un registro
+                    </p>
+                )}
                 {errors.resourceId && (
                     <p className="mt-1 text-sm text-red-500">{errors.resourceId.message}</p>
                 )}
@@ -175,7 +190,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                             type="date"
                             id="date"
                             {...register('date')}
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || isEditing}
                             onChange={(e) => {
                                 setValue('date', e.target.value);
                                 setSelectedDate(e.target.value);
@@ -183,6 +198,11 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                             className={`w-full px-4 py-2 bg-white dark:bg-gray-800 border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${errors.date ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
                                 }`}
                         />
+                        {isEditing && (
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                No se puede cambiar la fecha al editar un registro
+                            </p>
+                        )}
                         {errors.date && (
                             <p className="mt-1 text-sm text-red-500">{errors.date.message}</p>
                         )}
@@ -324,7 +344,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                     disabled={isSubmitting || !selectedResourceId || loadingMetrics || resourceMetrics.length === 0}
                     className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {isSubmitting ? 'Guardando...' : 'Crear Registro'}
+                    {isSubmitting ? (isEditing ? 'Actualizando...' : 'Guardando...') : (isEditing ? 'Actualizar Registro' : 'Crear Registro')}
                 </button>
             </div>
         </form>

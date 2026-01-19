@@ -126,9 +126,8 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({
                     onKeyDown={handleKeyDown}
                     placeholder={placeholder}
                     disabled={disabled}
-                    className={`w-full px-4 py-2 bg-white dark:bg-gray-800 border rounded-lg text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        error ? 'border-red-500' : 'border-gray-200 dark:border-gray-700'
-                    } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-text'}`}
+                    className={`w-full px-4 py-2 bg-white dark:bg-gray-800 border rounded-lg text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 ${error ? 'border-red-500' : 'border-gray-200 dark:border-gray-700'
+                        } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-text'}`}
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg
@@ -154,15 +153,13 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({
                             <div
                                 key={option.value}
                                 onClick={() => handleOptionClick(option.value)}
-                                className={`px-4 py-2 cursor-pointer transition-colors ${
-                                    index === highlightedIndex
+                                className={`px-4 py-2 cursor-pointer transition-colors ${index === highlightedIndex
                                         ? 'bg-blue-50 dark:bg-blue-900/20'
                                         : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                                } ${
-                                    option.value === value
+                                    } ${option.value === value
                                         ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                                         : 'text-gray-900 dark:text-white'
-                                }`}
+                                    }`}
                             >
                                 <div className="font-medium">{option.label}</div>
                                 {option.description && (
