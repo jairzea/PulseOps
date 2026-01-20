@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useResources } from '../hooks/useResources';
 import { useMetrics } from '../hooks/useMetrics';
+import { apiClient } from '../services/apiClient';
 import { useAnalysis } from '../hooks/useAnalysis';
 import { useConditionsMetadata } from '../hooks/useConditionsMetadata';
 import { ResourceSelector } from '../components/ResourceSelector';
@@ -21,6 +22,8 @@ export function ResourceDashboard() {
   const { resources, loading: loadingResources } = useResources();
   const { user } = useAuth();
   const { metrics, loading: loadingMetrics } = useMetrics({ resourceId: selectedResourceId });
+  const [userMetrics, setUserMetrics] = useState<any[]>([]);
+  const [loadingUserMetrics, setLoadingUserMetrics] = useState(false);
   const { conditions, loading: loadingConditions } = useConditionsMetadata();
 
   // Usar Zustand store para fetch de records
@@ -59,6 +62,24 @@ export function ResourceDashboard() {
       setSelectedResourceId(resources[0].id);
     }
   }, [resources, selectedResourceId, user]);
+
+  // Para usuarios no-admin, obtener métricas directamente desde el resource detail
+  useEffect(() => {
+    const loadUserMetrics = async () => {
+      if (!user || user.role === 'admin' || !user.id) return;
+      try {
+        setLoadingUserMetrics(true);
+        const rd: any = await apiClient.getResource(user.id);
+        setUserMetrics(rd.resourceMetrics || []);
+      } catch (err) {
+        setUserMetrics([]);
+      } finally {
+        setLoadingUserMetrics(false);
+      }
+    };
+
+    loadUserMetrics();
+  }, [user]);
 
   // Auto-select first metric when metrics change or resource changes
   useEffect(() => {
@@ -135,10 +156,10 @@ export function ResourceDashboard() {
                 />
               )}
               <MetricSelector
-                metrics={metrics}
+                metrics={user && user.role !== 'admin' ? userMetrics : metrics}
                 selectedKey={selectedMetricKey}
                 onSelect={setSelectedMetricKey}
-                loading={loadingMetrics}
+                loading={user && user.role !== 'admin' ? loadingUserMetrics : loadingMetrics}
               />
             </div>
 
