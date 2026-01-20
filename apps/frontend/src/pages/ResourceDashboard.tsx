@@ -70,7 +70,18 @@ export function ResourceDashboard() {
       try {
         setLoadingUserMetrics(true);
         const rd: any = await apiClient.getResource(user.id);
-        setUserMetrics(rd.resourceMetrics || []);
+        const rms = rd.resourceMetrics || [];
+        if (rms.length === 0) {
+          // Fallback: intentar obtener métricas por resourceId (/metrics?resourceId=...)
+          try {
+            const byQuery = await apiClient.getMetrics(user.id);
+            setUserMetrics(byQuery || []);
+          } catch (e) {
+            setUserMetrics([]);
+          }
+        } else {
+          setUserMetrics(rms);
+        }
       } catch (err) {
         setUserMetrics([]);
       } finally {
