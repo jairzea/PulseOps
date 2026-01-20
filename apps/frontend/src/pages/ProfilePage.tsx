@@ -27,7 +27,12 @@ export function ProfilePage() {
     }, [user]);
 
     const loadProfile = async () => {
-        if (!user) return;
+        // Asegurar que isLoading se actualiza aunque no haya user
+        if (!user) {
+            setIsLoading(false);
+            return;
+        }
+        setIsLoading(true);
 
         try {
             const data = await authAPI.getProfile();
