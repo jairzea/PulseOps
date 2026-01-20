@@ -151,14 +151,23 @@ class AuthAPI {
         }
     }
 
-    async deleteUser(id: string): Promise<void> {
-        const response = await fetch(`${API_URL}/users/${id}`, {
+    async deleteUser(id: string, hard = false): Promise<void> {
+        const url = `${API_URL}/users/${id}${hard ? '?hard=true' : ''}`;
+        const response = await fetch(url, {
             method: 'DELETE',
             headers: this.getHeaders(true),
         });
 
         if (!response.ok) {
-            throw new Error('Failed to delete user');
+            const errorText = await response.text();
+            let errMsg = 'Failed to delete user';
+            try {
+                const parsed = JSON.parse(errorText);
+                errMsg = parsed.message || errMsg;
+            } catch (e) {
+                if (errorText) errMsg = errorText;
+            }
+            throw new Error(errMsg);
         }
     }
 }

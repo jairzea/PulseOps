@@ -7,6 +7,7 @@ import type {
 } from '@pulseops/shared-types';
 import { useToast } from '../hooks/useToast';
 import { PulseLoader } from '../components/PulseLoader';
+import { PermissionFeedback } from '../components/PermissionFeedback';
 
 // Step Components
 interface StepProps {
@@ -17,9 +18,9 @@ interface StepProps {
 
 // Paso 1: Fórmulas de Condiciones (Playbooks)
 function Step1Formulas() {
-    const [playbooks, setPlaybooks] = useState<Playbook[]>([]);
     const [editedPlaybooks, setEditedPlaybooks] = useState<Record<string, Playbook>>({});
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [expandedCondition, setExpandedCondition] = useState<string | null>('AFLUENCIA');
     const { success, error: showError } = useToast();
 
@@ -49,16 +50,18 @@ function Step1Formulas() {
         try {
             setLoading(true);
             const data = await apiClient.getAllPlaybooks();
-            setPlaybooks(data);
             // Inicializar editedPlaybooks con los datos cargados
             const edited: Record<string, Playbook> = {};
             data.forEach(pb => {
                 edited[pb.condition] = { ...pb };
             });
             setEditedPlaybooks(edited);
+            setError(null);
         } catch (error) {
             console.error('Error loading playbooks:', error);
-            showError('No se pudieron cargar las fórmulas');
+            const msg = 'No se pudieron cargar las fórmulas';
+            setError(msg);
+            showError(msg);
         } finally {
             setLoading(false);
         }
@@ -142,6 +145,15 @@ function Step1Formulas() {
 
     if (loading) {
         return <PulseLoader size="md" variant="primary" text="Cargando fórmulas..." />;
+    }
+
+    if (error) {
+        return (
+            <PermissionFeedback
+                message={error}
+                onRetry={loadPlaybooks}
+            />
+        );
     }
 
     return (
@@ -289,6 +301,7 @@ function Step1Formulas() {
 
 // Paso 2: Condiciones Principales
 function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
+    void thresholds;
     return (
         <div className="space-y-8">
             <div>
@@ -525,6 +538,7 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
 
 // Paso 3: Configuración de Señales
 function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
+    void thresholds;
     return (
         <div className="space-y-8">
             <div>
@@ -831,6 +845,7 @@ function Step4Review({ thresholds, configName }: Step4ReviewProps) {
 
 // Paso 4: Fórmulas de Condiciones
 function Step4Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
+    void thresholds;
     const conditions = [
         { key: 'afluencia', name: 'AFLUENCIA', color: 'purple' },
         { key: 'normal', name: 'NORMAL', color: 'green' },
@@ -931,6 +946,9 @@ function Step4Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
     );
 }
 
+// Mantener referencia a Step4Formulas para evitar error de "declarado pero no usado"
+void Step4Formulas;
+
 interface SummaryCardProps {
     title: string;
     color: 'purple' | 'green' | 'yellow' | 'red' | 'cyan' | 'gray';
@@ -979,6 +997,7 @@ function SummaryCard({ title, color, items }: SummaryCardProps) {
 export function ConfigurationPage() {
     const [activeConfig, setActiveConfig] = useState<AnalysisConfiguration | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [errorConfig, setErrorConfig] = useState<string | null>(null);
     const [currentStep, setCurrentStep] = useState(1);
     const [editedThresholds, setEditedThresholds] =
         useState<ConditionThresholds | null>(null);
@@ -997,7 +1016,9 @@ export function ConfigurationPage() {
             setActiveConfig(active);
         } catch (error) {
             console.error('Error loading configurations:', error);
-            showError('No se pudieron cargar las configuraciones');
+            const msg = 'No se pudieron cargar las configuraciones';
+            setErrorConfig(msg);
+            showError(msg);
         } finally {
             setIsLoading(false);
         }
@@ -1096,48 +1117,56 @@ export function ConfigurationPage() {
                 </div>
 
                 {/* Active Configuration Info */}
-                {activeConfig && (
-                    <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-                                    {activeConfig.name}
-                                </h2>
-                                {activeConfig.description && (
-                                    <p className="text-gray-400 text-sm">{activeConfig.description}</p>
-                                )}
-                                <div className="mt-3 text-xs text-gray-600 dark:text-gray-500">
-                                    <span>Versión: {activeConfig.version}</span>
-                                    <span className="mx-3">•</span>
-                                    <span>
-                                        Actualizada:{' '}
-                                        {new Date(activeConfig.updatedAt).toLocaleString('es-ES')}
+                {errorConfig ? (
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                        <PermissionFeedback
+                            message={errorConfig}
+                            onRetry={loadConfigurations}
+                        />
+                    </div>
+                ) : (
+                    activeConfig && (
+                        <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+                                        {activeConfig.name}
+                                    </h2>
+                                    {activeConfig.description && (
+                                        <p className="text-gray-400 text-sm">{activeConfig.description}</p>
+                                    )}
+                                    <div className="mt-3 text-xs text-gray-600 dark:text-gray-500">
+                                        <span>Versión: {activeConfig.version}</span>
+                                        <span className="mx-3">•</span>
+                                        <span>
+                                            Actualizada:{' '}
+                                            {new Date(activeConfig.updatedAt).toLocaleString('es-ES')}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="px-3 py-1 bg-green-600/20 text-green-600 dark:text-green-400 text-sm rounded-full border border-green-200 dark:border-green-600/30">
+                                        Activa
                                     </span>
+                                    {!isEditing ? (
+                                        <button
+                                            onClick={handleEdit}
+                                            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                                        >
+                                            Editar Configuración
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={handleCancel}
+                                            className="px-6 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
+                                        >
+                                            Cancelar
+                                        </button>
+                                    )}
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <span className="px-3 py-1 bg-green-600/20 text-green-600 dark:text-green-400 text-sm rounded-full border border-green-200 dark:border-green-600/30">
-                                    Activa
-                                </span>
-                                {!isEditing ? (
-                                    <button
-                                        onClick={handleEdit}
-                                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                                    >
-                                        Editar Configuración
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={handleCancel}
-                                        className="px-6 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
-                                    >
-                                        Cancelar
-                                    </button>
-                                )}
-                            </div>
                         </div>
-                    </div>
-                )}
+                    ))}
 
                 {/* Wizard Steps */}
                 {isEditing && (

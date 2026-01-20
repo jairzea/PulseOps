@@ -9,6 +9,7 @@ import { TableSkeleton } from '../components/TableSkeleton';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { useConfirmModal } from '../hooks/useConfirmModal';
 import { PageHeader } from '../components/PageHeader';
+import { PermissionFeedback } from '../components/PermissionFeedback';
 import { Metric } from '../services/apiClient';
 import { useToast } from '../hooks/useToast';
 
@@ -78,9 +79,10 @@ export const MetricsPage: React.FC = () => {
                     {loading && <TableSkeleton columns={5} rows={6} showActions={true} />}
 
                     {error && (
-                        <div className="p-8 text-center">
-                            <p className="text-red-500">Error al cargar métricas: {error}</p>
-                        </div>
+                        <PermissionFeedback
+                            message={typeof error === 'string' ? error : String(error)}
+                            onRetry={fetchMetrics}
+                        />
                     )}
 
                     {!loading && !error && metrics.length === 0 && (

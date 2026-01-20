@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { RegisterDto, UpdateUserDto, ChangePasswordDto } from './dto/user.dto';
 import * as bcrypt from 'bcryptjs';
@@ -25,10 +25,24 @@ export class UsersService {
   }
 
   async findById(id: string): Promise<UserDocument> {
+    // Support demo ids in AUTH_MODE=demo to avoid CastError and DB lookups
+    if (id === 'demo-admin' || id === 'demo-user') {
+      const role = id === 'demo-admin' ? 'admin' : 'user';
+      const demoUser = new this.userModel({
+        _id: new Types.ObjectId(),
+        email: `${id}@local`,
+        role,
+        isActive: true,
+        name: id === 'demo-admin' ? 'Demo Admin' : 'Demo User',
+      });
+      return demoUser as UserDocument;
+    }
+
     const user = await this.userModel.findById(id).exec();
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
+
     return user;
   }
 
@@ -87,6 +101,11 @@ export class UsersService {
   }
 
   async delete(id: string): Promise<void> {
+    // Support demo ids in AUTH_MODE=demo: no-op to avoid CastError
+    if (id === 'demo-admin' || id === 'demo-user') {
+      return;
+    }
+
     // Soft delete: marcar como inactivo
     const user = await this.userModel.findByIdAndUpdate(
       id,

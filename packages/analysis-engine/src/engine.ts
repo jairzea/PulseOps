@@ -25,12 +25,34 @@ import type {
   OperationalCondition,
   TrendAnalysisResult,
   TrendDirection,
+  ConditionThresholds,
 } from '@pulseops/shared-types';
 
 /**
  * Configuración por defecto de la ventana de análisis
  */
 const DEFAULT_WINDOW_SIZE = 2;
+
+/**
+ * Valores por defecto de umbrales (coinciden con createDefaultConfiguration en backend)
+ */
+const DEFAULT_CONDITION_THRESHOLDS: ConditionThresholds = {
+  afluencia: { minInclination: 50 },
+  normal: { minInclination: 5, maxInclination: 50 },
+  emergencia: { minInclination: -5, maxInclination: 5 },
+  peligro: { minInclination: -80, maxInclination: -50 },
+  poder: { minConsecutivePeriods: 3, minInclination: -5, stabilityThreshold: 0.1 },
+  inexistencia: { threshold: 0.01 },
+  signals: {
+    volatility: { minDirectionChanges: 3, minWindowSize: 5 },
+    slowDecline: { minConsecutiveDeclines: 3, maxInclinationPerPeriod: -5 },
+    dataGaps: { expectedDaysBetweenPoints: 7, toleranceDays: 2 },
+    recoverySpike: { minPriorDeclines: 2, minRecoveryInclination: 50 },
+    noise: { maxInclinationVariation: 5, minWindowSize: 4 },
+  },
+};
+
+
 
 /**
  * Umbral mínimo para considerar un valor como cercano a cero
@@ -73,7 +95,7 @@ const INCLINATION_THRESHOLDS = {
  * @param points - Serie temporal completa
  * @returns Señal de deterioro lento o null
  */
-function detectSlowDecline(points: MetricPoint[]): AnalysisSignal | null {
+function detectSlowDecline(points: MetricPoint[], signalsCfg: ConditionThresholds['signals']): AnalysisSignal | null {
   const WINDOW = 4;
   if (points.length < WINDOW + 1) return null;
 
@@ -98,11 +120,12 @@ function detectSlowDecline(points: MetricPoint[]): AnalysisSignal | null {
     }
   }
 
-  // Criterio: 3+ caídas y suma de inclinaciones negativa
-  if (negativeCount >= 3 && totalInclinationSum < 0) {
+  // Criterio: N caídas definidas en configuración y suma de inclinaciones negativa
+  const minDeclines = signalsCfg?.slowDecline?.minConsecutiveDeclines ?? 3;
+  if (negativeCount >= minDeclines && totalInclinationSum < 0) {
     const severity: 'LOW' | 'MEDIUM' | 'HIGH' = 
-      negativeCount === 4 ? 'HIGH' :
-      negativeCount === 3 ? 'MEDIUM' : 'LOW';
+      negativeCount === WINDOW ? 'HIGH' :
+      negativeCount === minDeclines ? 'MEDIUM' : 'LOW';
 
     return {
       type: 'SLOW_DECLINE',
@@ -130,8 +153,8 @@ function detectSlowDecline(points: MetricPoint[]): AnalysisSignal | null {
  * @param points - Serie temporal completa
  * @returns Señal de volatilidad o null
  */
-function detectVolatility(points: MetricPoint[]): AnalysisSignal | null {
-  const WINDOW = 5;
+function detectVolatility(points: MetricPoint[], signalsCfg: ConditionThresholds['signals']): AnalysisSignal | null {
+  const WINDOW = signalsCfg?.volatility?.minWindowSize ?? 5;
   if (points.length < WINDOW) return null;
 
   const recentPoints = points.slice(-WINDOW);
@@ -157,11 +180,12 @@ function detectVolatility(points: MetricPoint[]): AnalysisSignal | null {
     }
   }
 
-  // Criterio: 3+ cambios de signo
-  if (signChanges >= 3) {
+  // Criterio: N cambios de signo según configuración
+  const minChanges = signalsCfg?.volatility?.minDirectionChanges ?? 3;
+  if (signChanges >= minChanges) {
     const severity: 'LOW' | 'MEDIUM' | 'HIGH' = 
       signChanges === deltas.length - 1 ? 'HIGH' : // Todos cambian
-      signChanges >= 3 ? 'MEDIUM' : 'LOW';
+      signChanges >= minChanges ? 'MEDIUM' : 'LOW';
 
     return {
       type: 'VOLATILE',
@@ -188,11 +212,11 @@ function detectVolatility(points: MetricPoint[]): AnalysisSignal | null {
  * @param points - Serie temporal completa
  * @returns Señal de gaps o null
  */
-function detectDataGaps(points: MetricPoint[]): AnalysisSignal | null {
+function detectDataGaps(points: MetricPoint[], signalsCfg: ConditionThresholds['signals']): AnalysisSignal | null {
   if (points.length < 2) return null;
 
-  const EXPECTED_DAYS = 7;
-  const TOLERANCE_DAYS = 2;
+  const EXPECTED_DAYS = signalsCfg?.dataGaps?.expectedDaysBetweenPoints ?? 7;
+  const TOLERANCE_DAYS = signalsCfg?.dataGaps?.toleranceDays ?? 2;
   const MAX_GAP_MS = (EXPECTED_DAYS + TOLERANCE_DAYS) * 24 * 60 * 60 * 1000;
 
   let gapCount = 0;
@@ -243,8 +267,8 @@ function detectDataGaps(points: MetricPoint[]): AnalysisSignal | null {
  * @param points - Serie temporal completa
  * @returns Señal de recuperación o null
  */
-function detectRecoverySpike(points: MetricPoint[]): AnalysisSignal | null {
-  const WINDOW = 5;
+function detectRecoverySpike(points: MetricPoint[], signalsCfg: ConditionThresholds['signals']): AnalysisSignal | null {
+  const WINDOW = signalsCfg?.recoverySpike?.minPriorDeclines ? signalsCfg.recoverySpike.minPriorDeclines + 3 : 5;
   if (points.length < WINDOW) return null;
 
   const recentPoints = points.slice(-WINDOW);
@@ -259,7 +283,7 @@ function detectRecoverySpike(points: MetricPoint[]): AnalysisSignal | null {
   if (
     !lastInclination.isValid ||
     lastInclination.value === null ||
-    lastInclination.value < INCLINATION_THRESHOLDS.STEEP_POSITIVE
+    lastInclination.value < (signalsCfg.recoverySpike?.minRecoveryInclination ?? 50)
   ) {
     return null; // No hay spike, no puede haber recovery
   }
@@ -304,9 +328,9 @@ function detectRecoverySpike(points: MetricPoint[]): AnalysisSignal | null {
  * @param points - Serie temporal completa
  * @returns Señal de ruido o null
  */
-function detectNoise(points: MetricPoint[]): AnalysisSignal | null {
-  const WINDOW = 4;
-  const NOISE_THRESHOLD = 2; // ±2%
+function detectNoise(points: MetricPoint[], signalsCfg: ConditionThresholds['signals']): AnalysisSignal | null {
+  const WINDOW = signalsCfg?.noise?.minWindowSize ?? 4;
+  const NOISE_THRESHOLD = signalsCfg?.noise?.maxInclinationVariation ?? 2; // ±2%
   const ABSOLUTE_NOISE_THRESHOLD = 1; // Umbral absoluto para valores cercanos a 0
 
   if (points.length < WINDOW + 1) return null;
@@ -357,15 +381,15 @@ function detectNoise(points: MetricPoint[]): AnalysisSignal | null {
  * @param points - Serie temporal completa
  * @returns Array de señales detectadas (puede estar vacío)
  */
-function detectPatterns(points: MetricPoint[]): AnalysisSignal[] {
+function detectPatterns(points: MetricPoint[], signalsCfg: ConditionThresholds['signals']): AnalysisSignal[] {
   const signals: AnalysisSignal[] = [];
 
   // Ejecutar todos los detectores
-  const slowDecline = detectSlowDecline(points);
-  const volatility = detectVolatility(points);
-  const dataGaps = detectDataGaps(points);
-  const recoverySpike = detectRecoverySpike(points);
-  const noise = detectNoise(points);
+  const slowDecline = detectSlowDecline(points, signalsCfg);
+  const volatility = detectVolatility(points, signalsCfg);
+  const dataGaps = detectDataGaps(points, signalsCfg);
+  const recoverySpike = detectRecoverySpike(points, signalsCfg);
+  const noise = detectNoise(points, signalsCfg);
 
   // Agregar señales detectadas
   if (slowDecline) signals.push(slowDecline);
@@ -496,9 +520,11 @@ function calculateInclination(
  * @returns true si cumple criterios de Poder
  */
 function isPowerCondition(
-  points: Array<{ timestamp: string; value: number }>
+  points: Array<{ timestamp: string; value: number }>,
+  thresholds: ConditionThresholds,
 ): boolean {
-  if (points.length < POWER_MIN_PERIODS) {
+  const minPeriods = thresholds.poder?.minConsecutivePeriods ?? POWER_MIN_PERIODS;
+  if (points.length < minPeriods) {
     return false;
   }
 
@@ -515,7 +541,7 @@ function isPowerCondition(
     if (inclination.value === null) return false;
     
     // Debe estar en rango de Normal o Afluencia (positivo)
-    if (inclination.value < INCLINATION_THRESHOLDS.FLAT_LOWER) {
+    if (inclination.value < thresholds.emergencia.minInclination) {
       return false;
     }
   }
@@ -544,18 +570,20 @@ function isPowerCondition(
  */
 function resolveCondition(
   inclination: InclinationResult,
-  allPoints: Array<{ timestamp: string; value: number }>
+  allPoints: Array<{ timestamp: string; value: number }>,
+  thresholds: ConditionThresholds,
 ): { condition: HubbardCondition; reason: ConditionReason } {
   // =========================================================================
   // 1. SIN_DATOS / INEXISTENCIA: Casos bloqueantes técnicos
   // =========================================================================
   
   // 1a. SIN_DATOS: Inclinación no válida por datos insuficientes
+  const zeroThreshold = thresholds?.inexistencia?.threshold ?? ZERO_THRESHOLD;
   if (!inclination.isValid && inclination.value === null) {
     // Caso especial: ambos valores ≈ 0
     if (
-      Math.abs(inclination.previousValue) < ZERO_THRESHOLD &&
-      Math.abs(inclination.currentValue) < ZERO_THRESHOLD
+      Math.abs(inclination.previousValue) < zeroThreshold &&
+      Math.abs(inclination.currentValue) < zeroThreshold
     ) {
       return {
         condition: 'INEXISTENCIA',
@@ -568,8 +596,8 @@ function resolveCondition(
 
     // Inicio de existencia (de 0 a valor positivo)
     if (
-      Math.abs(inclination.previousValue) < ZERO_THRESHOLD &&
-      inclination.currentValue > ZERO_THRESHOLD
+      Math.abs(inclination.previousValue) < zeroThreshold &&
+      inclination.currentValue > zeroThreshold
     ) {
       return {
         condition: 'INEXISTENCIA',
@@ -591,14 +619,14 @@ function resolveCondition(
 
   const inclinationValue = inclination.value!;
 
-  // 1b. INEXISTENCIA: Caída casi vertical (>80% de descenso)
-  if (inclinationValue <= INCLINATION_THRESHOLDS.CRITICAL_NEGATIVE) {
+  // 1b. INEXISTENCIA: Caída casi vertical (usar umbral de peligro.minInclination)
+  if (inclinationValue <= (thresholds?.peligro?.minInclination ?? -80)) {
     return {
       condition: 'INEXISTENCIA',
       reason: {
         code: 'VERTICAL_DROP',
         explanation: `Caída casi vertical de ${Math.abs(inclinationValue).toFixed(1)}%. La estadística colapsó.`,
-        threshold: INCLINATION_THRESHOLDS.CRITICAL_NEGATIVE,
+        threshold: thresholds?.peligro?.minInclination ?? -80,
       },
     };
   }
@@ -609,12 +637,12 @@ function resolveCondition(
   
   // PODER se evalúa ANTES que AFLUENCIA
   // Un crecimiento fuerte puntual (AFLUENCIA) NO anula PODER sostenido
-  if (isPowerCondition(allPoints)) {
+  if (isPowerCondition(allPoints, thresholds)) {
     return {
       condition: 'PODER',
       reason: {
         code: 'SUSTAINED_HIGH_NORMAL',
-        explanation: `Funcionamiento Normal sostenido en nivel alto durante ${POWER_MIN_PERIODS}+ períodos. Condición de Poder.`,
+        explanation: `Funcionamiento Normal sostenido en nivel alto durante ${thresholds.poder?.minConsecutivePeriods ?? POWER_MIN_PERIODS}+ períodos. Condición de Poder.`,
       },
     };
   }
@@ -623,13 +651,13 @@ function resolveCondition(
   // 3. AFLUENCIA: Expansión acelerada (puntual, no sostenible)
   // =========================================================================
   
-  if (inclinationValue >= INCLINATION_THRESHOLDS.STEEP_POSITIVE) {
+  if (inclinationValue >= (thresholds.afluencia?.minInclination ?? 50)) {
     return {
       condition: 'AFLUENCIA',
       reason: {
         code: 'STEEP_GROWTH',
         explanation: `Crecimiento pronunciado de ${inclinationValue.toFixed(1)}%. Condición de expansión.`,
-        threshold: INCLINATION_THRESHOLDS.STEEP_POSITIVE,
+        threshold: thresholds.afluencia?.minInclination ?? 50,
       },
     };
   }
@@ -641,17 +669,18 @@ function resolveCondition(
   // NORMAL requiere crecimiento REAL: +5% < I < +50%
   // NO incluye estancamiento (≤ +5%)
   if (
-    inclinationValue > INCLINATION_THRESHOLDS.FLAT_UPPER &&
-    inclinationValue < INCLINATION_THRESHOLDS.STEEP_POSITIVE
+    inclinationValue > (thresholds.normal?.minInclination ?? 5) &&
+    inclinationValue < (thresholds.afluencia?.minInclination ?? 50)
   ) {
     // Distinguir entre crecimiento gradual y leve
-    if (inclinationValue >= INCLINATION_THRESHOLDS.MODERATE_POSITIVE) {
+    const moderatePositive = ((thresholds.normal?.minInclination ?? 5) + (thresholds.afluencia?.minInclination ?? 50)) / 2;
+    if (inclinationValue >= moderatePositive) {
       return {
         condition: 'NORMAL',
         reason: {
           code: 'GRADUAL_GROWTH',
           explanation: `Crecimiento gradual de ${inclinationValue.toFixed(1)}%. Funcionamiento Normal.`,
-          threshold: INCLINATION_THRESHOLDS.MODERATE_POSITIVE,
+          threshold: moderatePositive,
         },
       };
     }
@@ -661,7 +690,7 @@ function resolveCondition(
       reason: {
         code: 'SLIGHT_GROWTH',
         explanation: `Crecimiento leve de ${inclinationValue.toFixed(1)}%. Funcionamiento Normal estable.`,
-        threshold: INCLINATION_THRESHOLDS.FLAT_UPPER,
+        threshold: thresholds.normal?.minInclination ?? (INCLINATION_THRESHOLDS.FLAT_UPPER),
       },
     };
   }
@@ -672,27 +701,27 @@ function resolveCondition(
   
   // 5a. EMERGENCIA por estancamiento (entre -5% y +5%)
   if (
-    inclinationValue >= INCLINATION_THRESHOLDS.FLAT_LOWER &&
-    inclinationValue <= INCLINATION_THRESHOLDS.FLAT_UPPER
+    inclinationValue >= (thresholds.emergencia?.minInclination ?? -5) &&
+    inclinationValue <= (thresholds.emergencia?.maxInclination ?? 5)
   ) {
     return {
       condition: 'EMERGENCIA',
       reason: {
         code: 'STAGNATION',
         explanation: `Sin cambio significativo (${inclinationValue.toFixed(1)}%). Estancamiento operativo.`,
-        threshold: INCLINATION_THRESHOLDS.FLAT_UPPER,
+        threshold: thresholds.emergencia?.maxInclination ?? 5,
       },
     };
   }
 
   // 5b. EMERGENCIA por descenso leve/moderado (entre -50% y -5%)
-  if (inclinationValue > INCLINATION_THRESHOLDS.STEEP_NEGATIVE) {
+  if (inclinationValue > (thresholds.peligro?.maxInclination ?? -50)) {
     return {
       condition: 'EMERGENCIA',
       reason: {
         code: 'MODERATE_DECLINE',
         explanation: `Descenso de ${Math.abs(inclinationValue).toFixed(1)}%. Se requiere acción correctiva.`,
-        threshold: INCLINATION_THRESHOLDS.MODERATE_NEGATIVE,
+        threshold: thresholds.peligro?.maxInclination ?? -50,
       },
     };
   }
@@ -708,7 +737,7 @@ function resolveCondition(
     reason: {
       code: 'STEEP_DECLINE',
       explanation: `Descenso pronunciado de ${Math.abs(inclinationValue).toFixed(1)}%. Requiere intervención inmediata.`,
-      threshold: INCLINATION_THRESHOLDS.STEEP_NEGATIVE,
+      threshold: thresholds.peligro?.maxInclination ?? -50,
     },
   };
 }
@@ -833,13 +862,11 @@ class TrendAnalysisEngine implements AnalysisEngine {
     const direction = determineTrendDirection(inclination.delta);
 
     // Resolver condición operativa jerárquica
-    const { condition, reason } = resolveCondition(
-      inclination,
-      series.points
-    );
+    const thresholds = config?.thresholds ?? DEFAULT_CONDITION_THRESHOLDS;
+    const { condition, reason } = resolveCondition(inclination, series.points, thresholds);
 
     // Detectar patrones adicionales (meta-análisis)
-    const signals = detectPatterns(series.points);
+    const signals = detectPatterns(series.points, thresholds.signals);
 
     // Calcular confianza basada en cantidad de datos
     // Más datos históricos = mayor confianza

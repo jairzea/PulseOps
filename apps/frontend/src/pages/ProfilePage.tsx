@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { authAPI } from '../services/authService';
+import { apiClient } from '../services/apiClient';
 import { showToast } from '../utils/toast';
 import { UserWithMetadata } from '../types/auth';
 
@@ -10,6 +11,7 @@ export function ProfilePage() {
     const [isEditing, setIsEditing] = useState(false);
     const [isChangingPassword, setIsChangingPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [resourceMetrics, setResourceMetrics] = useState<Array<any>>([]);
 
     // Formulario de edición
     const [name, setName] = useState('');
@@ -32,6 +34,16 @@ export function ProfilePage() {
             setProfile(data);
             setName(data.name);
             setEmail(data.email);
+            // Si el usuario es un recurso, cargar métricas asociadas y condición actual
+            try {
+                if (data.role === 'user') {
+                    const resourceDetail = await apiClient.getResource(data.id) as any;
+                    setResourceMetrics(resourceDetail.resourceMetrics || []);
+                }
+            } catch (err) {
+                // No bloquear la carga del perfil si fallan las métricas
+                console.debug('No se pudieron cargar métricas del recurso', err);
+            }
         } catch (error) {
             showToast('Error al cargar perfil', 'error');
         } finally {
@@ -217,6 +229,41 @@ export function ProfilePage() {
                                 </div>
                             )}
                         </div>
+
+                        {/* Métricas del recurso (si aplica) */}
+                        {profile?.role === 'user' && (
+                            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Métricas asociadas</h3>
+                                </div>
+
+                                {resourceMetrics.length === 0 ? (
+                                    <p className="text-gray-600 dark:text-gray-400">No se encontraron métricas asociadas.</p>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        {resourceMetrics.map((rm: any) => (
+                                            <div key={rm.metric?.id || rm.id} className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div>
+                                                        <p className="text-sm font-medium text-gray-900 dark:text-white">{rm.metric?.label || rm.label || rm.key}</p>
+                                                        <p className="text-xs text-gray-600 dark:text-gray-400">{rm.metric?.description || ''}</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        {rm.currentCondition ? (
+                                                            <span className="px-2 py-1 rounded-full text-xs" style={{ background: '#111827', color: '#fff' }}>
+                                                                {rm.currentCondition}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-xs text-gray-500">Sin condición</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* Cambiar contraseña */}
                         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-300">

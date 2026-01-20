@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from '../users/dto/user.dto';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { DemoOrJwtAuthGuard } from './guards/demo-or-jwt.guard';
 import {
   CurrentUser,
   CurrentUserData,
@@ -36,7 +36,7 @@ export class AuthController {
   }
 
   @Get('profile')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(DemoOrJwtAuthGuard)
   async getProfile(@CurrentUser() user: CurrentUserData) {
     const fullUser = await this.usersService.findById(user.userId);
     return {
@@ -51,7 +51,7 @@ export class AuthController {
   }
 
   @Post('validate')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(DemoOrJwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async validateToken(@CurrentUser() user: CurrentUserData) {
     return {

@@ -9,10 +9,11 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto, RegisterDto, ChangePasswordDto } from './dto/user.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { DemoOrJwtAuthGuard } from '../auth/guards/demo-or-jwt.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import {
@@ -23,7 +24,7 @@ import { UserRole } from './schemas/user.schema';
 import * as bcrypt from 'bcryptjs';
 
 @Controller('users')
-@UseGuards(JwtAuthGuard)
+@UseGuards(DemoOrJwtAuthGuard)
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
@@ -133,7 +134,12 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id') id: string) {
+  async delete(@Param('id') id: string, @Query('hard') hard?: string) {
+    if (hard === 'true') {
+      await this.usersService.hardDelete(id);
+      return;
+    }
+
     await this.usersService.delete(id);
   }
 }

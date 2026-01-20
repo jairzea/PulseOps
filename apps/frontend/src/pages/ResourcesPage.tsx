@@ -7,6 +7,7 @@ import { useResourcesStore } from '../stores/resourcesStore';
 import { useMetricsStore } from '../stores/metricsStore';
 import { useConfirmModal } from '../hooks/useConfirmModal';
 import { PageHeader } from '../components/PageHeader';
+import { PermissionFeedback } from '../components/PermissionFeedback';
 import { ResourceModal } from '../components/ResourceModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { TableSkeleton } from '../components/TableSkeleton';
@@ -142,34 +143,13 @@ export const ResourcesPage: React.FC = () => {
                     {loading && <TableSkeleton rows={5} columns={5} />}
 
                     {error && (
-                        <div className="p-8 text-center">
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-900/20 mb-4">
-                                <svg
-                                    className="w-8 h-8 text-red-500"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
-                            </div>
-                            <p className="text-red-500 font-medium mb-2">Error al cargar recursos</p>
-                            <p className="text-gray-600 dark:text-gray-400 text-sm">{error || 'Error desconocido'}</p>
-                            <button
-                                onClick={() => fetchResources()}
-                                className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors"
-                            >
-                                Reintentar
-                            </button>
-                        </div>
+                        <PermissionFeedback
+                            message={typeof error === 'string' ? error : String(error)}
+                            onRetry={() => fetchResources()}
+                        />
                     )}
 
-                    {!loading && !error && resources.length === 0 && (
+                    {!loading && !error && activeResources.length === 0 && (
                         <div className="p-12 text-center">
                             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-800 mb-4">
                                 <svg
@@ -196,7 +176,7 @@ export const ResourcesPage: React.FC = () => {
                         </div>
                     )}
 
-                    {!loading && !error && resources.length > 0 && (
+                    {!loading && !error && activeResources.length > 0 && (
                         <table className="w-full">
                             <thead className="bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
                                 <tr>
@@ -218,7 +198,7 @@ export const ResourcesPage: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                                {resources.map((resource) => (
+                                {activeResources.map((resource) => (
                                     <tr key={resource.id} className="hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">

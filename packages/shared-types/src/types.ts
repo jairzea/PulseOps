@@ -23,6 +23,8 @@ export interface MetricSeries {
  */
 export interface AnalysisWindowConfig {
   size: number;  // número de períodos a analizar (default: 2)
+  // Opcional: umbrales personalizados que el motor puede aceptar para sobrescribir valores por defecto
+  thresholds?: ConditionThresholds;
 }
 
 /**

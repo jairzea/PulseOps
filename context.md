@@ -1,5 +1,17 @@
 # PulseOps – Documento de Conocimiento y Contexto
 
+## Migration Log (Frontend refactor por carpetas)
+
+- Iteración 1 (assets) — 20/01/2026:
+  - Acción: intenté mover `src/assets/**` → `src/shared/assets/**` y actualizar imports que apuntaban a `../assets/`.
+  - Archivos afectados: `src/pages/LoginPage.tsx`, `src/pages/LoginPage2.tsx`, `src/components/Toast.tsx`, `src/components/ShredderLoader.tsx`, `src/components/ConfirmModal.tsx` (imports actualizados temporalmente).
+  - Validación: ejecuté `npm run typecheck` y `npm run build`. El `tsc` devolvió errores existentes en el repo (no relacionados con el move de assets).
+  - Resultado: revertí los cambios (moví los assets de vuelta a `src/assets` y restauré los imports). No se realizó commit.
+  - Estado: revertido — pendiente repetir la iteración tras resolver errores de `tsc` preexistentes o ejecutar la migración en pasos más seguros.
+
+  - Próximo paso sugerido: corregir los errores de `tsc` o aislar la migración de assets en trozos (mover solo `animations/` y JSON primero), volver a intentar la iteración 1.
+
+
 # Instrucción obligatoria para la IA
 
 Este documento debe ser tratado como **memoria persistente del proyecto**.

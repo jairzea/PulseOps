@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   UseGuards,
@@ -18,17 +19,19 @@ import { RegisterDto } from '../users/dto/user.dto';
 import { UpdateResourceDto } from './dto/resource.dto';
 import { CreateResourceDto } from './dto/resource.dto';
 import { v4 as uuidv4 } from 'uuid';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { DemoOrJwtAuthGuard } from '../auth/guards/demo-or-jwt.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { ForbiddenException } from '../common/exceptions/app.exception';
 import { UserRole } from '../users/schemas/user.schema';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 /**
  * ResourcesController: proxy sobre UsersService para exponer una vista
  * operativa de los usuarios cuyo role === 'user'. Evita duplicar datos.
  */
 @Controller('resources')
-@UseGuards(JwtAuthGuard)
+@UseGuards(DemoOrJwtAuthGuard)
 export class ResourcesController {
   constructor(
     private usersService: UsersService,
@@ -39,6 +42,8 @@ export class ResourcesController {
 
   // GET /resources -> lista usuarios con role = user
   @Get()
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
   async findAll() {
     const users = await this.usersService.findAll(true);
     return users
@@ -57,9 +62,34 @@ export class ResourcesController {
       }));
   }
 
+  // DELETE /resources/:id -> eliminar recurso (proxy hacia UsersController.delete)
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async delete(@Param('id') id: string) {
+    try {
+      await this.usersService.delete(id);
+    } catch (err) {
+      // Si no existe, devolver NotFound para mantener contrato REST
+      if (err instanceof NotFoundException) {
+        throw err;
+      }
+      // Otros errores se propagan
+      throw err;
+    }
+  }
+
   // GET /resources/:id -> detalle completo del recurso
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string, @CurrentUser() currentUser: any) {
+    // Los usuarios solo pueden consultar su propio recurso; los admins pueden cualquiera
+    const isAdmin = currentUser?.role === UserRole.ADMIN;
+    const isOwner = currentUser?.id === id;
+    if (!isAdmin && !isOwner) {
+      throw new ForbiddenException('Forbidden resource');
+    }
+
     const user = await this.usersService.findById(id);
     if (!user || user.role !== UserRole.USER) {
       throw new NotFoundException('Resource not found');
@@ -111,7 +141,12 @@ export class ResourcesController {
 
   // GET /resources/:id/metrics -> métricas asociadas al recurso
   @Get(':id/metrics')
-  async getResourceMetrics(@Param('id') id: string) {
+  async getResourceMetrics(@Param('id') id: string, @CurrentUser() currentUser: any) {
+    const isAdmin = currentUser?.role === UserRole.ADMIN;
+    const isOwner = currentUser?.id === id;
+    if (!isAdmin && !isOwner) {
+      throw new ForbiddenException('Forbidden resource');
+    }
     // Delegar a MetricsService.findByResource (retorna métricas por resourceId)
     return this.metricsService.findByResource(id);
   }
@@ -166,19 +201,26 @@ export class ResourcesController {
 
   // PATCH /resources/:id -> actualizar resourceProfile y estado
   @Patch(':id')
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
   async update(@Param('id') id: string, @Body() dto: UpdateResourceDto) {
-    // Forzar que solo se pueda editar resourceProfile y isActive desde este endpoint
     const allowed: any = {};
 
-    // Construir resourceProfile si se envían campos específicos desde el frontend
+    // Construir resourceProfile a partir del payload (roleType, metricIds o resourceProfile)
     const rp: any = (dto as any).resourceProfile ? { ...(dto as any).resourceProfile } : {};
     if (dto.roleType !== undefined) rp.resourceType = dto.roleType;
     if (dto.metricIds !== undefined) rp.metricIds = dto.metricIds;
 
     if (Object.keys(rp).length > 0) allowed.resourceProfile = rp;
-    if (dto.isActive !== undefined) allowed.isActive = dto.isActive;
+
+    // Permitir actualizar el nombre del recurso cuando venga en el payload
+    if ((dto as any).name !== undefined) {
+      allowed.name = (dto as any).name;
+    }
+
+    // Ahora sólo los admins pueden acceder a este controlador, por lo que
+    // si isActive viene en el payload se acepta directamente.
+    if (dto.isActive !== undefined) {
+      allowed.isActive = dto.isActive;
+    }
 
     const user = await this.usersService.update(id, allowed);
 
@@ -187,7 +229,6 @@ export class ResourcesController {
       try {
         await this.metricsService.syncResourceAssociations(id, dto.metricIds || []);
       } catch (err) {
-        // No bloquear la respuesta por errores en sincronización de métricas
         console.warn('Error sincronizando asociaciones de métricas:', err);
       }
     }

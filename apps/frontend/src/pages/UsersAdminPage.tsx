@@ -59,10 +59,11 @@ export function UsersAdminPage() {
     };
 
     const handleDeleteUser = async (userId: string) => {
-        if (!confirm('¿Estás seguro de que deseas eliminar este usuario?')) return;
+        if (!confirm('¿Estás seguro de que deseas eliminar este usuario? Esta acción eliminará al usuario permanentemente.')) return;
 
         try {
-            await authAPI.deleteUser(userId);
+            // Hard delete desde la gestión de usuarios
+            await authAPI.deleteUser(userId, true);
             showToast('Usuario eliminado exitosamente', 'success');
             loadUsers();
         } catch (error: any) {

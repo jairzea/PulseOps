@@ -141,7 +141,18 @@ async function fetchJSON<T>(
       return await ErrorHandler.handleHttpError(response);
     }
 
-    return response.json();
+    // Manejar respuestas sin cuerpo (204 No Content) o cuerpos vacíos
+    const text = await response.text();
+    if (!text) {
+      return undefined as unknown as T;
+    }
+
+    try {
+      return JSON.parse(text) as T;
+    } catch (err) {
+      // Si ocurre un error al parsear, delegamos al manejador genérico
+      return ErrorHandler.handleGenericError(err);
+    }
   } catch (error) {
     // Delegar al ErrorHandler para procesar errores genéricos (network, etc)
     return ErrorHandler.handleGenericError(error);

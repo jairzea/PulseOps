@@ -9,13 +9,13 @@ import {
 } from '@nestjs/common';
 import { RulesService } from './rules.service';
 import { CreateRuleDto, SimulateRuleDto } from './dto/rule.dto';
-import { DemoAuthGuard } from '../auth/guards/demo-auth.guard';
+import { DemoOrJwtAuthGuard } from '../auth/guards/demo-or-jwt.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { User } from '../common/interfaces/user.interface';
 import { analysisEngine } from '@pulseops/analysis-engine';
 
 @Controller('rules')
-@UseGuards(DemoAuthGuard)
+@UseGuards(DemoOrJwtAuthGuard)
 export class RulesController {
   constructor(private readonly rulesService: RulesService) {}
 
@@ -42,7 +42,7 @@ export class RulesController {
     const config = configOverride
       ? {
           size: configOverride.windowSize || 2,
-          // TODO: Pasar thresholds si el engine los acepta en el futuro
+          thresholds: configOverride.thresholds as any,
         }
       : undefined;
 

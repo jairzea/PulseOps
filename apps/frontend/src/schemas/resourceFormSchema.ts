@@ -10,10 +10,7 @@ export const resourceFormSchema = z.object({
         .min(2, 'El nombre debe tener al menos 2 caracteres')
         .max(100, 'El nombre no puede exceder 100 caracteres'),
 
-    roleType: z.enum(['DEV', 'TL', 'OTHER'], {
-        required_error: 'El tipo de rol es requerido',
-        invalid_type_error: 'Tipo de rol inválido',
-    }),
+    roleType: z.enum(['DEV', 'TL', 'OTHER'] as const),
 
     isActive: z.boolean().default(true),
 

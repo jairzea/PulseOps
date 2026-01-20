@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, TooltipProps } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Record } from '../services/apiClient';
 import { useTheme } from '../contexts/ThemeContext';
 

@@ -77,7 +77,6 @@ export const RecordForm: React.FC<RecordFormProps> = ({
         formState: { errors },
         setValue,
         watch,
-        reset,
     } = useForm<RecordFormData>({
         resolver: yupResolver(createRecordSchema(resourceMetrics.length > 0)) as any,
         defaultValues: {
