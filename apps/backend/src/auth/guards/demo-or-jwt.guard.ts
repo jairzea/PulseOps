@@ -11,8 +11,17 @@ export class DemoOrJwtAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
 
     if (authMode === 'demo') {
-      // Inyectar usuario demo para desarrollo con la misma forma que JwtStrategy
-      // JwtStrategy adjunta { userId, email, role } a request.user
+      // Si en modo demo se provee un Authorization header, intentar delegar
+      // al guard JWT para permitir pruebas con tokens reales.
+      const authHeader = (request.headers && request.headers.authorization) || null;
+      if (authHeader) {
+        const JwtGuardClass = AuthGuard('jwt') as any;
+        const jwtGuard = new JwtGuardClass();
+        const result = await jwtGuard.canActivate(context as any);
+        return result as boolean;
+      }
+
+      // Si no hay Authorization, inyectar usuario demo para desarrollo
       request.user = {
         userId: 'demo-admin',
         id: 'demo-admin',
