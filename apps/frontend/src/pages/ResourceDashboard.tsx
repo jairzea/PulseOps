@@ -10,6 +10,7 @@ import { ConditionFormula } from '../components/ConditionFormula';
 import { ConditionCard } from '../components/ConditionCard';
 import { RecordModal } from '../components/RecordModal';
 import { useRecordsStore } from '../stores/recordsStore';
+import { useAuth } from '../contexts/AuthContext';
 
 export function ResourceDashboard() {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
@@ -18,6 +19,7 @@ export function ResourceDashboard() {
   const conditionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const { resources, loading: loadingResources } = useResources();
+  const { user } = useAuth();
   const { metrics, loading: loadingMetrics } = useMetrics({ resourceId: selectedResourceId });
   const { conditions, loading: loadingConditions } = useConditionsMetadata();
 
@@ -45,10 +47,18 @@ export function ResourceDashboard() {
 
   // Auto-select first resource and metric when loaded
   useEffect(() => {
+    // If user is not admin, force their own resource and skip auto-select
+    if (user && user.role !== 'admin') {
+      if (user.id && user.id !== selectedResourceId) {
+        setSelectedResourceId(user.id);
+      }
+      return;
+    }
+
     if (!selectedResourceId && resources.length > 0) {
       setSelectedResourceId(resources[0].id);
     }
-  }, [resources, selectedResourceId]);
+  }, [resources, selectedResourceId, user]);
 
   // Auto-select first metric when metrics change or resource changes
   useEffect(() => {
@@ -116,12 +126,14 @@ export function ResourceDashboard() {
           <div className="flex items-center justify-between">
             {/* Selectors */}
             <div className="flex items-center gap-3">
-              <ResourceSelector
-                resources={resources}
-                selectedId={selectedResourceId}
-                onSelect={setSelectedResourceId}
-                loading={loadingResources}
-              />
+              {user && user.role === 'admin' && (
+                <ResourceSelector
+                  resources={resources}
+                  selectedId={selectedResourceId}
+                  onSelect={setSelectedResourceId}
+                  loading={loadingResources}
+                />
+              )}
               <MetricSelector
                 metrics={metrics}
                 selectedKey={selectedMetricKey}
