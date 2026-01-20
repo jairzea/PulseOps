@@ -10,10 +10,33 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import { useConfirmModal } from '../hooks/useConfirmModal';
 import { PageHeader } from '../components/PageHeader';
 import { PermissionFeedback } from '../components/PermissionFeedback';
+import { useAuth } from '../contexts/AuthContext';
 import { Metric } from '../services/apiClient';
 import { useToast } from '../hooks/useToast';
 
 export const MetricsPage: React.FC = () => {
+    const { user } = useAuth();
+
+    // Bloquear acceso para usuarios con rol 'user'
+    if (user?.role === 'user') {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <PageHeader
+                        title="Métricas"
+                        description="Gestiona las métricas del sistema (Story Points, Performance, Integraciones, etc.)"
+                    />
+                    <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors duration-300">
+                        <PermissionFeedback
+                            title="Acceso restringido"
+                            message="No tienes permisos para acceder a este módulo. Solo los administradores pueden gestionar métricas."
+                        />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     // Estado local de UI
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingMetric, setEditingMetric] = useState<Metric | null>(null);

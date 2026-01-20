@@ -41,12 +41,12 @@ export class ResourcesController {
   ) {}
 
   // GET /resources -> lista usuarios con role = user
+  // ADMIN: ve todos los recursos
+  // USER: solo ve su propio recurso
   @Get()
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
-  async findAll() {
+  async findAll(@CurrentUser() currentUser: any) {
     const users = await this.usersService.findAll(true);
-    return users
+    const resourceUsers = users
       .filter((u) => u.role === UserRole.USER)
       .map((user) => ({
         id: user._id.toString(),
@@ -60,6 +60,19 @@ export class ResourcesController {
         createdAt: user.createdAt,
         updatedAt: user.updatedAt || null,
       }));
+
+    // Si el usuario actual es ADMIN, devolver todos los recursos
+    if (currentUser?.role === UserRole.ADMIN) {
+      return resourceUsers;
+    }
+
+    // Si es USER, solo devolver su propio recurso
+    if (currentUser?.role === UserRole.USER) {
+      return resourceUsers.filter((r) => r.id === currentUser.id);
+    }
+
+    // Si no está autenticado o no tiene rol válido, devolver array vacío
+    return [];
   }
 
   // DELETE /resources/:id -> eliminar recurso (proxy hacia UsersController.delete)

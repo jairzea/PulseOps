@@ -8,6 +8,7 @@ import type {
 import { useToast } from '../hooks/useToast';
 import { PulseLoader } from '../components/PulseLoader';
 import { PermissionFeedback } from '../components/PermissionFeedback';
+import { useAuth } from '../contexts/AuthContext';
 
 // Step Components
 interface StepProps {
@@ -995,6 +996,28 @@ function SummaryCard({ title, color, items }: SummaryCardProps) {
  * Página de configuración de umbrales y condiciones - Wizard de 3 pasos
  */
 export function ConfigurationPage() {
+    const { user } = useAuth();
+
+    // Bloquear acceso para usuarios con rol 'user'
+    if (user?.role === 'user') {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Configuración</h1>
+                        <p className="text-gray-600 dark:text-gray-400">Gestiona los umbrales y fórmulas del motor de análisis</p>
+                    </div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors duration-300">
+                        <PermissionFeedback
+                            title="Acceso restringido"
+                            message="No tienes permisos para acceder a este módulo. Solo los administradores pueden gestionar la configuración del sistema."
+                        />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     const [activeConfig, setActiveConfig] = useState<AnalysisConfiguration | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [errorConfig, setErrorConfig] = useState<string | null>(null);

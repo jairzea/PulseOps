@@ -8,6 +8,7 @@ import { useMetricsStore } from '../stores/metricsStore';
 import { useConfirmModal } from '../hooks/useConfirmModal';
 import { PageHeader } from '../components/PageHeader';
 import { PermissionFeedback } from '../components/PermissionFeedback';
+import { useAuth } from '../contexts/AuthContext';
 import { ResourceModal } from '../components/ResourceModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { TableSkeleton } from '../components/TableSkeleton';
@@ -22,6 +23,28 @@ const ROLE_TYPE_LABELS: Record<string, string> = {
 };
 
 export const ResourcesPage: React.FC = () => {
+    const { user } = useAuth();
+
+    // Bloquear acceso para usuarios con rol 'user'
+    if (user?.role === 'user') {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <PageHeader
+                        title="Recursos"
+                        description="Gestiona los recursos del equipo (desarrolladores, líderes técnicos, etc.)"
+                    />
+                    <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors duration-300">
+                        <PermissionFeedback
+                            title="Acceso restringido"
+                            message="No tienes permisos para acceder a este módulo. Solo los administradores pueden gestionar recursos."
+                        />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     // Estado local de UI
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingResource, setEditingResource] = useState<Resource | null>(null);

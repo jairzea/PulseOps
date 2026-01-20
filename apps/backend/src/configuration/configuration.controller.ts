@@ -157,4 +157,3 @@ export class ConfigurationController {
     return this.rulesService.toggleRuleStatus(id, isActive);
   }
 }
-

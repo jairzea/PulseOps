@@ -2,12 +2,16 @@ import { useState, useEffect } from 'react';
 import { authAPI } from '../services/authService';
 import { showToast } from '../utils/toast';
 import { UserWithMetadata, RegisterData } from '../types/auth';
+import { useResources } from '../hooks/useResources';
+import { ResourceSelector } from '../components/ResourceSelector';
 
 export function UsersAdminPage() {
     const [users, setUsers] = useState<UserWithMetadata[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const { resources, loading: loadingResources } = useResources();
+    const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
 
     // Formulario de creación
     const [formData, setFormData] = useState<RegisterData>({
@@ -19,9 +23,14 @@ export function UsersAdminPage() {
 
     useEffect(() => {
         loadUsers();
-    const { resources, loading: loadingResources } = useResources();
-    const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
     }, []);
+
+    // Preseleccionar el primer recurso cuando se cargan los recursos y el rol es 'user'
+    useEffect(() => {
+        if (!loadingResources && resources.length > 0 && formData.role === 'user' && !selectedResourceId) {
+            setSelectedResourceId(resources[0].id);
+        }
+    }, [loadingResources, resources, formData.role, selectedResourceId]);
 
     const loadUsers = async () => {
         try {
@@ -37,25 +46,25 @@ export function UsersAdminPage() {
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await authAPI.createUser(formData);
+            const payload = { ...formData } as RegisterData;
+            if (selectedResourceId && formData.role === 'user') {
+                payload.resourceProfile = { resourceId: selectedResourceId };
+            }
+            await authAPI.createUser(payload);
             showToast('Usuario creado exitosamente', 'success');
             setShowCreateModal(false);
             setFormData({ email: '', password: '', name: '', role: 'user' });
+            setSelectedResourceId(null);
             loadUsers();
         } catch (error: any) {
             showToast(error.message || 'Error al crear usuario', 'error');
         }
     };
 
-            const payload = { ...formData } as RegisterData;
-            if (selectedResourceId) {
-                payload.resourceProfile = { resourceId: selectedResourceId };
-            }
-            await authAPI.createUser(payload);
+    const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
         try {
             await authAPI.updateUser(userId, { isActive: !currentStatus });
             showToast(
-            setSelectedResourceId(null);
                 `Usuario ${!currentStatus ? 'activado' : 'desactivado'} exitosamente`,
                 'success'
             );
@@ -183,7 +192,7 @@ export function UsersAdminPage() {
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
                                             <button
-                                                onClick={() => handleToggleActive(user.id, user.isActive)}
+                                                onClick={() => handleToggleUserStatus(user.id, user.isActive)}
                                                 className="p-2 text-yellow-600 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
                                                 title={user.isActive ? 'Desactivar' : 'Activar'}
                                             >
@@ -243,19 +252,6 @@ export function UsersAdminPage() {
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                     className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required
-                            {/* Resource selector: preselected and disabled when creating a 'user' */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Recurso asociado
-                                </label>
-                                <ResourceSelector
-                                    resources={resources}
-                                    selectedId={selectedResourceId}
-                                    onSelect={(id) => setSelectedResourceId(id)}
-                                    loading={loadingResources}
-                                    disabled={formData.role === 'user'}
-                                />
-                            </div>
                                 />
                             </div>
                             <div>
@@ -277,15 +273,42 @@ export function UsersAdminPage() {
                                 </label>
                                 <select
                                     value={formData.role}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, role: e.target.value as 'admin' | 'user' })
-                                    }
+                                    onChange={(e) => {
+                                        const newRole = e.target.value as 'admin' | 'user';
+                                        setFormData({ ...formData, role: newRole });
+                                        // Si cambia a 'user' y hay recursos, preseleccionar el primero
+                                        if (newRole === 'user' && resources.length > 0 && !selectedResourceId) {
+                                            setSelectedResourceId(resources[0].id);
+                                        }
+                                        // Si cambia a 'admin', limpiar selección
+                                        if (newRole === 'admin') {
+                                            setSelectedResourceId(null);
+                                        }
+                                    }}
                                     className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value="user">Usuario</option>
                                     <option value="admin">Administrador</option>
                                 </select>
                             </div>
+                            {/* Selector de recurso: preseleccionado y deshabilitado cuando el rol es 'user' */}
+                            {formData.role === 'user' && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Recurso asociado
+                                    </label>
+                                    <ResourceSelector
+                                        resources={resources}
+                                        selectedId={selectedResourceId}
+                                        onSelect={(id) => setSelectedResourceId(id)}
+                                        loading={loadingResources}
+                                        disabled={true}
+                                    />
+                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                        El recurso se asigna automáticamente para usuarios con rol "Usuario"
+                                    </p>
+                                </div>
+                            )}
                             <div className="flex gap-3 pt-4">
                                 <button
                                     type="submit"
@@ -298,6 +321,7 @@ export function UsersAdminPage() {
                                     onClick={() => {
                                         setShowCreateModal(false);
                                         setFormData({ email: '', password: '', name: '', role: 'user' });
+                                        setSelectedResourceId(null);
                                     }}
                                     className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
                                 >
