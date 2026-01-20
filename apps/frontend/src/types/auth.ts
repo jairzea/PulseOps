@@ -20,6 +20,7 @@ export interface RegisterData {
     password: string;
     name: string;
     role?: 'admin' | 'user';
+    resourceProfile?: Record<string, any>;
 }
 
 export interface UpdateUserData {

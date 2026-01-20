@@ -6,6 +6,7 @@ interface ResourceSelectorProps {
     selectedId: string | null;
     onSelect: (resourceId: string) => void;
     loading?: boolean;
+    disabled?: boolean;
 }
 
 export function ResourceSelector({
@@ -13,6 +14,7 @@ export function ResourceSelector({
     selectedId,
     onSelect,
     loading = false,
+    disabled = false,
 }: ResourceSelectorProps) {
     if (loading) {
         return (
@@ -33,7 +35,7 @@ export function ResourceSelector({
                 value={selectedId || ''}
                 onChange={onSelect}
                 placeholder={resources.length === 0 ? 'No resources available' : 'Select a resource'}
-                disabled={resources.length === 0}
+                disabled={disabled || resources.length === 0}
             />
         </div>
     );

@@ -19,6 +19,8 @@ export function UsersAdminPage() {
 
     useEffect(() => {
         loadUsers();
+    const { resources, loading: loadingResources } = useResources();
+    const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
     }, []);
 
     const loadUsers = async () => {
@@ -45,10 +47,15 @@ export function UsersAdminPage() {
         }
     };
 
-    const handleToggleActive = async (userId: string, currentStatus: boolean) => {
+            const payload = { ...formData } as RegisterData;
+            if (selectedResourceId) {
+                payload.resourceProfile = { resourceId: selectedResourceId };
+            }
+            await authAPI.createUser(payload);
         try {
             await authAPI.updateUser(userId, { isActive: !currentStatus });
             showToast(
+            setSelectedResourceId(null);
                 `Usuario ${!currentStatus ? 'activado' : 'desactivado'} exitosamente`,
                 'success'
             );
@@ -236,6 +243,19 @@ export function UsersAdminPage() {
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                     className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required
+                            {/* Resource selector: preselected and disabled when creating a 'user' */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Recurso asociado
+                                </label>
+                                <ResourceSelector
+                                    resources={resources}
+                                    selectedId={selectedResourceId}
+                                    onSelect={(id) => setSelectedResourceId(id)}
+                                    loading={loadingResources}
+                                    disabled={formData.role === 'user'}
+                                />
+                            </div>
                                 />
                             </div>
                             <div>
