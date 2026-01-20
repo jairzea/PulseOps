@@ -27,8 +27,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         }
 
         // Este objeto se adjunta a request.user
+        // Incluir `id` además de `userId` para mantener compatibilidad
+        // con código que espera `user.id` (p.ej. controllers que usan CurrentUser())
         return {
             userId: payload.sub,
+            id: payload.sub,
             email: payload.email,
             role: payload.role,
         };
