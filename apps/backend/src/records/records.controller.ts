@@ -62,8 +62,17 @@ export class RecordsController {
       return this.recordsService.findManyPaginated(query, filters);
     }
 
-    // Mantener compatibilidad: sin paginación devolver todo
-    return this.recordsService.findMany(filters);
+    // Mantener compatibilidad: sin paginación devolver todo en formato paginado
+    const allRecords = await this.recordsService.findMany(filters);
+    return {
+      data: allRecords,
+      meta: {
+        page: 1,
+        pageSize: allRecords.length,
+        totalItems: allRecords.length,
+        totalPages: 1,
+      },
+    };
   }
 
   @Delete(':id')

@@ -40,6 +40,17 @@ export function ResourceDashboard() {
 
   const { result: analysis, loading: loadingAnalysis, evaluate, reset: resetAnalysis } = useAnalysis();
 
+  // Debug: Monitorear cambios en records y analysis
+  useEffect(() => {
+    console.log('[Dashboard] Data state:', {
+      recordsCount: records?.length,
+      hasAnalysis: !!analysis,
+      analysisCondition: analysis?.evaluation?.condition,
+      loadingRecords,
+      loadingAnalysis
+    });
+  }, [records, analysis, loadingRecords, loadingAnalysis]);
+
   // Resetear estado SOLO cuando realmente cambia el usuario (logout/login)
   useEffect(() => {
     const currentUserId = user?.id;
@@ -60,6 +71,7 @@ export function ResourceDashboard() {
   // Fetch records cuando cambian resource/metric
   useEffect(() => {
     if (selectedResourceId && selectedMetricKey) {
+      console.log('[Dashboard] Fetching records:', { selectedResourceId, selectedMetricKey });
       fetchRecords({
         resourceId: selectedResourceId,
         metricKey: selectedMetricKey,
@@ -148,11 +160,11 @@ export function ResourceDashboard() {
   // Trigger analysis when resource or metric changes
   useEffect(() => {
     if (selectedResourceId && selectedMetricKey) {
+      console.log('[Dashboard] Triggering analysis:', { selectedResourceId, selectedMetricKey });
       evaluate({
         resourceId: selectedResourceId,
         metricKey: selectedMetricKey,
       });
-      console.log("select", selectedMetricKey)
     }
   }, [selectedResourceId, selectedMetricKey, evaluate]);
 
@@ -170,10 +182,11 @@ export function ResourceDashboard() {
     }
   }, [analysis?.evaluation?.condition]);
 
-  const selectedMetric = useMemo(
-    () => Array.isArray(metrics) ? metrics.find((m) => m.key === selectedMetricKey) : undefined,
-    [metrics, selectedMetricKey]
-  );
+  const selectedMetric = useMemo(() => {
+    const metric = Array.isArray(metrics) ? metrics.find((m) => m.key === selectedMetricKey) : undefined;
+    console.log('[Dashboard] Selected metric:', { selectedMetricKey, metric, metricsCount: metrics?.length });
+    return metric;
+  }, [metrics, selectedMetricKey]);
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
@@ -249,7 +262,7 @@ export function ResourceDashboard() {
                     isActive={analysis?.evaluation?.condition === conditionMeta.condition}
                     confidence={
                       analysis?.evaluation?.condition === conditionMeta.condition
-                        ? analysis.evaluation.confidence
+                        ? analysis?.evaluation?.confidence
                         : undefined
                     }
                   />
@@ -294,11 +307,11 @@ export function ResourceDashboard() {
                   <div>
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Inclinación</div>
                     <div className="flex items-baseline gap-2">
-                      <span className={`text-3xl font-bold ${analysis.evaluation.inclination.value > 0 ? 'text-green-600 dark:text-green-400' : analysis.evaluation.inclination.value < 0 ? 'text-red-600 dark:text-red-400' : 'text-yellow-600 dark:text-yellow-400'
+                      <span className={`text-3xl font-bold ${(analysis?.evaluation?.inclination?.value ?? 0) > 0 ? 'text-green-600 dark:text-green-400' : (analysis?.evaluation?.inclination?.value ?? 0) < 0 ? 'text-red-600 dark:text-red-400' : 'text-yellow-600 dark:text-yellow-400'
                         }`}>
-                        {analysis.evaluation.inclination.value > 0 ? '+' : ''}{analysis.evaluation.inclination.value.toFixed(1)}%
+                        {(analysis?.evaluation?.inclination?.value ?? 0) > 0 ? '+' : ''}{(analysis?.evaluation?.inclination?.value ?? 0).toFixed(1)}%
                       </span>
-                      <span className="text-2xl">{analysis.evaluation.inclination.value > 0 ? '↗' : analysis.evaluation.inclination.value < 0 ? '↘' : '→'}</span>
+                      <span className="text-2xl">{(analysis?.evaluation?.inclination?.value ?? 0) > 0 ? '↗' : (analysis?.evaluation?.inclination?.value ?? 0) < 0 ? '↘' : '→'}</span>
                     </div>
                   </div>
 
@@ -306,7 +319,7 @@ export function ResourceDashboard() {
                   <div>
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Cambio</div>
                     <div className="text-xl font-semibold text-gray-900 dark:text-white">
-                      {records.length >= 2 ? (
+                      {records && records.length >= 2 ? (
                         <>
                           {records[records.length - 2].value} → {records[records.length - 1].value}
                           <span className="text-blue-600 dark:text-blue-400 ml-2">
@@ -322,7 +335,7 @@ export function ResourceDashboard() {
                   <div>
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Alertas</div>
                     <div className="space-y-2">
-                      {analysis.evaluation?.signals && analysis.evaluation.signals.length > 0 ? (
+                      {analysis?.evaluation?.signals && analysis.evaluation.signals.length > 0 ? (
                         analysis.evaluation.signals.slice(0, 2).map((signal, idx) => (
                           <div key={idx} className="flex items-center gap-2">
                             <span className={`px-2 py-1 rounded text-xs font-semibold ${signal.severity === 'HIGH' ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :

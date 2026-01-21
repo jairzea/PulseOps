@@ -59,13 +59,22 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
   },
 
   fetchRecords: async (params) => {
+    console.log('[RecordsStore] Fetching records with params:', params);
     set({ loading: true, error: null });
     try {
       const data = await apiClient.getRecords(params);
+      console.log('[RecordsStore] Records fetched successfully:', data?.length, 'records');
       set({ records: data, loading: false });
     } catch (err) {
+      // Si el error es "No records found", simplemente establecer array vacío
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar registros';
+      const isNoRecordsError = errorMessage.includes('No records found');
+      
+      console.log('[RecordsStore] Error fetching records:', errorMessage, 'isNoRecordsError:', isNoRecordsError);
+      
       set({
-        error: err instanceof Error ? err.message : 'Error al cargar registros',
+        records: [], // Siempre limpiar records en caso de error
+        error: isNoRecordsError ? null : errorMessage, // No mostrar error si simplemente no hay records
         loading: false,
       });
     }

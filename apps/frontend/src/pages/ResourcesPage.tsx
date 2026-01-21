@@ -2,10 +2,11 @@
  * ResourcesPage - Gestión de recursos (desarrolladores, líderes técnicos, etc.)
  * CRUD completo con componentes reutilizables
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useResourcesStore } from '../stores/resourcesStore';
 import { useMetricsStore } from '../stores/metricsStore';
 import { useConfirmModal } from '../hooks/useConfirmModal';
+import { usePaginatedData } from '../hooks/usePaginatedData';
 import { PageHeader } from '../components/PageHeader';
 import { PermissionFeedback } from '../components/PermissionFeedback';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,12 +14,10 @@ import { ResourceModal } from '../components/ResourceModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { TableSkeleton } from '../components/TableSkeleton';
 import { ResourceFormData } from '../schemas/resourceFormSchema';
-import { Resource, apiClient } from '../services/apiClient';
+import { Resource, apiClient, resourcesApi } from '../services/apiClient';
 import { useToast } from '../hooks/useToast';
-import { usePagination } from '../hooks/usePagination';
 import { PaginationControls } from '../components/PaginationControls';
 import { SearchInput } from '../components/SearchInput';
-import type { PaginationMeta } from '../types/pagination';
 
 const ROLE_TYPE_LABELS: Record<string, string> = {
     DEV: 'Desarrollador',
@@ -55,17 +54,22 @@ export const ResourcesPage: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
-    // Estado local para datos paginados del servidor
-    const [resources, setResources] = useState<Resource[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [meta, setMeta] = useState<PaginationMeta>({
-        page: 1,
-        pageSize: 10,
-        totalItems: 0,
-        totalPages: 0,
+    // Memorizar fetchFn para evitar re-renders innecesarios
+    const fetchResources = useCallback((params: any) => resourcesApi.getPaginated(params), []);
+
+    // Hook genérico para datos paginados
+    const { 
+        data: resources, 
+        meta, 
+        loading, 
+        error, 
+        reload, 
+        pagination 
+    } = usePaginatedData<Resource>({
+        fetchFn: fetchResources,
+        initialPageSize: 10,
     });
-    
+
     // Estado para estadísticas globales
     const [stats, setStats] = useState({
         totalResources: 0,
@@ -84,42 +88,24 @@ export const ResourcesPage: React.FC = () => {
     const { metrics, fetchMetrics } = useMetricsStore();
     const { confirm, ...confirmModalProps } = useConfirmModal();
     const { success, error: showError } = useToast();
-    const pagination = usePagination(10);
-
-    // Cargar recursos paginados del servidor
-    const loadResources = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await apiClient.getResourcesPaginated(pagination.params);
-            setResources(response.data);
-            setMeta(response.meta);
-        } catch (err) {
-            console.error('Error al cargar recursos:', err);
-            setError(err instanceof Error ? err.message : 'Error al cargar recursos');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     // Cargar estadísticas globales independientemente de la paginación
-    const loadStats = async () => {
+    const loadStats = useCallback(async () => {
         try {
+            console.log('[ResourcesPage] Cargando stats...');
             const statsData = await apiClient.getResourcesStats();
+            console.log('[ResourcesPage] Stats cargados:', statsData);
             setStats(statsData);
         } catch (err) {
-            console.error('Error al cargar estadísticas:', err);
+            console.error('[ResourcesPage] Error al cargar estadísticas:', err);
         }
-    };
+    }, []);
 
+    // Cargar métricas y stats solo al montar
     useEffect(() => {
-        loadResources();
         fetchMetrics();
-    }, [pagination.params, fetchMetrics]);
-
-    // Cargar estadísticas al montar el componente
-    useEffect(() => {
         loadStats();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleOpenModal = (resource?: Resource) => {
@@ -143,7 +129,7 @@ export const ResourcesPage: React.FC = () => {
                 success('Recurso creado correctamente');
             }
             handleCloseModal();
-            await loadResources(); // Recargar datos del servidor
+            await reload(); // Usar reload del hook
             await loadStats(); // Recargar estadísticas
         } catch (err) {
             console.error('Error al guardar recurso:', err);
@@ -167,7 +153,7 @@ export const ResourcesPage: React.FC = () => {
             try {
                 await deleteResource(resource.id);
                 success('Recurso eliminado correctamente');
-                await loadResources(); // Recargar datos del servidor
+                await reload(); // Usar reload del hook
                 await loadStats(); // Recargar estadísticas
             } catch (err) {
                 showError('Error al eliminar el recurso');
@@ -191,7 +177,7 @@ export const ResourcesPage: React.FC = () => {
                 />
 
                 {/* Estadísticas */}
-                {!loading && !error && stats.totalResources > 0 && (
+                {stats.totalResources > 0 && (
                     <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4 fade-in">
                         <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/50 dark:to-blue-800/30 rounded-lg border border-blue-200 dark:border-blue-700/50 p-4 transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-600">
                             <p className="text-blue-600 dark:text-blue-300 text-sm font-medium">Total de Recursos</p>
@@ -228,7 +214,7 @@ export const ResourcesPage: React.FC = () => {
                     {error && (
                         <PermissionFeedback
                             message={typeof error === 'string' ? error : String(error)}
-                            onRetry={loadResources}
+                            onRetry={reload}
                         />
                     )}
 

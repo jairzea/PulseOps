@@ -82,7 +82,7 @@ export const HistoricalChart = memo(function HistoricalChart({ records, metricNa
 
   // Solo mostrar skeleton si está loading Y no hay datos
   // Esto permite que el gráfico permanezca visible mientras carga nuevos datos
-  if (loading && records.length === 0) {
+  if (loading && (!records || records.length === 0)) {
     return (
       <div className="w-full h-96 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse transition-colors duration-300 flex items-center justify-center">
         <div className="text-gray-500">Loading chart data...</div>
@@ -90,7 +90,7 @@ export const HistoricalChart = memo(function HistoricalChart({ records, metricNa
     );
   }
 
-  if (records.length === 0) {
+  if (!records || records.length === 0) {
     return (
       <div className="w-full h-96 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center border border-gray-200 dark:border-gray-700 transition-colors duration-300">
         <div className="text-center">
