@@ -7,6 +7,8 @@ import { ResourceSelector } from '../components/ResourceSelector';
 import { usePagination } from '../hooks/usePagination';
 import { SearchInput } from '../components/SearchInput';
 import { PaginationControls } from '../components/PaginationControls';
+import { TableSkeleton } from '../components/TableSkeleton';
+import { PageHeader } from '../components/PageHeader';
 import type { PaginationMeta } from '../types/pagination';
 
 export function UsersAdminPage() {
@@ -99,29 +101,17 @@ export function UsersAdminPage() {
         }
     };
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors duration-300">
-                <div className="text-gray-600 dark:text-gray-400">Cargando usuarios...</div>
-            </div>
-        );
-    }
-
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-20 px-6 transition-colors duration-300">
-            <div className="max-w-7xl mx-auto">
-                <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Gestión de Usuarios</h1>
-                    <button
-                        onClick={() => setShowCreateModal(true)}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
-                    >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Nuevo Usuario
-                    </button>
-                </div>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <PageHeader
+                    title="Gestión de Usuarios"
+                    description="Administra usuarios del sistema, crea nuevas cuentas y gestiona permisos"
+                    action={{
+                        label: 'Nuevo Usuario',
+                        onClick: () => setShowCreateModal(true),
+                    }}
+                />
 
                 {/* Búsqueda */}
                 <div className="mb-6">
@@ -134,28 +124,31 @@ export function UsersAdminPage() {
                 </div>
 
                 {/* Tabla de usuarios */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-500 ease-in-out min-h-[500px]">
+                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-500 ease-in-out min-h-[500px]">
+                    {isLoading && <TableSkeleton columns={5} rows={6} showActions={true} />}
+
+                    {!isLoading && (
                     <table className="w-full fade-in">
-                        <thead className="bg-gray-100 dark:bg-gray-700 transition-colors duration-300">
+                        <thead className="bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                                     Usuario
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                                     Rol
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                                     Estado
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                                     Último acceso
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                                     Acciones
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700 transition-colors duration-300">
+                        <tbody className="divide-y divide-gray-200 dark:divide-gray-800 transition-colors duration-300">
                             {users.map((user) => (
                                 <tr key={user.id} className="hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-all duration-200 ease-in-out">
                                     <td className="px-6 py-4">
@@ -220,15 +213,16 @@ export function UsersAdminPage() {
                             ))}
                         </tbody>
                     </table>
+                    )}
 
-                    {users.length === 0 && (
+                    {!isLoading && users.length === 0 && (
                         <div className="text-center py-12 text-gray-600 dark:text-gray-400">
                             {pagination.search ? 'No se encontraron usuarios' : 'No hay usuarios registrados'}
                         </div>
                     )}
 
                     {/* Controles de paginación */}
-                    {users.length > 0 && (
+                    {!isLoading && users.length > 0 && (
                         <PaginationControls
                             meta={meta}
                             page={pagination.page}
