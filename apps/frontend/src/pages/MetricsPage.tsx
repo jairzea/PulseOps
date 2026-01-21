@@ -49,13 +49,13 @@ export const MetricsPage: React.FC = () => {
     const fetchMetrics = useCallback((params: any) => metricsApi.getPaginated(params), []);
 
     // Hook genérico para datos paginados
-    const { 
-        data: metrics, 
-        meta, 
-        loading, 
-        error, 
-        reload, 
-        pagination 
+    const {
+        data: metrics,
+        meta,
+        loading,
+        error,
+        reload,
+        pagination
     } = usePaginatedData<Metric>({
         fetchFn: fetchMetrics,
         initialPageSize: 10,

@@ -7,6 +7,7 @@ import type {
 } from '@pulseops/shared-types';
 import { useToast } from '../hooks/useToast';
 import { PulseLoader } from '../components/PulseLoader';
+import { LoadingButton } from '../components/LoadingButton';
 import { PermissionFeedback } from '../components/PermissionFeedback';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -23,6 +24,7 @@ function Step1Formulas() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [expandedCondition, setExpandedCondition] = useState<string | null>('AFLUENCIA');
+    const [savingCondition, setSavingCondition] = useState<string | null>(null);
     const { success, error: showError } = useToast();
 
     const conditions = [
@@ -127,6 +129,7 @@ function Step1Formulas() {
         if (!pb) return;
 
         try {
+            setSavingCondition(condition);
             await apiClient.updatePlaybook(condition, {
                 title: pb.title,
                 steps: pb.steps.filter(s => s.trim() !== ''), // Filtrar pasos vacíos
@@ -137,6 +140,8 @@ function Step1Formulas() {
         } catch (error) {
             console.error('Error saving playbook:', error);
             showError(`No se pudo guardar la fórmula de ${condition}`);
+        } finally {
+            setSavingCondition(null);
         }
     };
 
@@ -220,15 +225,17 @@ function Step1Formulas() {
                                             />
                                             <span className="text-sm text-gray-700 dark:text-gray-300">Activa</span>
                                         </label>
-                                        <button
+                                        <LoadingButton
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 savePlaybook(key);
                                             }}
-                                            className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded transition-colors"
+                                            loading={savingCondition === key}
+                                            variant="primary"
+                                            className="text-xs px-3 py-1"
                                         >
                                             💾 Guardar
-                                        </button>
+                                        </LoadingButton>
                                     </div>
 
                                     <div>

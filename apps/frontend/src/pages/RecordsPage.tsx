@@ -62,13 +62,13 @@ export const RecordsPage: React.FC = () => {
     }), [selectedResourceId, selectedMetricKey]);
 
     // Hook genérico para datos paginados con filtros
-    const { 
-        data: records, 
-        meta, 
-        loading, 
-        error: recordsError, 
-        reload, 
-        pagination 
+    const {
+        data: records,
+        meta,
+        loading,
+        error: recordsError,
+        reload,
+        pagination
     } = usePaginatedData<MetricRecord>({
         fetchFn: fetchRecords,
         initialPageSize: 10,
