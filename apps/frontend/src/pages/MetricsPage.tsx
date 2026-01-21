@@ -11,11 +11,12 @@ import { useConfirmModal } from '../hooks/useConfirmModal';
 import { PageHeader } from '../components/PageHeader';
 import { PermissionFeedback } from '../components/PermissionFeedback';
 import { useAuth } from '../contexts/AuthContext';
-import { Metric } from '../services/apiClient';
+import { Metric, apiClient } from '../services/apiClient';
 import { useToast } from '../hooks/useToast';
 import { usePagination } from '../hooks/usePagination';
 import { PaginationControls } from '../components/PaginationControls';
 import { SearchInput } from '../components/SearchInput';
+import type { PaginationMeta } from '../types/pagination';
 
 export const MetricsPage: React.FC = () => {
     const { user } = useAuth();
@@ -45,43 +46,55 @@ export const MetricsPage: React.FC = () => {
     const [editingMetric, setEditingMetric] = useState<Metric | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
-    // Zustand solo para datos globales
-    const { metrics, loading, error, fetchMetrics, deleteMetric } = useMetricsStore();
+    // Estado local para datos paginados del servidor
+    const [metrics, setMetrics] = useState<Metric[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [meta, setMeta] = useState<PaginationMeta>({
+        page: 1,
+        pageSize: 10,
+        totalItems: 0,
+        totalPages: 0,
+    });
+
+    // Zustand solo para eliminar
+    const { deleteMetric } = useMetricsStore();
     const { resources } = useResources();
     const confirmModal = useConfirmModal();
     const { success, error: showError } = useToast();
     const pagination = usePagination(10);
 
-    // Filtrar por búsqueda
-    const filteredMetrics = metrics.filter((metric) => {
-        if (!pagination.debouncedSearch) return true;
-        const searchLower = pagination.debouncedSearch.toLowerCase();
-        return (
-            metric.label.toLowerCase().includes(searchLower) ||
-            metric.key.toLowerCase().includes(searchLower) ||
-            (metric.description?.toLowerCase().includes(searchLower) ?? false)
-        );
-    });
-
-    // Datos paginados
-    const paginatedMetrics = filteredMetrics.slice(
-        (pagination.page - 1) * pagination.pageSize,
-        pagination.page * pagination.pageSize
-    );
-    const totalPages = Math.ceil(filteredMetrics.length / pagination.pageSize);
+    // Cargar métricas paginadas del servidor
+    const loadMetrics = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await apiClient.getMetricsPaginated(pagination.params);
+            setMetrics(response.data);
+            setMeta(response.meta);
+        } catch (err) {
+            console.error('Error al cargar métricas:', err);
+            setError(err instanceof Error ? err.message : 'Error al cargar métricas');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        fetchMetrics();
-    }, [fetchMetrics]);
+        loadMetrics();
+    }, [pagination.params]);
 
     const handleEdit = (metric: Metric) => {
         setEditingMetric(metric);
         setIsModalOpen(true);
     };
 
-    const handleCloseModal = () => {
+    const handleCloseModal = async (reload = false) => {
         setIsModalOpen(false);
         setEditingMetric(null);
+        if (reload) {
+            await loadMetrics(); // Recargar datos si se guardó
+        }
     };
 
     const handleDelete = async (id: string, metricName: string) => {
@@ -98,6 +111,7 @@ export const MetricsPage: React.FC = () => {
             try {
                 await deleteMetric(id);
                 success('Métrica eliminada correctamente');
+                await loadMetrics(); // Recargar datos del servidor
             } catch (err) {
                 showError('Error al eliminar la métrica');
             } finally {
@@ -135,11 +149,11 @@ export const MetricsPage: React.FC = () => {
                     {error && (
                         <PermissionFeedback
                             message={typeof error === 'string' ? error : String(error)}
-                            onRetry={fetchMetrics}
+                            onRetry={loadMetrics}
                         />
                     )}
 
-                    {!loading && !error && metrics.length === 0 && (
+                    {!loading && !error && meta.totalItems === 0 && (
                         <div className="p-8 text-center">
                             <p className="text-gray-400">No hay métricas registradas</p>
                             <button
@@ -173,7 +187,7 @@ export const MetricsPage: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                                {paginatedMetrics.map((metric) => (
+                                {metrics.map((metric) => (
                                     <tr key={metric.id} className="hover:bg-gray-800/50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm font-medium text-gray-900 dark:text-white">{metric.label}</div>
@@ -238,12 +252,7 @@ export const MetricsPage: React.FC = () => {
                     {!loading && !error && metrics.length > 0 && (
                         <div className="p-4 border-t border-gray-200 dark:border-gray-800">
                             <PaginationControls
-                                meta={{
-                                    page: pagination.page,
-                                    pageSize: pagination.pageSize,
-                                    totalItems: filteredMetrics.length,
-                                    totalPages: totalPages,
-                                }}
+                                meta={meta}
                                 page={pagination.page}
                                 pageSize={pagination.pageSize}
                                 onPageSizeChange={pagination.setPageSize}
@@ -255,11 +264,11 @@ export const MetricsPage: React.FC = () => {
                 </div>
 
                 {/* Estadísticas */}
-                {!loading && !error && metrics.length > 0 && (
+                {!loading && !error && meta.totalItems > 0 && (
                     <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 transition-colors duration-300">
                             <p className="text-gray-600 dark:text-gray-400 text-sm">Total de Métricas</p>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{metrics.length}</p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{meta.totalItems}</p>
                         </div>
                         <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 transition-colors duration-300">
                             <p className="text-gray-600 dark:text-gray-400 text-sm">Métricas Configuradas</p>

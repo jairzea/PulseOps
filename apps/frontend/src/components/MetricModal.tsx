@@ -11,7 +11,7 @@ import { useToast } from '../hooks/useToast';
 
 interface MetricModalProps {
     isOpen: boolean;
-    onClose: () => void;
+    onClose: (reload?: boolean) => void;
     editingMetric: Metric | null;
     resources: Resource[];
 }
@@ -31,7 +31,7 @@ export const MetricModal: React.FC<MetricModalProps> = ({ isOpen, onClose, editi
                 await createMetric(data);
                 success('Métrica creada correctamente');
             }
-            onClose();
+            onClose(true); // Pasar true para indicar que debe recargar
         } catch (err) {
             console.error('Error al guardar métrica:', err);
             showError(err instanceof Error ? err.message : 'Error al guardar la métrica');

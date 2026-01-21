@@ -13,11 +13,12 @@ import { ResourceModal } from '../components/ResourceModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { TableSkeleton } from '../components/TableSkeleton';
 import { ResourceFormData } from '../schemas/resourceFormSchema';
-import { Resource } from '../services/apiClient';
+import { Resource, apiClient } from '../services/apiClient';
 import { useToast } from '../hooks/useToast';
 import { usePagination } from '../hooks/usePagination';
 import { PaginationControls } from '../components/PaginationControls';
 import { SearchInput } from '../components/SearchInput';
+import type { PaginationMeta } from '../types/pagination';
 
 const ROLE_TYPE_LABELS: Record<string, string> = {
     DEV: 'Desarrollador',
@@ -54,12 +55,27 @@ export const ResourcesPage: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
-    // Zustand solo para datos globales
+    // Estado local para datos paginados del servidor
+    const [resources, setResources] = useState<Resource[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [meta, setMeta] = useState<PaginationMeta>({
+        page: 1,
+        pageSize: 10,
+        totalItems: 0,
+        totalPages: 0,
+    });
+    
+    // Estado para estadísticas globales
+    const [stats, setStats] = useState({
+        totalResources: 0,
+        activeResources: 0,
+        devResources: 0,
+        tlResources: 0,
+    });
+
+    // Zustand solo para crear/actualizar/eliminar
     const {
-        resources,
-        loading,
-        error,
-        fetchResources,
         createResource,
         updateResource,
         deleteResource,
@@ -70,31 +86,41 @@ export const ResourcesPage: React.FC = () => {
     const { success, error: showError } = useToast();
     const pagination = usePagination(10);
 
-    // Filtrar recursos activos
-    const activeResources = resources.filter((r) => r.isActive);
+    // Cargar recursos paginados del servidor
+    const loadResources = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await apiClient.getResourcesPaginated(pagination.params);
+            setResources(response.data);
+            setMeta(response.meta);
+        } catch (err) {
+            console.error('Error al cargar recursos:', err);
+            setError(err instanceof Error ? err.message : 'Error al cargar recursos');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    // Filtrar por búsqueda
-    const filteredResources = activeResources.filter((resource) => {
-        if (!pagination.debouncedSearch) return true;
-        const searchLower = pagination.debouncedSearch.toLowerCase();
-        return (
-            resource.name.toLowerCase().includes(searchLower) ||
-            resource.id.toLowerCase().includes(searchLower) ||
-            ROLE_TYPE_LABELS[resource.roleType]?.toLowerCase().includes(searchLower)
-        );
-    });
-
-    // Aplicar paginación
-    const paginatedResources = filteredResources.slice(
-        (pagination.page - 1) * pagination.pageSize,
-        pagination.page * pagination.pageSize
-    );
-    const totalPages = Math.ceil(filteredResources.length / pagination.pageSize);
+    // Cargar estadísticas globales independientemente de la paginación
+    const loadStats = async () => {
+        try {
+            const statsData = await apiClient.getResourcesStats();
+            setStats(statsData);
+        } catch (err) {
+            console.error('Error al cargar estadísticas:', err);
+        }
+    };
 
     useEffect(() => {
-        fetchResources();
+        loadResources();
         fetchMetrics();
-    }, [fetchResources, fetchMetrics]);
+    }, [pagination.params, fetchMetrics]);
+
+    // Cargar estadísticas al montar el componente
+    useEffect(() => {
+        loadStats();
+    }, []);
 
     const handleOpenModal = (resource?: Resource) => {
         setEditingResource(resource || null);
@@ -117,6 +143,8 @@ export const ResourcesPage: React.FC = () => {
                 success('Recurso creado correctamente');
             }
             handleCloseModal();
+            await loadResources(); // Recargar datos del servidor
+            await loadStats(); // Recargar estadísticas
         } catch (err) {
             console.error('Error al guardar recurso:', err);
             showError(err instanceof Error ? err.message : 'Error al guardar el recurso');
@@ -139,6 +167,8 @@ export const ResourcesPage: React.FC = () => {
             try {
                 await deleteResource(resource.id);
                 success('Recurso eliminado correctamente');
+                await loadResources(); // Recargar datos del servidor
+                await loadStats(); // Recargar estadísticas
             } catch (err) {
                 showError('Error al eliminar el recurso');
             } finally {
@@ -147,9 +177,6 @@ export const ResourcesPage: React.FC = () => {
             }
         }
     };
-
-    const devResources = resources.filter((r) => r.roleType === 'DEV');
-    const tlResources = resources.filter((r) => r.roleType === 'TL');
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
@@ -164,23 +191,23 @@ export const ResourcesPage: React.FC = () => {
                 />
 
                 {/* Estadísticas */}
-                {!loading && !error && resources.length > 0 && (
+                {!loading && !error && stats.totalResources > 0 && (
                     <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/50 dark:to-blue-800/30 rounded-lg border border-blue-200 dark:border-blue-700/50 p-4">
                             <p className="text-blue-600 dark:text-blue-300 text-sm font-medium">Total de Recursos</p>
-                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{resources.length}</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.totalResources}</p>
                         </div>
                         <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/50 dark:to-green-800/30 rounded-lg border border-green-200 dark:border-green-700/50 p-4">
                             <p className="text-green-600 dark:text-green-300 text-sm font-medium">Recursos Activos</p>
-                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{activeResources.length}</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.activeResources}</p>
                         </div>
                         <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/50 dark:to-purple-800/30 rounded-lg border border-purple-200 dark:border-purple-700/50 p-4">
                             <p className="text-purple-600 dark:text-purple-300 text-sm font-medium">Desarrolladores</p>
-                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{devResources.length}</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.devResources}</p>
                         </div>
                         <div className="bg-gradient-to-br from-orange-900/50 to-orange-800/30 rounded-lg border border-orange-700/50 p-4">
                             <p className="text-orange-600 dark:text-orange-300 text-sm font-medium">Líderes Técnicos</p>
-                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{tlResources.length}</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.tlResources}</p>
                         </div>
                     </div>
                 )}
@@ -201,11 +228,11 @@ export const ResourcesPage: React.FC = () => {
                     {error && (
                         <PermissionFeedback
                             message={typeof error === 'string' ? error : String(error)}
-                            onRetry={() => fetchResources()}
+                            onRetry={loadResources}
                         />
                     )}
 
-                    {!loading && !error && activeResources.length === 0 && (
+                    {!loading && !error && meta.totalItems === 0 && (
                         <div className="p-12 text-center">
                             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-800 mb-4">
                                 <svg
@@ -232,7 +259,7 @@ export const ResourcesPage: React.FC = () => {
                         </div>
                     )}
 
-                    {!loading && !error && activeResources.length > 0 && (
+                    {!loading && !error && resources.length > 0 && (
                         <table className="w-full">
                             <thead className="bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
                                 <tr>
@@ -254,7 +281,7 @@ export const ResourcesPage: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                                {paginatedResources.map((resource) => (
+                                {resources.map((resource) => (
                                     <tr key={resource.id} className="hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
@@ -342,15 +369,10 @@ export const ResourcesPage: React.FC = () => {
                         </table>
                     )}
 
-                    {!loading && !error && activeResources.length > 0 && (
+                    {!loading && !error && resources.length > 0 && (
                         <div className="p-4 border-t border-gray-200 dark:border-gray-800">
                             <PaginationControls
-                                meta={{
-                                    page: pagination.page,
-                                    pageSize: pagination.pageSize,
-                                    totalItems: filteredResources.length,
-                                    totalPages: totalPages,
-                                }}
+                                meta={meta}
                                 page={pagination.page}
                                 pageSize={pagination.pageSize}
                                 onPageSizeChange={pagination.setPageSize}

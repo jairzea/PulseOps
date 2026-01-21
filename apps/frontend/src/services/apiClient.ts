@@ -201,6 +201,15 @@ export const apiClient = {
     return fetchJSON<PaginatedResponse<Resource>>(`/resources${query}`);
   },
 
+  async getResourcesStats(): Promise<{
+    totalResources: number;
+    activeResources: number;
+    devResources: number;
+    tlResources: number;
+  }> {
+    return fetchJSON(`/resources/stats`);
+  },
+
   async getResource(id: string): Promise<Resource> {
     return fetchJSON<Resource>(`/resources/${id}`);
   },

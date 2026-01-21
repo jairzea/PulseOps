@@ -42,6 +42,31 @@ export class ResourcesController {
     private analysisService: AnalysisService,
   ) {}
 
+  // GET /resources/stats -> estadísticas globales de recursos
+  @Get('stats')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getStats() {
+    const users = await this.usersService.findAll(false);
+    const resourceUsers = users.filter((u) => u.role === UserRole.USER);
+
+    const totalResources = resourceUsers.length;
+    const activeResources = resourceUsers.filter((u) => u.isActive).length;
+    const devResources = resourceUsers.filter(
+      (u) => (u as any).resourceProfile?.resourceType === 'DEV',
+    ).length;
+    const tlResources = resourceUsers.filter(
+      (u) => (u as any).resourceProfile?.resourceType === 'TL',
+    ).length;
+
+    return {
+      totalResources,
+      activeResources,
+      devResources,
+      tlResources,
+    };
+  }
+
   // GET /resources -> lista usuarios con role = user (con paginación)
   // ADMIN: ve todos los recursos
   // USER: solo ve su propio recurso
