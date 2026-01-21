@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { apiClient, Resource } from '../services/apiClient';
 
 interface UseResourcesState {
@@ -13,7 +13,7 @@ export function useResources(): UseResourcesState {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchResources = async () => {
+  const fetchResources = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -24,11 +24,11 @@ export function useResources(): UseResourcesState {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchResources();
-  }, []);
+  }, [fetchResources]);
 
   return {
     resources,

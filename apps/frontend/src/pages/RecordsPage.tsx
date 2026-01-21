@@ -1,7 +1,7 @@
 /**
  * RecordsPage - Gestión de registros manuales
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRecordsStore } from '../stores/recordsStore';
 import { useResources } from '../hooks/useResources';
 import { useMetrics } from '../hooks/useMetrics';
@@ -54,6 +54,13 @@ export const RecordsPage: React.FC = () => {
     const [selectedMetricKey, setSelectedMetricKey] = useState<string>('');
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
+    // Memoizar función fetch para evitar múltiples llamadas
+    const fetchRecords = useCallback((params: any) => recordsApi.getPaginated({
+        ...params,
+        resourceId: selectedResourceId,
+        metricKey: selectedMetricKey,
+    }), [selectedResourceId, selectedMetricKey]);
+
     // Hook genérico para datos paginados con filtros
     const { 
         data: records, 
@@ -63,11 +70,7 @@ export const RecordsPage: React.FC = () => {
         reload, 
         pagination 
     } = usePaginatedData<MetricRecord>({
-        fetchFn: (params) => recordsApi.getPaginated({
-            ...params,
-            resourceId: selectedResourceId,
-            metricKey: selectedMetricKey,
-        }),
+        fetchFn: fetchRecords,
         initialPageSize: 10,
         dependencies: [selectedResourceId, selectedMetricKey],
     });

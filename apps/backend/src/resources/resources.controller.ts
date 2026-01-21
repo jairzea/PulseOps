@@ -77,6 +77,13 @@ export class ResourcesController {
     @Query('search') search?: string,
     @CurrentUser() currentUser?: any,
   ) {
+    console.log('[ResourcesController] findAll - currentUser:', {
+      exists: !!currentUser,
+      id: currentUser?.id,
+      role: currentUser?.role,
+      isAdmin: currentUser?.role === UserRole.ADMIN
+    });
+    
     // Si hay parámetros de paginación explícitos, usar endpoint paginado
     if (page !== undefined || pageSize !== undefined || search !== undefined) {
       const paginationQuery: PaginationQueryDto = {
@@ -103,10 +110,13 @@ export class ResourcesController {
       // Aplicar filtro de permisos
       let filteredData = resourceUsers;
       if (currentUser?.role === UserRole.USER) {
+        // Usuarios normales solo ven su propio recurso
         filteredData = resourceUsers.filter((r) => r.id === currentUser.id);
-      } else if (currentUser?.role !== UserRole.ADMIN) {
+      } else if (!currentUser || currentUser.role !== UserRole.ADMIN) {
+        // Si no hay usuario o no es admin, vaciar array
         filteredData = [];
       }
+      // Si es ADMIN, filteredData = resourceUsers (todos los recursos)
 
       return {
         data: filteredData,

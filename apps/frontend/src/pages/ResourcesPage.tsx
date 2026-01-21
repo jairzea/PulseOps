@@ -2,7 +2,7 @@
  * ResourcesPage - Gestión de recursos (desarrolladores, líderes técnicos, etc.)
  * CRUD completo con componentes reutilizables
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useResourcesStore } from '../stores/resourcesStore';
 import { useMetricsStore } from '../stores/metricsStore';
 import { useConfirmModal } from '../hooks/useConfirmModal';
@@ -54,6 +54,9 @@ export const ResourcesPage: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
+    // Memorizar fetchFn para evitar re-renders innecesarios
+    const fetchResources = useCallback((params: any) => resourcesApi.getPaginated(params), []);
+
     // Hook genérico para datos paginados
     const { 
         data: resources, 
@@ -63,7 +66,7 @@ export const ResourcesPage: React.FC = () => {
         reload, 
         pagination 
     } = usePaginatedData<Resource>({
-        fetchFn: resourcesApi.getPaginated,
+        fetchFn: fetchResources,
         initialPageSize: 10,
     });
 
@@ -87,19 +90,23 @@ export const ResourcesPage: React.FC = () => {
     const { success, error: showError } = useToast();
 
     // Cargar estadísticas globales independientemente de la paginación
-    const loadStats = async () => {
+    const loadStats = useCallback(async () => {
         try {
+            console.log('[ResourcesPage] Cargando stats...');
             const statsData = await apiClient.getResourcesStats();
+            console.log('[ResourcesPage] Stats cargados:', statsData);
             setStats(statsData);
         } catch (err) {
-            console.error('Error al cargar estadísticas:', err);
+            console.error('[ResourcesPage] Error al cargar estadísticas:', err);
         }
-    };
+    }, []);
 
+    // Cargar métricas y stats solo al montar
     useEffect(() => {
         fetchMetrics();
         loadStats();
-    }, [fetchMetrics]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleOpenModal = (resource?: Resource) => {
         setEditingResource(resource || null);
@@ -170,7 +177,7 @@ export const ResourcesPage: React.FC = () => {
                 />
 
                 {/* Estadísticas */}
-                {!loading && !error && stats.totalResources > 0 && (
+                {stats.totalResources > 0 && (
                     <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4 fade-in">
                         <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/50 dark:to-blue-800/30 rounded-lg border border-blue-200 dark:border-blue-700/50 p-4 transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-600">
                             <p className="text-blue-600 dark:text-blue-300 text-sm font-medium">Total de Recursos</p>

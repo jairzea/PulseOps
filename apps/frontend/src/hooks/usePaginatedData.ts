@@ -112,7 +112,7 @@ export function usePaginatedData<T>({
     } finally {
       setLoading(false);
     }
-  }, [fetchFn, pagination.params, onSuccess, onError, ...dependencies]);
+  }, [fetchFn, pagination.params, onSuccess, onError]);
 
   /**
    * Cargar datos cuando cambien los parámetros de paginación o dependencias

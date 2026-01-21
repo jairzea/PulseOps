@@ -1,7 +1,7 @@
 /**
  * MetricsPage - Gestión de métricas
  */
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useMetricsStore } from '../stores/metricsStore';
 import { useResources } from '../hooks/useResources';
 import { usePaginatedData } from '../hooks/usePaginatedData';
@@ -45,6 +45,9 @@ export const MetricsPage: React.FC = () => {
     const [editingMetric, setEditingMetric] = useState<Metric | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
+    // Memorizar fetchFn para evitar re-renders innecesarios
+    const fetchMetrics = useCallback((params: any) => metricsApi.getPaginated(params), []);
+
     // Hook genérico para datos paginados
     const { 
         data: metrics, 
@@ -54,7 +57,7 @@ export const MetricsPage: React.FC = () => {
         reload, 
         pagination 
     } = usePaginatedData<Metric>({
-        fetchFn: metricsApi.getPaginated,
+        fetchFn: fetchMetrics,
         initialPageSize: 10,
     });
 

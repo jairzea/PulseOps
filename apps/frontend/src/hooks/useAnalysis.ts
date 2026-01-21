@@ -37,7 +37,15 @@ export function useAnalysis(): UseAnalysisState {
       });
       setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to evaluate analysis'));
+      // Si es un NotFoundError (no hay registros), no lo tratamos como error crítico
+      const error = err instanceof Error ? err : new Error('Failed to evaluate analysis');
+      const isNotFoundError = error.message?.includes('No records found');
+      
+      if (!isNotFoundError) {
+        console.warn('[useAnalysis] Error evaluating:', error.message);
+      }
+      
+      setError(error);
       setResult(null);
     } finally {
       setLoading(false);

@@ -57,47 +57,47 @@ export const apiClient = {
   // Resources
   // --------------------------------------------------------------------------
   
-  getResources: () => resourcesApi.getAll(),
+  getResources: async () => await resourcesApi.getAll(),
   
-  getResourcesPaginated: (params: PaginationParams) => 
-    resourcesApi.getPaginated(params),
+  getResourcesPaginated: async (params: PaginationParams) => 
+    await resourcesApi.getPaginated(params),
 
   getResourcesStats: async () => {
     const stats = await resourcesApi.getStats();
     return {
-      totalResources: stats.total,
-      activeResources: stats.active,
-      devResources: stats.byRoleType['DEV'] || 0,
-      tlResources: stats.byRoleType['TL'] || 0,
+      totalResources: stats.totalResources || 0,
+      activeResources: stats.activeResources || 0,
+      devResources: stats.devResources || 0,
+      tlResources: stats.tlResources || 0,
     };
   },
 
-  getResource: (id: string) => resourcesApi.getById(id),
+  getResource: async (id: string) => await resourcesApi.getById(id),
 
   getResourceMetrics: async (id: string) => {
-    return metricsApi.getAll(id);
+    return await metricsApi.getAll(id);
   },
 
-  createResource: (data: any) => resourcesApi.create(data),
+  createResource: async (data: any) => await resourcesApi.create(data),
 
-  updateResource: (id: string, data: any) => resourcesApi.update(id, data),
+  updateResource: async (id: string, data: any) => await resourcesApi.update(id, data),
 
-  deleteResource: (id: string) => resourcesApi.delete(id),
+  deleteResource: async (id: string) => await resourcesApi.delete(id),
 
   // --------------------------------------------------------------------------
   // Metrics
   // --------------------------------------------------------------------------
 
-  getMetrics: (resourceId?: string) => metricsApi.getAll(resourceId),
+  getMetrics: async (resourceId?: string) => await metricsApi.getAll(resourceId),
 
-  getMetricsPaginated: (params: PaginationParams) => 
-    metricsApi.getPaginated(params),
+  getMetricsPaginated: async (params: PaginationParams) => 
+    await metricsApi.getPaginated(params),
 
-  getMetric: (id: string) => metricsApi.getById(id),
+  getMetric: async (id: string) => await metricsApi.getById(id),
 
-  createMetric: (data: any) => metricsApi.create(data),
+  createMetric: async (data: any) => await metricsApi.create(data),
 
-  updateMetric: (id: string, data: any) => metricsApi.update(id, data),
+  updateMetric: async (id: string, data: any) => await metricsApi.update(id, data),
 
   deleteMetric: async (id: string) => {
     await metricsApi.delete(id);
@@ -108,15 +108,15 @@ export const apiClient = {
   // Records
   // --------------------------------------------------------------------------
 
-  getRecords: (params?: { resourceId?: string; metricKey?: string }) => 
-    recordsApi.getAll(params?.resourceId, params?.metricKey),
+  getRecords: async (params?: { resourceId?: string; metricKey?: string }) => 
+    await recordsApi.getAll(params?.resourceId, params?.metricKey),
 
-  getRecordsPaginated: (paginationParams: PaginationParams, filters?: any) =>
-    recordsApi.getPaginated({ ...paginationParams, ...filters }),
+  getRecordsPaginated: async (paginationParams: PaginationParams, filters?: any) =>
+    await recordsApi.getPaginated({ ...paginationParams, ...filters }),
 
-  createRecord: (data: any) => recordsApi.create(data),
+  createRecord: async (data: any) => await recordsApi.create(data),
 
-  upsertRecord: (data: any) => recordsApi.create(data),
+  upsertRecord: async (data: any) => await recordsApi.create(data),
 
   deleteRecord: async (id: string) => {
     await recordsApi.delete(id);
@@ -127,28 +127,28 @@ export const apiClient = {
   // Analysis
   // --------------------------------------------------------------------------
 
-  evaluate: (params: { resourceId: string; metricKey: string; windowSize?: number }) =>
-    analysisApi.evaluate(params),
+  evaluate: async (params: { resourceId: string; metricKey: string; windowSize?: number }) =>
+    await analysisApi.evaluate(params),
 
   // --------------------------------------------------------------------------
   // Conditions
   // --------------------------------------------------------------------------
 
-  getConditionsMetadata: () => conditionsApi.getMetadata(),
+  getConditionsMetadata: async () => await conditionsApi.getMetadata(),
 
   // --------------------------------------------------------------------------
   // Playbooks
   // --------------------------------------------------------------------------
 
-  getAllPlaybooks: () => playbooksApi.getAll(),
+  getAllPlaybooks: async () => await playbooksApi.getAll(),
 
-  getPlaybookByCondition: (condition: string) => 
-    playbooksApi.getByCondition(condition),
+  getPlaybookByCondition: async (condition: string) => 
+    await playbooksApi.getByCondition(condition),
 
-  updatePlaybook: (condition: string, data: any) => 
-    playbooksApi.update(condition, data),
+  updatePlaybook: async (condition: string, data: any) => 
+    await playbooksApi.update(condition, data),
 
-  seedPlaybooks: () => playbooksApi.seed(),
+  seedPlaybooks: async () => await playbooksApi.seed(),
 };
 
 // Export specific APIs for direct usage (recommended)

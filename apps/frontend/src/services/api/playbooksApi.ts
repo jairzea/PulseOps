@@ -46,7 +46,7 @@ class PlaybooksApiImpl implements PlaybooksApi {
   }
 
   async update(condition: string, data: UpdatePlaybookDto): Promise<Playbook> {
-    return httpClient.post<Playbook>(`${this.basePath}/${condition}`, data);
+    return httpClient.put<Playbook>(`${this.basePath}/${condition}`, data);
   }
 
   async seed(): Promise<{ message: string; created: number }> {
