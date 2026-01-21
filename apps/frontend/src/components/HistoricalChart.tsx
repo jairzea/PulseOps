@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, TooltipProps } from 'recharts';
 import { Record } from '../services/apiClient';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -13,10 +13,72 @@ interface ChartDataPoint {
   week: string;
   value: number;
   trend: number;
+  timestamp: string;
 }
 
 export const HistoricalChart = memo(function HistoricalChart({ records, metricName, loading = false }: HistoricalChartProps) {
   const { theme } = useTheme();
+
+  // Componente personalizado para el tooltip
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload as ChartDataPoint;
+      const date = new Date(data.timestamp);
+      const formattedDate = date.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+
+      return (
+        <div
+          style={{
+            backgroundColor: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+            border: `1px solid ${theme === 'dark' ? '#374151' : '#D1D5DB'}`,
+            borderRadius: '0.375rem',
+            color: theme === 'dark' ? '#F9FAFB' : '#111827',
+            padding: '12px',
+            position: 'relative',
+          }}
+        >
+          {/* Fecha en la esquina superior derecha */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '8px',
+              right: '8px',
+              fontSize: '10px',
+              color: theme === 'dark' ? '#9CA3AF' : '#6B7280',
+            }}
+          >
+            {formattedDate}
+          </div>
+
+          {/* Contenido principal del tooltip */}
+          <div style={{ marginTop: '16px' }}>
+            <p style={{ color: theme === 'dark' ? '#9CA3AF' : '#6B7280', marginBottom: '8px', fontSize: '14px' }}>
+              {label}
+            </p>
+            {payload.map((entry, index) => (
+              <p
+                key={`item-${index}`}
+                style={{
+                  color: entry.color,
+                  fontSize: '14px',
+                  marginBottom: '4px',
+                  fontWeight: 500,
+                }}
+              >
+                {entry.name}: {typeof entry.value === 'number' ? entry.value.toFixed(2) : entry.value}
+              </p>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   // Solo mostrar skeleton si está loading Y no hay datos
   // Esto permite que el gráfico permanezca visible mientras carga nuevos datos
@@ -64,6 +126,7 @@ export const HistoricalChart = memo(function HistoricalChart({ records, metricNa
       week: formatWeek(record.week),
       value: record.value,
       trend: Number(trendValue.toFixed(2)),
+      timestamp: record.timestamp,
     };
   });
 
@@ -84,15 +147,7 @@ export const HistoricalChart = memo(function HistoricalChart({ records, metricNa
             stroke={theme === 'dark' ? '#9CA3AF' : '#6B7280'}
             tick={{ fill: theme === 'dark' ? '#9CA3AF' : '#6B7280' }}
           />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: theme === 'dark' ? '#1F2937' : '#FFFFFF',
-              border: `1px solid ${theme === 'dark' ? '#374151' : '#D1D5DB'}`,
-              borderRadius: '0.375rem',
-              color: theme === 'dark' ? '#F9FAFB' : '#111827',
-            }}
-            labelStyle={{ color: theme === 'dark' ? '#9CA3AF' : '#6B7280' }}
-          />
+          <Tooltip content={<CustomTooltip />} />
           <Legend
             wrapperStyle={{ color: theme === 'dark' ? '#9CA3AF' : '#6B7280' }}
             iconType="line"

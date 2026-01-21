@@ -13,9 +13,9 @@ export interface AutocompleteInfiniteOption {
 interface AutocompleteInfiniteProps {
     value: string;
     onChange: (value: string) => void;
-    fetchFunction: (page: number, search: string, pageSize: number) => Promise<{ 
-        data: AutocompleteInfiniteOption[]; 
-        meta: { totalPages: number } 
+    fetchFunction: (page: number, search: string, pageSize: number) => Promise<{
+        data: AutocompleteInfiniteOption[];
+        meta: { totalPages: number }
     }>;
     placeholder?: string;
     disabled?: boolean;
@@ -36,6 +36,7 @@ export const AutocompleteInfinite: React.FC<AutocompleteInfiniteProps> = ({
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
+    const [selectedLabel, setSelectedLabel] = useState<string>(''); // Guardar label seleccionado
     const wrapperRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -56,6 +57,16 @@ export const AutocompleteInfinite: React.FC<AutocompleteInfiniteProps> = ({
 
     // Obtener la opción seleccionada
     const selectedOption = options.find(opt => opt.value === value);
+
+    // Actualizar selectedLabel cuando se encuentra la opción o cambia el value
+    useEffect(() => {
+        if (selectedOption) {
+            setSelectedLabel(selectedOption.label);
+        } else if (!value) {
+            setSelectedLabel('');
+        }
+        // Si value existe pero selectedOption no, mantener el selectedLabel anterior
+    }, [selectedOption, value]);
 
     // Cerrar dropdown al hacer clic fuera
     useEffect(() => {
@@ -107,9 +118,13 @@ export const AutocompleteInfinite: React.FC<AutocompleteInfiniteProps> = ({
     };
 
     const handleOptionClick = (optionValue: string) => {
+        const option = options.find(opt => opt.value === optionValue);
+        if (option) {
+            setSelectedLabel(option.label); // Guardar label antes de cerrar
+        }
         onChange(optionValue);
         setIsOpen(false);
-        setSearch('');
+        setSearch(''); // Limpiar búsqueda después de seleccionar
         inputRef.current?.blur();
     };
 
@@ -146,7 +161,7 @@ export const AutocompleteInfinite: React.FC<AutocompleteInfiniteProps> = ({
         }
     };
 
-    const displayValue = isOpen ? search : (selectedOption?.label || '');
+    const displayValue = isOpen ? search : selectedLabel;
 
     return (
         <div ref={wrapperRef} className={`relative ${className}`}>
@@ -160,9 +175,8 @@ export const AutocompleteInfinite: React.FC<AutocompleteInfiniteProps> = ({
                     onKeyDown={handleKeyDown}
                     placeholder={placeholder}
                     disabled={disabled}
-                    className={`w-full px-4 py-2 bg-white dark:bg-gray-800 border rounded-lg text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        error ? 'border-red-500' : 'border-gray-200 dark:border-gray-700'
-                    } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-text'}`}
+                    className={`w-full px-4 py-2 bg-white dark:bg-gray-800 border rounded-lg text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 ${error ? 'border-red-500' : 'border-gray-200 dark:border-gray-700'
+                        } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-text'}`}
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg
@@ -178,7 +192,7 @@ export const AutocompleteInfinite: React.FC<AutocompleteInfiniteProps> = ({
 
             {/* Dropdown de opciones */}
             {isOpen && !disabled && (
-                <div 
+                <div
                     ref={dropdownRef}
                     className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-auto"
                 >
@@ -192,15 +206,13 @@ export const AutocompleteInfinite: React.FC<AutocompleteInfiniteProps> = ({
                                 <div
                                     key={option.value}
                                     onClick={() => handleOptionClick(option.value)}
-                                    className={`px-4 py-2 cursor-pointer transition-colors ${
-                                        index === highlightedIndex
-                                            ? 'bg-blue-50 dark:bg-blue-900/20'
-                                            : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                                    } ${
-                                        option.value === value
+                                    className={`px-4 py-2 cursor-pointer transition-colors ${index === highlightedIndex
+                                        ? 'bg-blue-50 dark:bg-blue-900/20'
+                                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        } ${option.value === value
                                             ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                                             : 'text-gray-900 dark:text-white'
-                                    }`}
+                                        }`}
                                 >
                                     <div className="font-medium">{option.label}</div>
                                     {option.description && (
@@ -210,7 +222,7 @@ export const AutocompleteInfinite: React.FC<AutocompleteInfiniteProps> = ({
                                     )}
                                 </div>
                             ))}
-                            
+
                             {/* Loading indicator y trigger para scroll infinito */}
                             <div ref={observerTarget} className="px-4 py-2 text-center">
                                 {loading && (

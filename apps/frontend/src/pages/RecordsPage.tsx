@@ -97,6 +97,11 @@ export const RecordsPage: React.FC = () => {
         loadRecords();
     }, [selectedResourceId, selectedMetricKey, pagination.params]);
 
+    // Resetear métrica cuando cambia el recurso
+    useEffect(() => {
+        setSelectedMetricKey('');
+    }, [selectedResourceId]);
+
     const formatWeek = (week: string) => {
         return week;
     };
@@ -224,6 +229,7 @@ export const RecordsPage: React.FC = () => {
                                                 page,
                                                 pageSize,
                                                 search: search || undefined,
+                                                resourceId: selectedResourceId || undefined,
                                             });
                                             return {
                                                 data: response.data.map(m => ({
@@ -234,8 +240,9 @@ export const RecordsPage: React.FC = () => {
                                                 meta: response.meta,
                                             };
                                         }}
-                                        placeholder="Seleccionar métrica..."
+                                        placeholder={selectedResourceId ? "Seleccionar métrica..." : "Primero selecciona un recurso"}
                                         pageSize={15}
+                                        disabled={!selectedResourceId}
                                     />
                                 </div>
                             </div>

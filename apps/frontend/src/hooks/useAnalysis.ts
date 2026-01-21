@@ -12,6 +12,7 @@ interface UseAnalysisState {
   loading: boolean;
   error: Error | null;
   evaluate: (params: UseAnalysisParams) => Promise<void>;
+  reset: () => void;
 }
 
 export function useAnalysis(): UseAnalysisState {
@@ -22,6 +23,7 @@ export function useAnalysis(): UseAnalysisState {
   const evaluate = useCallback(async (params: UseAnalysisParams) => {
     if (!params.resourceId || !params.metricKey) {
       setError(new Error('resourceId and metricKey are required'));
+      setResult(null); // Limpiar resultado cuando faltan parámetros
       return;
     }
 
@@ -42,10 +44,17 @@ export function useAnalysis(): UseAnalysisState {
     }
   }, []);
 
+  const reset = useCallback(() => {
+    setResult(null);
+    setError(null);
+    setLoading(false);
+  }, []);
+
   return {
     result,
     loading,
     error,
     evaluate,
+    reset,
   };
 }

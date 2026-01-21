@@ -49,6 +49,16 @@ export function useInfiniteScroll<T>({
     setError(null);
   }, [debouncedSearch]);
 
+  // Reset cuando cambia fetchFunction (ej: cuando cambia resourceId en MetricSelector)
+  useEffect(() => {
+    setItems([]);
+    setPage(1);
+    setHasMore(true);
+    setError(null);
+    setSearchState('');
+    setDebouncedSearch('');
+  }, [fetchFunction]);
+
   // Fetch data
   const fetchData = useCallback(async (pageToFetch: number, searchTerm: string) => {
     // Cancel previous request

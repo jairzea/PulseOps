@@ -18,6 +18,7 @@ export function ResourceDashboard() {
   const [selectedMetricKey, setSelectedMetricKey] = useState<string | null>(null);
   const conditionsContainerRef = useRef<HTMLDivElement>(null);
   const conditionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const prevUserIdRef = useRef<string | undefined>();
 
   // const { resources, loading: loadingResources } = useResources(); // Ya no se necesita
   const { user } = useAuth();
@@ -33,10 +34,28 @@ export function ResourceDashboard() {
     fetchRecords,
     setModalOpen,
     isModalOpen,
-    lastCreatedRecord
+    lastCreatedRecord,
+    reset: resetRecordsStore,
   } = useRecordsStore();
 
-  const { result: analysis, loading: loadingAnalysis, evaluate } = useAnalysis();
+  const { result: analysis, loading: loadingAnalysis, evaluate, reset: resetAnalysis } = useAnalysis();
+
+  // Resetear estado SOLO cuando realmente cambia el usuario (logout/login)
+  useEffect(() => {
+    const currentUserId = user?.id;
+    const prevUserId = prevUserIdRef.current;
+
+    // Solo resetear si el ID del usuario realmente cambió (no en el primer render)
+    if (prevUserId !== undefined && currentUserId !== prevUserId) {
+      resetAnalysis();
+      resetRecordsStore();
+      setSelectedResourceId(null);
+      setSelectedMetricKey(null);
+    }
+
+    // Actualizar ref con el ID actual
+    prevUserIdRef.current = currentUserId;
+  }, [user?.id, resetAnalysis, resetRecordsStore]);
 
   // Fetch records cuando cambian resource/metric
   useEffect(() => {

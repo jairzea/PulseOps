@@ -1,5 +1,7 @@
 import React from 'react';
+import Lottie from 'lottie-react';
 import type { PaginationMeta } from '../types/pagination';
+import arrowAnimation from '../assets/arrow-animation.json';
 
 interface PaginationControlsProps {
     meta: PaginationMeta;
@@ -79,9 +81,19 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
                 <button
                     onClick={onPrevPage}
                     disabled={page === 1}
-                    className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-2 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors group"
+                    title="Anterior"
                 >
-                    Anterior
+                    <div className="w-6 h-6 transform rotate-90">
+                        <Lottie
+                            animationData={arrowAnimation}
+                            loop={true}
+                            autoplay={true}
+                            style={{
+                                filter: 'grayscale(100%)',
+                            }}
+                        />
+                    </div>
                 </button>
 
                 <span className="text-sm text-gray-700 dark:text-gray-300 px-3">
@@ -92,9 +104,19 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
                 <button
                     onClick={onNextPage}
                     disabled={page >= totalPages}
-                    className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-2 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors group"
+                    title="Siguiente"
                 >
-                    Siguiente
+                    <div className="w-6 h-6 transform -rotate-90">
+                        <Lottie
+                            animationData={arrowAnimation}
+                            loop={true}
+                            autoplay={true}
+                            style={{
+                                filter: 'grayscale(100%)',
+                            }}
+                        />
+                    </div>
                 </button>
             </div>
         </div>
