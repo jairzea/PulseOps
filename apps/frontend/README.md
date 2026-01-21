@@ -29,37 +29,83 @@ src/
 ├── index.css                   # Estilos globales (Tailwind)
 ├── vite-env.d.ts               # Tipos de Vite
 │
-├── components/                 # Componentes reutilizables
-│   ├── HistoricalChart.tsx     # Gráfico de series temporales
-│   ├── MetricCard.tsx          # Tarjeta de métrica con condición
-│   ├── ConditionBadge.tsx      # Badge de condición (OK/WARNING/CRITICAL)
-│   ├── ResourceFlow.tsx        # Visualización de flujo de recursos
-│   └── PlaybookPanel.tsx       # Panel de playbooks
+├── assets/                     # Recursos estáticos
+│   ├── animations/            # Animaciones Lottie
+│   └── img/                   # Imágenes
 │
-├── modules/                    # Módulos funcionales
-│   ├── live-demo/              # Demo en vivo
-│   │   ├── LiveDemo.tsx
-│   │   └── hooks/
-│   ├── dashboard/              # Dashboard principal
-│   ├── metrics/                # Gestión de métricas
-│   ├── resources/              # Gestión de recursos
-│   └── analysis/               # Visualización de análisis
+├── components/                 # Componentes UI reutilizables
+│   ├── AutocompleteInfinite.tsx
+│   ├── ConfirmModal.tsx
+│   ├── HistoricalChart.tsx
+│   ├── MetricCard.tsx
+│   ├── MetricModal.tsx
+│   ├── MetricSelector.tsx
+│   ├── PageHeader.tsx
+│   ├── PaginationControls.tsx
+│   ├── PermissionFeedback.tsx
+│   ├── ResourceSelector.tsx
+│   ├── SearchInput.tsx
+│   ├── Sidebar.tsx
+│   ├── TableSkeleton.tsx
+│   └── ...
 │
-├── utils/                      # Utilidades
-│   ├── chartUtils.ts           # Helpers para gráficos
-│   ├── apiClient.ts            # Cliente HTTP al backend
-│   └── formatters.ts           # Formateadores de datos
+├── contexts/                   # React Contexts
+│   └── AuthContext.tsx        # Contexto de autenticación
 │
-├── hooks/                      # Custom hooks
-│   ├── useMetrics.ts           # Fetching de métricas
-│   ├── useAnalysis.ts          # Análisis de inclinación
-│   └── useResources.ts         # Gestión de recursos
+├── hooks/                      # Custom React hooks
+│   ├── useAnalysis.ts         # Hook para análisis
+│   ├── useAuth.ts             # Hook de autenticación
+│   ├── useConfirmModal.ts     # Hook para modal de confirmación
+│   ├── useInfiniteScroll.ts   # Hook para scroll infinito
+│   ├── useMetrics.ts          # Hook de métricas
+│   ├── usePagination.ts       # Hook de paginación
+│   └── useResources.ts        # Hook de recursos
 │
-├── types/                      # Tipos específicos del frontend
-│   └── ui.types.ts
+├── modules/                    # Módulos especializados
+│   └── live-demo/             # Módulo de demo en vivo
+│       └── flow/              # Componentes React Flow
 │
-└── styles/                     # Estilos adicionales
-    └── charts.css              # Estilos para gráficos
+├── pages/                      # Páginas/Vistas principales
+│   ├── AnalysisPage.tsx
+│   ├── ChartsPage.tsx
+│   ├── ConditionsPage.tsx
+│   ├── ConfigurationPage.tsx
+│   ├── DashboardPage.tsx
+│   ├── LiveDemoPage.tsx
+│   ├── LoginPage.tsx
+│   ├── MetricsPage.tsx
+│   ├── PlaybooksPage.tsx
+│   ├── RecordsPage.tsx
+│   ├── ResourceDashboard.tsx
+│   ├── ResourcesPage.tsx
+│   ├── RulesPage.tsx
+│   └── UsersAdminPage.tsx
+│
+├── schemas/                    # Schemas de validación
+│   └── ...
+│
+├── services/                   # Servicios y API clients
+│   ├── apiClient.ts           # Cliente HTTP base
+│   ├── authService.ts         # Servicio de autenticación
+│   └── ...
+│
+├── stores/                     # Estado global (Zustand)
+│   ├── authStore.ts           # Store de autenticación
+│   ├── conditionsStore.ts     # Store de condiciones
+│   ├── metricsStore.ts        # Store de métricas
+│   ├── resourcesStore.ts      # Store de recursos
+│   └── rulesStore.ts          # Store de reglas
+│
+├── types/                      # Definiciones TypeScript
+│   ├── auth.ts
+│   ├── pagination.ts
+│   └── ...
+│
+└── utils/                      # Funciones utilitarias
+    ├── errors/                # Manejo de errores
+    ├── format.ts              # Formateo de datos
+    ├── toast.ts               # Sistema de notificaciones
+    └── validation.ts          # Validaciones
 ```
 
 ### Principios de Diseño
