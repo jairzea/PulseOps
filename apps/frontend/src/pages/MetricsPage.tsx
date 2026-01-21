@@ -13,6 +13,9 @@ import { PermissionFeedback } from '../components/PermissionFeedback';
 import { useAuth } from '../contexts/AuthContext';
 import { Metric } from '../services/apiClient';
 import { useToast } from '../hooks/useToast';
+import { usePagination } from '../hooks/usePagination';
+import { PaginationControls } from '../components/PaginationControls';
+import { SearchInput } from '../components/SearchInput';
 
 export const MetricsPage: React.FC = () => {
     const { user } = useAuth();
@@ -47,6 +50,25 @@ export const MetricsPage: React.FC = () => {
     const { resources } = useResources();
     const confirmModal = useConfirmModal();
     const { success, error: showError } = useToast();
+    const pagination = usePagination(10);
+
+    // Filtrar por búsqueda
+    const filteredMetrics = metrics.filter((metric) => {
+        if (!pagination.debouncedSearch) return true;
+        const searchLower = pagination.debouncedSearch.toLowerCase();
+        return (
+            metric.label.toLowerCase().includes(searchLower) ||
+            metric.key.toLowerCase().includes(searchLower) ||
+            (metric.description?.toLowerCase().includes(searchLower) ?? false)
+        );
+    });
+
+    // Datos paginados
+    const paginatedMetrics = filteredMetrics.slice(
+        (pagination.page - 1) * pagination.pageSize,
+        pagination.page * pagination.pageSize
+    );
+    const totalPages = Math.ceil(filteredMetrics.length / pagination.pageSize);
 
     useEffect(() => {
         fetchMetrics();
@@ -97,6 +119,15 @@ export const MetricsPage: React.FC = () => {
                     }}
                 />
 
+                {/* Barra de búsqueda */}
+                <div className="mb-6">
+                    <SearchInput
+                        value={pagination.search}
+                        onChange={pagination.setSearch}
+                        placeholder="Buscar por etiqueta, clave o descripción..."
+                    />
+                </div>
+
                 {/* Tabla de métricas */}
                 <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors duration-300">
                     {loading && <TableSkeleton columns={5} rows={6} showActions={true} />}
@@ -142,7 +173,7 @@ export const MetricsPage: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                                {metrics.map((metric) => (
+                                {paginatedMetrics.map((metric) => (
                                     <tr key={metric.id} className="hover:bg-gray-800/50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm font-medium text-gray-900 dark:text-white">{metric.label}</div>
@@ -202,6 +233,24 @@ export const MetricsPage: React.FC = () => {
                                 ))}
                             </tbody>
                         </table>
+                    )}
+
+                    {!loading && !error && metrics.length > 0 && (
+                        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+                            <PaginationControls
+                                meta={{
+                                    page: pagination.page,
+                                    pageSize: pagination.pageSize,
+                                    totalItems: filteredMetrics.length,
+                                    totalPages: totalPages,
+                                }}
+                                page={pagination.page}
+                                pageSize={pagination.pageSize}
+                                onPageSizeChange={pagination.setPageSize}
+                                onPrevPage={pagination.prevPage}
+                                onNextPage={pagination.nextPage}
+                            />
+                        </div>
                     )}
                 </div>
 

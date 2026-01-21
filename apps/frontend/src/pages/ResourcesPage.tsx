@@ -15,6 +15,9 @@ import { TableSkeleton } from '../components/TableSkeleton';
 import { ResourceFormData } from '../schemas/resourceFormSchema';
 import { Resource } from '../services/apiClient';
 import { useToast } from '../hooks/useToast';
+import { usePagination } from '../hooks/usePagination';
+import { PaginationControls } from '../components/PaginationControls';
+import { SearchInput } from '../components/SearchInput';
 
 const ROLE_TYPE_LABELS: Record<string, string> = {
     DEV: 'Desarrollador',
@@ -65,6 +68,28 @@ export const ResourcesPage: React.FC = () => {
     const { metrics, fetchMetrics } = useMetricsStore();
     const { confirm, ...confirmModalProps } = useConfirmModal();
     const { success, error: showError } = useToast();
+    const pagination = usePagination(10);
+
+    // Filtrar recursos activos
+    const activeResources = resources.filter((r) => r.isActive);
+
+    // Filtrar por búsqueda
+    const filteredResources = activeResources.filter((resource) => {
+        if (!pagination.debouncedSearch) return true;
+        const searchLower = pagination.debouncedSearch.toLowerCase();
+        return (
+            resource.name.toLowerCase().includes(searchLower) ||
+            resource.id.toLowerCase().includes(searchLower) ||
+            ROLE_TYPE_LABELS[resource.roleType]?.toLowerCase().includes(searchLower)
+        );
+    });
+
+    // Aplicar paginación
+    const paginatedResources = filteredResources.slice(
+        (pagination.page - 1) * pagination.pageSize,
+        pagination.page * pagination.pageSize
+    );
+    const totalPages = Math.ceil(filteredResources.length / pagination.pageSize);
 
     useEffect(() => {
         fetchResources();
@@ -123,7 +148,6 @@ export const ResourcesPage: React.FC = () => {
         }
     };
 
-    const activeResources = resources.filter((r) => r.isActive);
     const devResources = resources.filter((r) => r.roleType === 'DEV');
     const tlResources = resources.filter((r) => r.roleType === 'TL');
 
@@ -160,6 +184,15 @@ export const ResourcesPage: React.FC = () => {
                         </div>
                     </div>
                 )}
+
+                {/* Barra de búsqueda */}
+                <div className="mb-6">
+                    <SearchInput
+                        value={pagination.search}
+                        onChange={pagination.setSearch}
+                        placeholder="Buscar por nombre, rol o ID..."
+                    />
+                </div>
 
                 {/* Tabla de recursos */}
                 <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors duration-300">
@@ -221,7 +254,7 @@ export const ResourcesPage: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                                {activeResources.map((resource) => (
+                                {paginatedResources.map((resource) => (
                                     <tr key={resource.id} className="hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
@@ -307,6 +340,24 @@ export const ResourcesPage: React.FC = () => {
                                 ))}
                             </tbody>
                         </table>
+                    )}
+
+                    {!loading && !error && activeResources.length > 0 && (
+                        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+                            <PaginationControls
+                                meta={{
+                                    page: pagination.page,
+                                    pageSize: pagination.pageSize,
+                                    totalItems: filteredResources.length,
+                                    totalPages: totalPages,
+                                }}
+                                page={pagination.page}
+                                pageSize={pagination.pageSize}
+                                onPageSizeChange={pagination.setPageSize}
+                                onPrevPage={pagination.prevPage}
+                                onNextPage={pagination.nextPage}
+                            />
+                        </div>
                     )}
                 </div>
             </div>
