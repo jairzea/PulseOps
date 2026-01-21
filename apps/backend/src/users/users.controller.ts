@@ -22,6 +22,7 @@ import {
 } from '../auth/decorators/current-user.decorator';
 import { UserRole } from './schemas/user.schema';
 import * as bcrypt from 'bcryptjs';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 
 @Controller('users')
 @UseGuards(DemoOrJwtAuthGuard)
@@ -31,17 +32,21 @@ export class UsersController {
   @Get()
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
-  async findAll() {
-    const users = await this.usersService.findAll(true);
-    return users.map((user) => ({
-      id: user._id.toString(),
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      isActive: user.isActive,
-      lastLogin: user.lastLogin,
-      createdAt: user.createdAt,
-    }));
+  async findAll(@Query() query: PaginationQueryDto) {
+    const result = await this.usersService.findAllPaginated(query, true);
+    
+    return {
+      data: result.data.map((user) => ({
+        id: user._id.toString(),
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin,
+        createdAt: user.createdAt,
+      })),
+      meta: result.meta,
+    };
   }
 
   @Get(':id')

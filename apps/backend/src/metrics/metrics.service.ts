@@ -9,6 +9,11 @@ import {
   DuplicateResourceException,
   DatabaseException,
 } from '../common/exceptions/app.exception';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
+import {
+  PaginatedResponse,
+  createPaginatedResponse,
+} from '../common/interfaces/paginated-response.interface';
 
 @Injectable()
 export class MetricsService {
@@ -47,6 +52,48 @@ export class MetricsService {
       return await this.metricModel.find().exec();
     } catch (error) {
       throw new DatabaseException('Error al obtener las métricas', {
+        originalError: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  /**
+   * Listado paginado de métricas con búsqueda
+   * @param query - Parámetros de paginación y búsqueda
+   * @returns Response paginada con métricas
+   */
+  async findAllPaginated(
+    query: PaginationQueryDto,
+  ): Promise<PaginatedResponse<Metric>> {
+    try {
+      const { page = 1, pageSize = 10, search, sortBy = 'label', sortDir = 'asc' } = query;
+
+      // Filtro de búsqueda (label, key, description)
+      const filter: any = {};
+      if (search) {
+        filter.$or = [
+          { label: { $regex: search, $options: 'i' } },
+          { key: { $regex: search, $options: 'i' } },
+          { description: { $regex: search, $options: 'i' } },
+        ];
+      }
+
+      const skip = (page - 1) * pageSize;
+      const sortOrder = sortDir === 'asc' ? 1 : -1;
+
+      const [data, totalItems] = await Promise.all([
+        this.metricModel
+          .find(filter)
+          .sort({ [sortBy]: sortOrder })
+          .skip(skip)
+          .limit(pageSize)
+          .exec(),
+        this.metricModel.countDocuments(filter).exec(),
+      ]);
+
+      return createPaginatedResponse(data, page, pageSize, totalItems);
+    } catch (error) {
+      throw new DatabaseException('Error al obtener las métricas paginadas', {
         originalError: error instanceof Error ? error.message : String(error),
       });
     }

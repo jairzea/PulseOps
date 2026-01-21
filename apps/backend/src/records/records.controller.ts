@@ -15,8 +15,7 @@ import { DemoOrJwtAuthGuard } from '../auth/guards/demo-or-jwt.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
-import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { User } from '../common/interfaces/user.interface';
+import { CurrentUser } from '../common/decorators/current-user.decorator';import { PaginationQueryDto } from '../common/dto/pagination-query.dto';import { User } from '../common/interfaces/user.interface';
 
 @Controller('records')
 @UseGuards(DemoOrJwtAuthGuard)
@@ -30,7 +29,10 @@ export class RecordsController {
   }
 
   @Get()
-  async findMany(@Query() query: QueryRecordsDto, @CurrentUser() user?: User) {
+  async findMany(
+    @Query() query: QueryRecordsDto & PaginationQueryDto,
+    @CurrentUser() user?: User,
+  ) {
     // Si se filtra por resourceId, permitir owner o admin
     const resourceId = (query as any).resourceId as string | undefined;
     if (resourceId) {
@@ -39,15 +41,29 @@ export class RecordsController {
       if (!isAdmin && !isOwner) {
         throw new ForbiddenException('Forbidden resource');
       }
-      return this.recordsService.findMany(query);
+    } else {
+      // Sin filtro, sólo admins pueden listar todos los registros
+      const isAdmin = user?.role === UserRole.ADMIN;
+      if (!isAdmin) {
+        throw new ForbiddenException('Forbidden resource');
+      }
     }
 
-    // Sin filtro, sólo admins pueden listar todos los registros
-    const isAdmin = user?.role === UserRole.ADMIN;
-    if (!isAdmin) {
-      throw new ForbiddenException('Forbidden resource');
+    // Extraer filtros de QueryRecordsDto
+    const filters = {
+      resourceId: (query as any).resourceId,
+      metricKey: (query as any).metricKey,
+      fromWeek: (query as any).fromWeek,
+      toWeek: (query as any).toWeek,
+    };
+
+    // Si hay parámetros de paginación, usar endpoint paginado
+    if (query.page || query.pageSize || query.search) {
+      return this.recordsService.findManyPaginated(query, filters);
     }
-    return this.recordsService.findMany(query);
+
+    // Mantener compatibilidad: sin paginación devolver todo
+    return this.recordsService.findMany(filters);
   }
 
   @Delete(':id')

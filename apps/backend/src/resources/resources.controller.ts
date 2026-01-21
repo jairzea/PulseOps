@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -25,6 +26,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { ForbiddenException } from '../common/exceptions/app.exception';
 import { UserRole } from '../users/schemas/user.schema';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 
 /**
  * ResourcesController: proxy sobre UsersService para exponer una vista
@@ -40,12 +42,55 @@ export class ResourcesController {
     private analysisService: AnalysisService,
   ) {}
 
-  // GET /resources -> lista usuarios con role = user
+  // GET /resources -> lista usuarios con role = user (con paginación)
   // ADMIN: ve todos los recursos
   // USER: solo ve su propio recurso
   @Get()
-  async findAll(@CurrentUser() currentUser: any) {
-    const users = await this.usersService.findAll(true);
+  async findAll(
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Query('search') search?: string,
+    @CurrentUser() currentUser?: any,
+  ) {
+    // Si hay parámetros de paginación explícitos, usar endpoint paginado
+    if (page !== undefined || pageSize !== undefined || search !== undefined) {
+      const paginationQuery: PaginationQueryDto = {
+        page: page ? parseInt(page, 10) : 1,
+        pageSize: pageSize ? parseInt(pageSize, 10) : 10,
+        search,
+      };
+      const result = await this.usersService.findAllPaginated(paginationQuery, false, UserRole.USER);
+      
+      // Mapear usuarios a formato de recursos
+      const resourceUsers = result.data.map((user) => ({
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        roleType: (user as any).resourceProfile?.resourceType || 'OTHER',
+        isActive: user.isActive,
+        resourceProfile: (user as any).resourceProfile || null,
+        lastLogin: user.lastLogin || null,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt || null,
+      }));
+
+      // Aplicar filtro de permisos
+      let filteredData = resourceUsers;
+      if (currentUser?.role === UserRole.USER) {
+        filteredData = resourceUsers.filter((r) => r.id === currentUser.id);
+      } else if (currentUser?.role !== UserRole.ADMIN) {
+        filteredData = [];
+      }
+
+      return {
+        data: filteredData,
+        meta: result.meta,
+      };
+    }
+
+    // Mantener compatibilidad: sin paginación devolver todo en formato paginado
+    const users = await this.usersService.findAll(false);
     const resourceUsers = users
       .filter((u) => u.role === UserRole.USER)
       .map((user) => ({
@@ -61,18 +106,29 @@ export class ResourcesController {
         updatedAt: user.updatedAt || null,
       }));
 
+    let filteredData = resourceUsers;
     // Si el usuario actual es ADMIN, devolver todos los recursos
     if (currentUser?.role === UserRole.ADMIN) {
-      return resourceUsers;
+      filteredData = resourceUsers;
     }
-
     // Si es USER, solo devolver su propio recurso
-    if (currentUser?.role === UserRole.USER) {
-      return resourceUsers.filter((r) => r.id === currentUser.id);
+    else if (currentUser?.role === UserRole.USER) {
+      filteredData = resourceUsers.filter((r) => r.id === currentUser.id);
+    }
+    // Si no está autenticado o no tiene rol válido, devolver array vacío
+    else {
+      filteredData = [];
     }
 
-    // Si no está autenticado o no tiene rol válido, devolver array vacío
-    return [];
+    return {
+      data: filteredData,
+      meta: {
+        page: 1,
+        pageSize: filteredData.length,
+        totalItems: filteredData.length,
+        totalPages: 1,
+      },
+    };
   }
 
   // DELETE /resources/:id -> eliminar recurso (proxy hacia UsersController.delete)

@@ -6,9 +6,14 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { User, UserDocument } from './schemas/user.schema';
+import { User, UserDocument, UserRole } from './schemas/user.schema';
 import { RegisterDto, UpdateUserDto, ChangePasswordDto } from './dto/user.dto';
 import * as bcrypt from 'bcryptjs';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
+import {
+  PaginatedResponse,
+  createPaginatedResponse,
+} from '../common/interfaces/paginated-response.interface';
 
 @Injectable()
 export class UsersService {
@@ -22,6 +27,55 @@ export class UsersService {
   async findAll(includeInactive = false): Promise<UserDocument[]> {
     const filter = includeInactive ? {} : { isActive: true };
     return this.userModel.find(filter).select('-password').exec();
+  }
+
+  /**
+   * Listado paginado de usuarios con búsqueda
+   * @param query - Parámetros de paginación y búsqueda
+   * @param includeInactive - Si debe incluir usuarios inactivos
+   * @param roleFilter - Filtrar por rol específico (opcional)
+   * @returns Response paginada con usuarios
+   */
+  async findAllPaginated(
+    query: PaginationQueryDto,
+    includeInactive = false,
+    roleFilter?: UserRole,
+  ): Promise<PaginatedResponse<UserDocument>> {
+    const { page = 1, pageSize = 10, search, sortBy = 'createdAt', sortDir = 'desc' } = query;
+
+    // Filtro base
+    const filter: any = includeInactive ? {} : { isActive: true };
+
+    // Aplicar filtro de rol si se especifica
+    if (roleFilter) {
+      filter.role = roleFilter;
+    }
+
+    // Aplicar búsqueda si existe (name, email, role)
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { role: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    // Calcular skip y ejecutar queries en paralelo
+    const skip = (page - 1) * pageSize;
+    const sortOrder = sortDir === 'asc' ? 1 : -1;
+
+    const [data, totalItems] = await Promise.all([
+      this.userModel
+        .find(filter)
+        .select('-password')
+        .sort({ [sortBy]: sortOrder })
+        .skip(skip)
+        .limit(pageSize)
+        .exec(),
+      this.userModel.countDocuments(filter).exec(),
+    ]);
+
+    return createPaginatedResponse(data, page, pageSize, totalItems);
   }
 
   async findById(id: string): Promise<UserDocument> {

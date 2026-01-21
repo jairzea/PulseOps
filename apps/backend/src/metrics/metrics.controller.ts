@@ -18,6 +18,7 @@ import { UserRole } from '../users/schemas/user.schema';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { User } from '../common/interfaces/user.interface';
 import { ForbiddenException } from '../common/exceptions/app.exception';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 
 @Controller('metrics')
 @UseGuards(DemoOrJwtAuthGuard)
@@ -34,6 +35,9 @@ export class MetricsController {
   @Get()
   async findAll(
     @Query('resourceId') resourceId?: string,
+    @Query('page') page?: number,
+    @Query('pageSize') pageSize?: number,
+    @Query('search') search?: string,
     @CurrentUser() user?: User,
   ) {
     if (resourceId) {
@@ -43,7 +47,17 @@ export class MetricsController {
       if (!isAdmin && !isOwner) {
         throw new ForbiddenException('Forbidden resource');
       }
-      return this.metricsService.findByResource(resourceId);
+      const metrics = await this.metricsService.findByResource(resourceId);
+      // Devolver formato paginado para consistencia
+      return {
+        data: metrics,
+        meta: {
+          page: 1,
+          pageSize: metrics.length,
+          totalItems: metrics.length,
+          totalPages: 1,
+        },
+      };
     }
 
     // Si no se especifica resourceId, sólo admins pueden listar todas las métricas
@@ -51,7 +65,28 @@ export class MetricsController {
     if (!isAdmin) {
       throw new ForbiddenException('Forbidden resource');
     }
-    return this.metricsService.findAll();
+
+    // Si hay parámetros de paginación, usar endpoint paginado
+    if (page || pageSize || search) {
+      const paginationQuery: PaginationQueryDto = {
+        page: page ? Number(page) : undefined,
+        pageSize: pageSize ? Number(pageSize) : undefined,
+        search: search || undefined,
+      };
+      return this.metricsService.findAllPaginated(paginationQuery);
+    }
+
+    // Mantener compatibilidad: sin paginación devolver todo en formato paginado
+    const allMetrics = await this.metricsService.findAll();
+    return {
+      data: allMetrics,
+      meta: {
+        page: 1,
+        pageSize: allMetrics.length,
+        totalItems: allMetrics.length,
+        totalPages: 1,
+      },
+    };
   }
 
   @Patch(':id')
