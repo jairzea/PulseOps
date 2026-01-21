@@ -1,19 +1,39 @@
-import { Metric } from '../services/apiClient';
-import { Autocomplete } from './Autocomplete';
+import { useCallback } from 'react';
+import { apiClient } from '../services/apiClient';
+import { AutocompleteInfinite } from './AutocompleteInfinite';
 
 interface MetricSelectorProps {
-    metrics: Metric[];
     selectedKey: string | null;
     onSelect: (metricKey: string) => void;
     loading?: boolean;
+    resourceId?: string | null;
 }
 
 export function MetricSelector({
-    metrics,
     selectedKey,
     onSelect,
     loading = false,
+    resourceId,
 }: MetricSelectorProps) {
+    // Memoizar fetchFunction para evitar re-renders innecesarios
+    // Incluye resourceId en dependencias para que se actualice cuando cambia el recurso
+    const fetchFunction = useCallback(async (page: number, search: string, pageSize: number) => {
+        const response = await apiClient.getMetricsPaginated({
+            page,
+            pageSize,
+            search: search || undefined,
+            resourceId: resourceId || undefined,
+        });
+        return {
+            data: response.data.map(m => ({
+                value: m.key,
+                label: m.label,
+                description: m.description,
+            })),
+            meta: response.meta,
+        };
+    }, [resourceId]);
+
     if (loading) {
         return (
             <div className="animate-pulse">
@@ -24,16 +44,12 @@ export function MetricSelector({
 
     return (
         <div className="min-w-[200px]">
-            <Autocomplete
-                options={metrics.map(metric => ({
-                    value: metric.key,
-                    label: metric.label,
-                    description: metric.description
-                }))}
+            <AutocompleteInfinite
                 value={selectedKey || ''}
                 onChange={onSelect}
-                placeholder={metrics.length === 0 ? 'No metrics available' : 'Select a metric'}
-                disabled={metrics.length === 0}
+                fetchFunction={fetchFunction}
+                placeholder="Select a metric"
+                pageSize={15}
             />
         </div>
     );

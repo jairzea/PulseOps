@@ -4,13 +4,13 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Resource, Metric, Record as MetricRecord } from '../services/apiClient';
+import { /* Resource, */ Metric, Record as MetricRecord } from '../services/apiClient';
 import { apiClient } from '../services/apiClient';
-import { Autocomplete } from './Autocomplete';
+import { AutocompleteInfinite } from './AutocompleteInfinite';
 import * as yup from 'yup';
 
 interface RecordFormProps {
-    resources: Resource[];
+    // resources: Resource[]; // Ya no se necesita - AutocompleteInfinite obtiene desde backend
     onSubmit: (data: RecordFormData) => void;
     onCancel: () => void;
     isSubmitting?: boolean;
@@ -56,7 +56,7 @@ const formatToISOWeek = (date: Date): string => {
 };
 
 export const RecordForm: React.FC<RecordFormProps> = ({
-    resources,
+    // resources, // Ya no se necesita porque AutocompleteInfinite obtiene desde backend
     onSubmit,
     onCancel,
     isSubmitting = false,
@@ -153,20 +153,33 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                 <label htmlFor="resourceId" className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                     1. Selecciona el Recurso *
                 </label>
-                <Autocomplete
-                    options={resources.filter(r => r.isActive).map(resource => ({
-                        value: resource.id,
-                        label: resource.name,
-                        description: resource.roleType
-                    }))}
+                <AutocompleteInfinite
                     value={selectedResourceId}
                     onChange={(value) => {
                         setValue('resourceId', value);
                         setSelectedResourceId(value);
                     }}
+                    fetchFunction={async (page, search, pageSize) => {
+                        const response = await apiClient.getResourcesPaginated({
+                            page,
+                            pageSize,
+                            search: search || undefined,
+                        });
+                        return {
+                            data: response.data
+                                .filter(r => r.isActive)
+                                .map(r => ({
+                                    value: r.id,
+                                    label: r.name,
+                                    description: r.roleType,
+                                })),
+                            meta: response.meta,
+                        };
+                    }}
                     placeholder="Seleccionar recurso..."
                     disabled={isSubmitting || isEditing}
                     error={!!errors.resourceId}
+                    pageSize={15}
                 />
                 {isEditing && (
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">

@@ -2,19 +2,21 @@
  * RecordModal - Modal con integración a Zustand store
  */
 import { useEffect, useState } from 'react';
-import { Resource } from '../services/apiClient';
+// import { Resource } from '../services/apiClient'; // Ya no se necesita
 import { RecordForm } from './RecordForm';
 import { useRecordsStore } from '../stores/recordsStore';
 import { useToast } from '../hooks/useToast';
 
 interface RecordModalProps {
-    resources: Resource[];
+    // resources: Resource[]; // Ya no se necesita - RecordForm usa AutocompleteInfinite
     title?: string;
+    onSuccess?: () => void;
 }
 
 export const RecordModal: React.FC<RecordModalProps> = ({
-    resources,
+    // resources, // Ya no se necesita
     title,
+    onSuccess,
 }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -49,7 +51,7 @@ export const RecordModal: React.FC<RecordModalProps> = ({
                 // Modo edición: actualizar solo el registro actual
                 const metricValues = data.metricValues || {};
                 const metricValue = metricValues[editingRecord.metricKey];
-                
+
                 if (metricValue === null || metricValue === undefined) {
                     showError('Debes ingresar un valor para la métrica');
                     return;
@@ -63,7 +65,7 @@ export const RecordModal: React.FC<RecordModalProps> = ({
                     value: metricValue as number,
                     source: 'MANUAL',
                 });
-                
+
                 success('Registro actualizado correctamente');
             } else {
                 // Modo creación: crear múltiples registros, uno por cada métrica con valor
@@ -90,6 +92,7 @@ export const RecordModal: React.FC<RecordModalProps> = ({
                 success(`${promises.length} registro(s) creado(s) correctamente`);
             }
             setModalOpen(false);
+            onSuccess?.(); // Llamar callback después de éxito
         } catch (err) {
             console.error('Error submitting record:', err);
             showError(isEditing ? 'Error al actualizar el registro' : 'Error al crear los registros');
@@ -172,7 +175,6 @@ export const RecordModal: React.FC<RecordModalProps> = ({
                     )}
 
                     <RecordForm
-                        resources={resources}
                         onSubmit={handleSubmit}
                         onCancel={handleClose}
                         isSubmitting={isSubmitting}
