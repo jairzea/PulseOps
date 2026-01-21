@@ -260,7 +260,7 @@ export const RecordsPage: React.FC = () => {
                         )}
 
                         {/* Tabla de registros */}
-                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-300 min-h-[400px]">
                             {!selectedResourceId || !selectedMetricKey ? (
                                 <div className="p-8 text-center">
                                     <p className="text-gray-600 dark:text-gray-400">
@@ -284,7 +284,7 @@ export const RecordsPage: React.FC = () => {
                                     </button>
                                 </div>
                             ) : (
-                                <table className="w-full">
+                                <table className="w-full fade-in">
                                     <thead className="bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
                                         <tr>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">

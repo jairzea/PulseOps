@@ -192,7 +192,7 @@ export const ResourcesPage: React.FC = () => {
 
                 {/* Estadísticas */}
                 {!loading && !error && stats.totalResources > 0 && (
-                    <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4 fade-in">
                         <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/50 dark:to-blue-800/30 rounded-lg border border-blue-200 dark:border-blue-700/50 p-4">
                             <p className="text-blue-600 dark:text-blue-300 text-sm font-medium">Total de Recursos</p>
                             <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.totalResources}</p>
@@ -222,7 +222,7 @@ export const ResourcesPage: React.FC = () => {
                 </div>
 
                 {/* Tabla de recursos */}
-                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors duration-300">
+                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-300 min-h-[500px]">
                     {loading && <TableSkeleton rows={5} columns={5} />}
 
                     {error && (
@@ -260,7 +260,7 @@ export const ResourcesPage: React.FC = () => {
                     )}
 
                     {!loading && !error && resources.length > 0 && (
-                        <table className="w-full">
+                        <table className="w-full fade-in">
                             <thead className="bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">

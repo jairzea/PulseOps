@@ -17,7 +17,7 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({
     const actualColumns = showActions ? columns : columns - 1;
 
     return (
-        <div className="animate-pulse">
+        <div className="animate-pulse min-h-[400px] fade-in">
             {/* Header */}
             <div className="bg-gray-100 dark:bg-gray-800 px-6 py-3 transition-colors duration-300 flex gap-4">
                 {Array.from({ length: actualColumns }).map((_, i) => (
