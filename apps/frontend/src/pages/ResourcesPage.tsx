@@ -207,7 +207,7 @@ export const ResourcesPage: React.FC = () => {
                     {error && (
                         <PermissionFeedback
                             message={typeof error === 'string' ? error : String(error)}
-                            onRetry={loadResources}
+                            onRetry={reload}
                         />
                     )}
 

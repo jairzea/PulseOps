@@ -17,8 +17,8 @@ import { AutocompleteInfinite } from '../components/AutocompleteInfinite';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { useConfirmModal } from '../hooks/useConfirmModal';
 import { useToast } from '../hooks/useToast';
-import { recordsApi } from '../services/apiClient';
-import type { Record as MetricRecord } from '../services/apiClient';
+import { recordsApi, resourcesApi, metricsApi } from '../services/apiClient';
+import type { Record as MetricRecord, Resource, Metric } from '../services/apiClient';
 
 export const RecordsPage: React.FC = () => {
     const { user } = useAuth();
@@ -169,13 +169,13 @@ export const RecordsPage: React.FC = () => {
                                         value={selectedResourceId}
                                         onChange={setSelectedResourceId}
                                         fetchFunction={async (page, search, pageSize) => {
-                                            const response = await apiClient.getResourcesPaginated({
+                                            const response = await resourcesApi.getPaginated({
                                                 page,
                                                 pageSize,
                                                 search: search || undefined,
                                             });
                                             return {
-                                                data: response.data.map(r => ({
+                                                data: response.data.map((r: Resource) => ({
                                                     value: r.id,
                                                     label: r.name,
                                                     description: r.roleType,
@@ -200,14 +200,14 @@ export const RecordsPage: React.FC = () => {
                                         value={selectedMetricKey}
                                         onChange={setSelectedMetricKey}
                                         fetchFunction={async (page, search, pageSize) => {
-                                            const response = await apiClient.getMetricsPaginated({
+                                            const response = await metricsApi.getPaginated({
                                                 page,
                                                 pageSize,
                                                 search: search || undefined,
                                                 resourceId: selectedResourceId || undefined,
                                             });
                                             return {
-                                                data: response.data.map(m => ({
+                                                data: response.data.map((m: Metric) => ({
                                                     value: m.key,
                                                     label: m.label,
                                                     description: m.description,
