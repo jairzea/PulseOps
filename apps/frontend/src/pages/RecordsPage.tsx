@@ -260,7 +260,7 @@ export const RecordsPage: React.FC = () => {
                         )}
 
                         {/* Tabla de registros */}
-                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-300 min-h-[400px]">
+                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-500 ease-in-out min-h-[400px]">
                             {!selectedResourceId || !selectedMetricKey ? (
                                 <div className="p-8 text-center">
                                     <p className="text-gray-600 dark:text-gray-400">
@@ -307,7 +307,7 @@ export const RecordsPage: React.FC = () => {
 
                                     <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                                         {records.map((record) => (
-                                            <tr key={record.id} className="hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors">
+                                            <tr key={record.id} className="hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all duration-200 ease-in-out">
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className="px-2 py-1 text-xs font-mono rounded bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
                                                         {formatWeek(record.week)}

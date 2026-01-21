@@ -44,10 +44,10 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
     const endItem = Math.min(page * pageSize, totalItems);
 
     return (
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-colors duration-300">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-500 ease-in-out">
             {/* Info de items */}
-            <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+            <div className="flex items-center gap-4 transition-all duration-300">
+                <span className="text-sm text-gray-700 dark:text-gray-300 transition-colors duration-300">
                     Mostrando <span className="font-medium">{startItem}</span> a{' '}
                     <span className="font-medium">{endItem}</span> de{' '}
                     <span className="font-medium">{totalItems}</span> resultados
@@ -65,7 +65,7 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
                         id="pageSize"
                         value={pageSize}
                         onChange={(e) => onPageSizeChange(Number(e.target.value))}
-                        className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                        className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ease-in-out hover:border-blue-400"
                     >
                         {pageSizeOptions.map((size) => (
                             <option key={size} value={size}>
@@ -81,7 +81,7 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
                 <button
                     onClick={onPrevPage}
                     disabled={page === 1}
-                    className="px-2 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 group"
+                    className="px-2 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md group"
                     title="Anterior"
                 >
                     <div className="w-6 h-6 transform rotate-90">
@@ -104,7 +104,7 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
                 <button
                     onClick={onNextPage}
                     disabled={page >= totalPages}
-                    className="px-2 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 group"
+                    className="px-2 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md group"
                     title="Siguiente"
                 >
                     <div className="w-6 h-6 transform -rotate-90">

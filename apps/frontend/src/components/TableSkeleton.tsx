@@ -19,7 +19,7 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({
     return (
         <div className="animate-pulse min-h-[400px] fade-in">
             {/* Header */}
-            <div className="bg-gray-100 dark:bg-gray-800 px-6 py-3 transition-colors duration-300 flex gap-4">
+            <div className="bg-gray-100 dark:bg-gray-800 px-6 py-3 transition-all duration-500 ease-in-out flex gap-4">
                 {Array.from({ length: actualColumns }).map((_, i) => (
                     <div
                         key={`header-${i}`}

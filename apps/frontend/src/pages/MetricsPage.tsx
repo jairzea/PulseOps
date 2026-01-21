@@ -143,7 +143,7 @@ export const MetricsPage: React.FC = () => {
                 </div>
 
                 {/* Tabla de métricas */}
-                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-300 min-h-[500px]">
+                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-500 ease-in-out min-h-[500px]">
                     {loading && <TableSkeleton columns={5} rows={6} showActions={true} />}
 
                     {error && (
@@ -188,7 +188,7 @@ export const MetricsPage: React.FC = () => {
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                                 {metrics.map((metric) => (
-                                    <tr key={metric.id} className="hover:bg-gray-800/50 transition-colors">
+                                    <tr key={metric.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200 ease-in-out">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm font-medium text-gray-900 dark:text-white">{metric.label}</div>
                                         </td>
@@ -209,7 +209,7 @@ export const MetricsPage: React.FC = () => {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => handleEdit(metric)}
-                                                    className="p-2 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                                    className="p-2 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all duration-200 ease-in-out hover:scale-105"
                                                     title="Editar métrica"
                                                 >
                                                     <svg

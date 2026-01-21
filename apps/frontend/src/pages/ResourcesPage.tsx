@@ -193,19 +193,19 @@ export const ResourcesPage: React.FC = () => {
                 {/* Estadísticas */}
                 {!loading && !error && stats.totalResources > 0 && (
                     <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4 fade-in">
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/50 dark:to-blue-800/30 rounded-lg border border-blue-200 dark:border-blue-700/50 p-4">
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/50 dark:to-blue-800/30 rounded-lg border border-blue-200 dark:border-blue-700/50 p-4 transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-600">
                             <p className="text-blue-600 dark:text-blue-300 text-sm font-medium">Total de Recursos</p>
                             <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.totalResources}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/50 dark:to-green-800/30 rounded-lg border border-green-200 dark:border-green-700/50 p-4">
+                        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/50 dark:to-green-800/30 rounded-lg border border-green-200 dark:border-green-700/50 p-4 transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-xl hover:border-green-300 dark:hover:border-green-600">
                             <p className="text-green-600 dark:text-green-300 text-sm font-medium">Recursos Activos</p>
                             <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.activeResources}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/50 dark:to-purple-800/30 rounded-lg border border-purple-200 dark:border-purple-700/50 p-4">
+                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/50 dark:to-purple-800/30 rounded-lg border border-purple-200 dark:border-purple-700/50 p-4 transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-xl hover:border-purple-300 dark:hover:border-purple-600">
                             <p className="text-purple-600 dark:text-purple-300 text-sm font-medium">Desarrolladores</p>
                             <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.devResources}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-orange-900/50 to-orange-800/30 rounded-lg border border-orange-700/50 p-4">
+                        <div className="bg-gradient-to-br from-orange-900/50 to-orange-800/30 rounded-lg border border-orange-700/50 p-4 transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-xl hover:border-orange-600">
                             <p className="text-orange-600 dark:text-orange-300 text-sm font-medium">Líderes Técnicos</p>
                             <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.tlResources}</p>
                         </div>
@@ -222,7 +222,7 @@ export const ResourcesPage: React.FC = () => {
                 </div>
 
                 {/* Tabla de recursos */}
-                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-300 min-h-[500px]">
+                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-500 ease-in-out min-h-[500px]">
                     {loading && <TableSkeleton rows={5} columns={5} />}
 
                     {error && (
@@ -282,7 +282,7 @@ export const ResourcesPage: React.FC = () => {
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                                 {resources.map((resource) => (
-                                    <tr key={resource.id} className="hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors">
+                                    <tr key={resource.id} className="hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all duration-200 ease-in-out">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
                                                 <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
@@ -329,7 +329,7 @@ export const ResourcesPage: React.FC = () => {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => handleOpenModal(resource)}
-                                                    className="p-2 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                                    className="p-2 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all duration-200 ease-in-out hover:scale-105"
                                                     title="Editar recurso"
                                                 >
                                                     <svg

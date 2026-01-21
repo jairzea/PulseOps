@@ -134,7 +134,7 @@ export function UsersAdminPage() {
                 </div>
 
                 {/* Tabla de usuarios */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300 min-h-[500px]">
+                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-500 ease-in-out min-h-[500px]">
                     <table className="w-full fade-in">
                         <thead className="bg-gray-100 dark:bg-gray-700 transition-colors duration-300">
                             <tr>
@@ -157,7 +157,7 @@ export function UsersAdminPage() {
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-700 transition-colors duration-300">
                             {users.map((user) => (
-                                <tr key={user.id} className="hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
+                                <tr key={user.id} className="hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-all duration-200 ease-in-out">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center font-semibold text-white text-sm">
