@@ -23,19 +23,19 @@ export function MetricSelector({
         if (resourceId) {
             const metrics = await apiClient.getMetrics(resourceId);
             // Filtrar por búsqueda en el cliente si es necesario
-            const filtered = search 
-                ? metrics.filter(m => 
+            const filtered = search
+                ? metrics.filter(m =>
                     m.label.toLowerCase().includes(search.toLowerCase()) ||
                     m.key.toLowerCase().includes(search.toLowerCase()) ||
                     m.description?.toLowerCase().includes(search.toLowerCase())
-                  )
+                )
                 : metrics;
-            
+
             // Simular paginación en el cliente
             const start = (page - 1) * pageSize;
             const end = start + pageSize;
             const paginatedData = filtered.slice(start, end);
-            
+
             return {
                 data: paginatedData.map(m => ({
                     value: m.key,
@@ -50,7 +50,7 @@ export function MetricSelector({
                 },
             };
         }
-        
+
         // Sin resourceId, usar paginación del backend
         const response = await apiClient.getMetricsPaginated({
             page,

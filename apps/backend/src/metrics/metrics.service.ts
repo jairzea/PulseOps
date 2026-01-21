@@ -66,7 +66,13 @@ export class MetricsService {
     query: PaginationQueryDto,
   ): Promise<PaginatedResponse<Metric>> {
     try {
-      const { page = 1, pageSize = 10, search, sortBy = 'label', sortDir = 'asc' } = query;
+      const {
+        page = 1,
+        pageSize = 10,
+        search,
+        sortBy = 'label',
+        sortDir = 'asc',
+      } = query;
 
       // Filtro de búsqueda (label, key, description)
       const filter: any = {};
@@ -121,11 +127,11 @@ export class MetricsService {
       const updated = await this.metricModel
         .findOneAndUpdate({ id }, dto, { new: true })
         .exec();
-      
+
       if (!updated) {
         throw new ResourceNotFoundException('Métrica', id);
       }
-      
+
       return updated;
     } catch (error) {
       if (error instanceof ResourceNotFoundException) {
@@ -140,7 +146,7 @@ export class MetricsService {
   async delete(id: string): Promise<{ deleted: boolean; id: string }> {
     try {
       const metric = await this.metricModel.findOne({ id }).exec();
-      
+
       if (!metric) {
         throw new ResourceNotFoundException('Métrica', id);
       }
@@ -188,7 +194,10 @@ export class MetricsService {
    * - Añade `resourceId` a `resourceIds` de métricas cuyo `id` está en `metricIds`.
    * - Elimina `resourceId` de métricas cuyo `id` no está en `metricIds`.
    */
-  async syncResourceAssociations(resourceId: string, metricIds: string[]): Promise<void> {
+  async syncResourceAssociations(
+    resourceId: string,
+    metricIds: string[],
+  ): Promise<void> {
     try {
       // Añadir resourceId a métricas seleccionadas
       if (metricIds && metricIds.length > 0) {
@@ -208,11 +217,14 @@ export class MetricsService {
         )
         .exec();
     } catch (error) {
-      throw new DatabaseException('Error sincronizando asociaciones de métricas', {
-        originalError: error instanceof Error ? error.message : String(error),
-        resourceId,
-        metricIds,
-      });
+      throw new DatabaseException(
+        'Error sincronizando asociaciones de métricas',
+        {
+          originalError: error instanceof Error ? error.message : String(error),
+          resourceId,
+          metricIds,
+        },
+      );
     }
   }
 }

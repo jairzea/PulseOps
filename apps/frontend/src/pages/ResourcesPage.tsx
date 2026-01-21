@@ -58,13 +58,13 @@ export const ResourcesPage: React.FC = () => {
     const fetchResources = useCallback((params: any) => resourcesApi.getPaginated(params), []);
 
     // Hook genérico para datos paginados
-    const { 
-        data: resources, 
-        meta, 
-        loading, 
-        error, 
-        reload, 
-        pagination 
+    const {
+        data: resources,
+        meta,
+        loading,
+        error,
+        reload,
+        pagination
     } = usePaginatedData<Resource>({
         fetchFn: fetchResources,
         initialPageSize: 10,

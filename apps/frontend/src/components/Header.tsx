@@ -15,7 +15,7 @@ export const Header: React.FC = () => {
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const userMenuRef = useRef<HTMLDivElement>(null);
-    
+
     // Hook para manejo de animaciones de avatar
     const { avatarRef, showAvatar, isAnimating, animateLogout } = useAvatarAnimation();
 
