@@ -5,15 +5,20 @@ import { useState, useEffect } from 'react';
 import { useRecordsStore } from '../stores/recordsStore';
 import { useResources } from '../hooks/useResources';
 import { useMetrics } from '../hooks/useMetrics';
+import { usePagination } from '../hooks/usePagination';
 import { RecordModal } from '../components/RecordModal';
 import { PulseLoader } from '../components/PulseLoader';
+import { PaginationControls } from '../components/PaginationControls';
+import { SearchInput } from '../components/SearchInput';
 import { PageHeader } from '../components/PageHeader';
 import { PermissionFeedback } from '../components/PermissionFeedback';
 import { useAuth } from '../contexts/AuthContext';
-import { Autocomplete } from '../components/Autocomplete';
+import { AutocompleteInfinite } from '../components/AutocompleteInfinite';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { useConfirmModal } from '../hooks/useConfirmModal';
 import { useToast } from '../hooks/useToast';
+import { PaginationMeta } from '../types/pagination';
+import { apiClient } from '../services/apiClient';
 import type { Record as MetricRecord } from '../services/apiClient';
 
 export const RecordsPage: React.FC = () => {
@@ -39,25 +44,58 @@ export const RecordsPage: React.FC = () => {
         );
     }
 
-    const { records, loading, error: recordsError, fetchRecords, setModalOpen, setEditingRecord, deleteRecord } = useRecordsStore();
+    const { setModalOpen, setEditingRecord, deleteRecord } = useRecordsStore();
     const { resources, error: resourcesError } = useResources();
     const { metrics, error: metricsError } = useMetrics();
     const { confirm, ...confirmModalProps } = useConfirmModal();
     const { success, error: showError } = useToast();
 
+    // Estado local para paginación y datos
+    const [records, setRecords] = useState<MetricRecord[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [recordsError, setRecordsError] = useState<string | null>(null);
+    const [meta, setMeta] = useState<PaginationMeta>({
+        page: 1,
+        pageSize: 10,
+        totalItems: 0,
+        totalPages: 0,
+    });
+    const pagination = usePagination(10);
     const [selectedResourceId, setSelectedResourceId] = useState<string>('');
     const [selectedMetricKey, setSelectedMetricKey] = useState<string>('');
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
-    // Fetch records cuando cambian los filtros
-    useEffect(() => {
-        if (selectedResourceId && selectedMetricKey) {
-            fetchRecords({
-                resourceId: selectedResourceId,
-                metricKey: selectedMetricKey
-            });
+    /**
+     * Carga registros con paginación servidor
+     */
+    const loadRecords = async () => {
+        if (!selectedResourceId || !selectedMetricKey) {
+            setRecords([]);
+            return;
         }
-    }, [selectedResourceId, selectedMetricKey, fetchRecords]);
+
+        setLoading(true);
+        setRecordsError(null);
+        try {
+            const response = await apiClient.getRecordsPaginated({
+                ...pagination.params,
+                resourceId: selectedResourceId,
+                metricKey: selectedMetricKey,
+            });
+            setRecords(response.data);
+            setMeta(response.meta);
+        } catch (err) {
+            console.error('Error al cargar registros:', err);
+            setRecordsError(err instanceof Error ? err.message : 'Error al cargar registros');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch records cuando cambian los filtros o la paginación
+    useEffect(() => {
+        loadRecords();
+    }, [selectedResourceId, selectedMetricKey, pagination.params]);
 
     const formatWeek = (week: string) => {
         return week;
@@ -78,8 +116,8 @@ export const RecordsPage: React.FC = () => {
     };
 
     const handleDelete = async (record: MetricRecord) => {
-        const metricLabel = metrics.find(m => m.key === record.metricKey)?.label || record.metricKey;
-        const resourceName = resources.find(r => r.id === record.resourceId)?.name || 'Recurso';
+        const metricLabel = Array.isArray(metrics) ? metrics.find(m => m.key === record.metricKey)?.label || record.metricKey : record.metricKey;
+        const resourceName = Array.isArray(resources) ? resources.find(r => r.id === record.resourceId)?.name || 'Recurso' : 'Recurso';
 
         const confirmed = await confirm({
             title: '¿Eliminar registro?',
@@ -94,6 +132,7 @@ export const RecordsPage: React.FC = () => {
             try {
                 await deleteRecord(record.id);
                 success('Registro eliminado correctamente');
+                await loadRecords(); // Recargar con paginación
             } catch (err) {
                 showError('Error al eliminar el registro');
             } finally {
@@ -129,19 +168,13 @@ export const RecordsPage: React.FC = () => {
                     <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-6 border border-gray-200 dark:border-gray-800 transition-colors duration-300">
                         <PermissionFeedback
                             message={permissionMessage || 'No tienes permisos para ver este módulo'}
-                            onRetry={() => {
-                                if (selectedResourceId && selectedMetricKey) {
-                                    fetchRecords({ resourceId: selectedResourceId, metricKey: selectedMetricKey });
-                                } else {
-                                    fetchRecords({});
-                                }
-                            }}
+                            onRetry={() => loadRecords()}
                         />
                     </div>
                 ) : (
                     <div>
                         {/* Filtros */}
-                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6 transition-colors duration-300 mb-6">
+                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6 transition-colors duration-300 mb-4">
                             <h2 className="text-lg font-semibold mb-4">Filtros</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* Selector de Recurso */}
@@ -152,15 +185,26 @@ export const RecordsPage: React.FC = () => {
                                     >
                                         Recurso
                                     </label>
-                                    <Autocomplete
-                                        options={resources.map(resource => ({
-                                            value: resource.id,
-                                            label: resource.name,
-                                            description: resource.roleType,
-                                        }))}
+                                    <AutocompleteInfinite
                                         value={selectedResourceId}
                                         onChange={setSelectedResourceId}
+                                        fetchFunction={async (page, search, pageSize) => {
+                                            const response = await apiClient.getResourcesPaginated({
+                                                page,
+                                                pageSize,
+                                                search: search || undefined,
+                                            });
+                                            return {
+                                                data: response.data.map(r => ({
+                                                    value: r.id,
+                                                    label: r.name,
+                                                    description: r.roleType,
+                                                })),
+                                                meta: response.meta,
+                                            };
+                                        }}
                                         placeholder="Seleccionar recurso..."
+                                        pageSize={15}
                                     />
                                 </div>
 
@@ -172,19 +216,41 @@ export const RecordsPage: React.FC = () => {
                                     >
                                         Métrica
                                     </label>
-                                    <Autocomplete
-                                        options={metrics.map(metric => ({
-                                            value: metric.key,
-                                            label: metric.label,
-                                            description: metric.description,
-                                        }))}
+                                    <AutocompleteInfinite
                                         value={selectedMetricKey}
                                         onChange={setSelectedMetricKey}
+                                        fetchFunction={async (page, search, pageSize) => {
+                                            const response = await apiClient.getMetricsPaginated({
+                                                page,
+                                                pageSize,
+                                                search: search || undefined,
+                                            });
+                                            return {
+                                                data: response.data.map(m => ({
+                                                    value: m.key,
+                                                    label: m.label,
+                                                    description: m.description,
+                                                })),
+                                                meta: response.meta,
+                                            };
+                                        }}
                                         placeholder="Seleccionar métrica..."
+                                        pageSize={15}
                                     />
                                 </div>
                             </div>
                         </div>
+
+                        {/* Búsqueda */}
+                        {selectedResourceId && selectedMetricKey && (
+                            <div className="mb-4">
+                                <SearchInput
+                                    value={pagination.search}
+                                    onChange={pagination.setSearch}
+                                    placeholder="Buscar por semana..."
+                                />
+                            </div>
+                        )}
 
                         {/* Tabla de registros */}
                         <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
@@ -287,27 +353,41 @@ export const RecordsPage: React.FC = () => {
                                     </tbody>
                                 </table>
                             )}
+
+                            {/* Controles de paginación */}
+                            {!loading && records.length > 0 && (
+                                <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800">
+                                    <PaginationControls
+                                        meta={meta}
+                                        page={pagination.page}
+                                        pageSize={pagination.pageSize}
+                                        onPageSizeChange={pagination.setPageSize}
+                                        onPrevPage={pagination.prevPage}
+                                        onNextPage={pagination.nextPage}
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         {/* Estadísticas */}
                         {records.length > 0 && (
                             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 transition-colors duration-300">
-                                    <p className="text-gray-600 dark:text-gray-400 text-sm">Total de Registros</p>
+                                    <p className="text-gray-600 dark:text-gray-400 text-sm">Total en Página</p>
                                     <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                         {records.length}
                                     </p>
                                 </div>
                                 <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 transition-colors duration-300">
-                                    <p className="text-gray-600 dark:text-gray-400 text-sm">Valor Promedio</p>
+                                    <p className="text-gray-600 dark:text-gray-400 text-sm">Valor Promedio (Página)</p>
                                     <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                         {(records.reduce((acc, r) => acc + r.value, 0) / records.length).toFixed(1)}
                                     </p>
                                 </div>
                                 <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4 transition-colors duration-300">
-                                    <p className="text-gray-600 dark:text-gray-400 text-sm">Último Valor</p>
+                                    <p className="text-gray-600 dark:text-gray-400 text-sm">Total de Registros</p>
                                     <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                                        {records[records.length - 1]?.value || 0}
+                                        {meta.totalItems}
                                     </p>
                                 </div>
                             </div>
@@ -316,7 +396,9 @@ export const RecordsPage: React.FC = () => {
                 )}
 
                 {/* Modal de formulario */}
-                <RecordModal resources={resources} />
+                <RecordModal
+                    onSuccess={() => loadRecords()}
+                />
 
                 {/* Modal de confirmación */}
                 <ConfirmModal

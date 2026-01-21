@@ -4,12 +4,22 @@ import { showToast } from '../utils/toast';
 import { UserWithMetadata, RegisterData } from '../types/auth';
 import { useResources } from '../hooks/useResources';
 import { ResourceSelector } from '../components/ResourceSelector';
+import { usePagination } from '../hooks/usePagination';
+import { SearchInput } from '../components/SearchInput';
+import { PaginationControls } from '../components/PaginationControls';
+import type { PaginationMeta } from '../types/pagination';
 
 export function UsersAdminPage() {
     const [users, setUsers] = useState<UserWithMetadata[]>([]);
+    const [meta, setMeta] = useState<PaginationMeta>({
+        page: 1,
+        pageSize: 10,
+        totalItems: 0,
+        totalPages: 0,
+    });
     const [isLoading, setIsLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
+    const pagination = usePagination(10);
     const { resources, loading: loadingResources } = useResources();
     const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
 
@@ -23,7 +33,7 @@ export function UsersAdminPage() {
 
     useEffect(() => {
         loadUsers();
-    }, []);
+    }, [pagination.params]);
 
     // Preseleccionar el primer recurso cuando se cargan los recursos y el rol es 'user'
     useEffect(() => {
@@ -34,8 +44,10 @@ export function UsersAdminPage() {
 
     const loadUsers = async () => {
         try {
-            const data = await authAPI.getAllUsers();
-            setUsers(data);
+            setIsLoading(true);
+            const response = await authAPI.getAllUsersPaginated(pagination.params);
+            setUsers(response.data);
+            setMeta(response.meta);
         } catch (error) {
             showToast('Error al cargar usuarios', 'error');
         } finally {
@@ -87,12 +99,6 @@ export function UsersAdminPage() {
         }
     };
 
-    const filteredUsers = users.filter(
-        (user) =>
-            user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors duration-300">
@@ -119,12 +125,11 @@ export function UsersAdminPage() {
 
                 {/* Búsqueda */}
                 <div className="mb-6">
-                    <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Buscar por nombre o email..."
-                        className="w-full max-w-md px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    <SearchInput
+                        value={pagination.search}
+                        onChange={pagination.setSearch}
+                        placeholder="Buscar por nombre, email o rol..."
+                        className="max-w-md"
                     />
                 </div>
 
@@ -151,7 +156,7 @@ export function UsersAdminPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-700 transition-colors duration-300">
-                            {filteredUsers.map((user) => (
+                            {users.map((user) => (
                                 <tr key={user.id} className="hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
@@ -215,13 +220,25 @@ export function UsersAdminPage() {
                             ))}
                         </tbody>
                     </table>
-                </div>
 
-                {filteredUsers.length === 0 && (
-                    <div className="text-center py-12 text-gray-600 dark:text-gray-400">
-                        {searchTerm ? 'No se encontraron usuarios' : 'No hay usuarios registrados'}
-                    </div>
-                )}
+                    {users.length === 0 && (
+                        <div className="text-center py-12 text-gray-600 dark:text-gray-400">
+                            {pagination.search ? 'No se encontraron usuarios' : 'No hay usuarios registrados'}
+                        </div>
+                    )}
+
+                    {/* Controles de paginación */}
+                    {users.length > 0 && (
+                        <PaginationControls
+                            meta={meta}
+                            page={pagination.page}
+                            pageSize={pagination.pageSize}
+                            onPageSizeChange={pagination.setPageSize}
+                            onPrevPage={pagination.prevPage}
+                            onNextPage={pagination.nextPage}
+                        />
+                    )}
+                </div>
             </div>
 
             {/* Modal Crear Usuario */}
@@ -298,7 +315,6 @@ export function UsersAdminPage() {
                                         Recurso asociado
                                     </label>
                                     <ResourceSelector
-                                        resources={resources}
                                         selectedId={selectedResourceId}
                                         onSelect={(id) => setSelectedResourceId(id)}
                                         loading={loadingResources}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useResources } from '../hooks/useResources';
+// import { useResources } from '../hooks/useResources'; // Ya no se necesita - AutocompleteInfinite maneja los datos
 import { useMetrics } from '../hooks/useMetrics';
-import { apiClient } from '../services/apiClient';
+// import { apiClient } from '../services/apiClient';
 import { useAnalysis } from '../hooks/useAnalysis';
 import { useConditionsMetadata } from '../hooks/useConditionsMetadata';
 import { ResourceSelector } from '../components/ResourceSelector';
@@ -19,11 +19,11 @@ export function ResourceDashboard() {
   const conditionsContainerRef = useRef<HTMLDivElement>(null);
   const conditionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
-  const { resources, loading: loadingResources } = useResources();
+  // const { resources, loading: loadingResources } = useResources(); // Ya no se necesita
   const { user } = useAuth();
   const { metrics, loading: loadingMetrics } = useMetrics({ resourceId: selectedResourceId });
-  const [userMetrics, setUserMetrics] = useState<any[]>([]);
-  const [loadingUserMetrics, setLoadingUserMetrics] = useState(false);
+  // const [userMetrics, setUserMetrics] = useState<any[]>([]);
+  // const [loadingUserMetrics, setLoadingUserMetrics] = useState(false);
   const { conditions, loading: loadingConditions } = useConditionsMetadata();
 
   // Usar Zustand store para fetch de records
@@ -48,22 +48,21 @@ export function ResourceDashboard() {
     }
   }, [selectedResourceId, selectedMetricKey, fetchRecords]);
 
-  // Auto-select first resource and metric when loaded
+  // Auto-select resource for non-admin users
   useEffect(() => {
-    // If user is not admin, force their own resource and skip auto-select
+    // If user is not admin, force their own resource
     if (user && user.role !== 'admin') {
       if (user.id && user.id !== selectedResourceId) {
         setSelectedResourceId(user.id);
       }
-      return;
     }
-
-    if (!selectedResourceId && resources.length > 0) {
-      setSelectedResourceId(resources[0].id);
-    }
-  }, [resources, selectedResourceId, user]);
+    // Para usuarios admin, ya no auto-seleccionamos el primer recurso
+    // El usuario debe seleccionar manualmente desde el dropdown
+  }, [user, selectedResourceId]);
 
   // Para usuarios no-admin, obtener métricas directamente desde el resource detail
+  // Este código está deshabilitado porque ya no se usa userMetrics state
+  /*
   useEffect(() => {
     const loadUserMetrics = async () => {
       if (!user || user.role === 'admin' || !user.id) return;
@@ -91,10 +90,17 @@ export function ResourceDashboard() {
 
     loadUserMetrics();
   }, [user]);
+  */
 
   // Auto-select first metric when metrics change or resource changes
   useEffect(() => {
-    if (metrics.length > 0) {
+    // Solo auto-seleccionar métrica si hay un recurso seleccionado
+    if (!selectedResourceId) {
+      setSelectedMetricKey(null);
+      return;
+    }
+
+    if (Array.isArray(metrics) && metrics.length > 0) {
       // Si no hay métrica seleccionada O la métrica actual no está en la lista de métricas del recurso
       const currentMetricExists = metrics.some(m => m.key === selectedMetricKey);
       if (!selectedMetricKey || !currentMetricExists) {
@@ -104,7 +110,7 @@ export function ResourceDashboard() {
       // Si no hay métricas, limpiar la selección
       setSelectedMetricKey(null);
     }
-  }, [metrics]);
+  }, [metrics, selectedResourceId, selectedMetricKey]);
 
   // Detectar cuando se cierra el modal (indica que se creó un registro)
   const prevModalOpen = useRef(isModalOpen);
@@ -146,7 +152,7 @@ export function ResourceDashboard() {
   }, [analysis?.evaluation?.condition]);
 
   const selectedMetric = useMemo(
-    () => metrics.find((m) => m.key === selectedMetricKey),
+    () => Array.isArray(metrics) ? metrics.find((m) => m.key === selectedMetricKey) : undefined,
     [metrics, selectedMetricKey]
   );
 
@@ -160,17 +166,15 @@ export function ResourceDashboard() {
             <div className="flex items-center gap-3">
               {user && user.role === 'admin' && (
                 <ResourceSelector
-                  resources={resources}
                   selectedId={selectedResourceId}
                   onSelect={setSelectedResourceId}
-                  loading={loadingResources}
                 />
               )}
               <MetricSelector
-                metrics={user && user.role !== 'admin' ? userMetrics : metrics}
                 selectedKey={selectedMetricKey}
                 onSelect={setSelectedMetricKey}
-                loading={user && user.role !== 'admin' ? loadingUserMetrics : loadingMetrics}
+                loading={loadingMetrics}
+                resourceId={selectedResourceId}
               />
             </div>
 
@@ -331,9 +335,7 @@ export function ResourceDashboard() {
       </main>
 
       {/* Record Modal */}
-      <RecordModal
-        resources={resources}
-      />
+      <RecordModal />
     </div>
   );
 }
