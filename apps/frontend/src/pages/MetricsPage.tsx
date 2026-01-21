@@ -1,9 +1,10 @@
 /**
  * MetricsPage - Gestión de métricas
  */
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useMetricsStore } from '../stores/metricsStore';
 import { useResources } from '../hooks/useResources';
+import { usePaginatedData } from '../hooks/usePaginatedData';
 import { MetricModal } from '../components/MetricModal';
 import { TableSkeleton } from '../components/TableSkeleton';
 import { ConfirmModal } from '../components/ConfirmModal';
@@ -11,12 +12,10 @@ import { useConfirmModal } from '../hooks/useConfirmModal';
 import { PageHeader } from '../components/PageHeader';
 import { PermissionFeedback } from '../components/PermissionFeedback';
 import { useAuth } from '../contexts/AuthContext';
-import { Metric, apiClient } from '../services/apiClient';
+import { Metric, metricsApi } from '../services/apiClient';
 import { useToast } from '../hooks/useToast';
-import { usePagination } from '../hooks/usePagination';
 import { PaginationControls } from '../components/PaginationControls';
 import { SearchInput } from '../components/SearchInput';
-import type { PaginationMeta } from '../types/pagination';
 
 export const MetricsPage: React.FC = () => {
     const { user } = useAuth();
@@ -46,15 +45,17 @@ export const MetricsPage: React.FC = () => {
     const [editingMetric, setEditingMetric] = useState<Metric | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
-    // Estado local para datos paginados del servidor
-    const [metrics, setMetrics] = useState<Metric[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [meta, setMeta] = useState<PaginationMeta>({
-        page: 1,
-        pageSize: 10,
-        totalItems: 0,
-        totalPages: 0,
+    // Hook genérico para datos paginados
+    const { 
+        data: metrics, 
+        meta, 
+        loading, 
+        error, 
+        reload, 
+        pagination 
+    } = usePaginatedData<Metric>({
+        fetchFn: metricsApi.getPaginated,
+        initialPageSize: 10,
     });
 
     // Zustand solo para eliminar
@@ -62,38 +63,17 @@ export const MetricsPage: React.FC = () => {
     const { resources } = useResources();
     const confirmModal = useConfirmModal();
     const { success, error: showError } = useToast();
-    const pagination = usePagination(10);
-
-    // Cargar métricas paginadas del servidor
-    const loadMetrics = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await apiClient.getMetricsPaginated(pagination.params);
-            setMetrics(response.data);
-            setMeta(response.meta);
-        } catch (err) {
-            console.error('Error al cargar métricas:', err);
-            setError(err instanceof Error ? err.message : 'Error al cargar métricas');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        loadMetrics();
-    }, [pagination.params]);
 
     const handleEdit = (metric: Metric) => {
         setEditingMetric(metric);
         setIsModalOpen(true);
     };
 
-    const handleCloseModal = async (reload = false) => {
+    const handleCloseModal = async (shouldReload = false) => {
         setIsModalOpen(false);
         setEditingMetric(null);
-        if (reload) {
-            await loadMetrics(); // Recargar datos si se guardó
+        if (shouldReload) {
+            await reload(); // Usar reload del hook
         }
     };
 
@@ -111,7 +91,7 @@ export const MetricsPage: React.FC = () => {
             try {
                 await deleteMetric(id);
                 success('Métrica eliminada correctamente');
-                await loadMetrics(); // Recargar datos del servidor
+                await reload(); // Usar reload del hook
             } catch (err) {
                 showError('Error al eliminar la métrica');
             } finally {
@@ -149,7 +129,7 @@ export const MetricsPage: React.FC = () => {
                     {error && (
                         <PermissionFeedback
                             message={typeof error === 'string' ? error : String(error)}
-                            onRetry={loadMetrics}
+                            onRetry={reload}
                         />
                     )}
 

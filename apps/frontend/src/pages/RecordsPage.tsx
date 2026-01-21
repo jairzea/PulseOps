@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRecordsStore } from '../stores/recordsStore';
 import { useResources } from '../hooks/useResources';
 import { useMetrics } from '../hooks/useMetrics';
-import { usePagination } from '../hooks/usePagination';
+import { usePaginatedData } from '../hooks/usePaginatedData';
 import { RecordModal } from '../components/RecordModal';
 import { PulseLoader } from '../components/PulseLoader';
 import { PaginationControls } from '../components/PaginationControls';
@@ -17,8 +17,7 @@ import { AutocompleteInfinite } from '../components/AutocompleteInfinite';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { useConfirmModal } from '../hooks/useConfirmModal';
 import { useToast } from '../hooks/useToast';
-import { PaginationMeta } from '../types/pagination';
-import { apiClient } from '../services/apiClient';
+import { recordsApi } from '../services/apiClient';
 import type { Record as MetricRecord } from '../services/apiClient';
 
 export const RecordsPage: React.FC = () => {
@@ -50,52 +49,28 @@ export const RecordsPage: React.FC = () => {
     const { confirm, ...confirmModalProps } = useConfirmModal();
     const { success, error: showError } = useToast();
 
-    // Estado local para paginación y datos
-    const [records, setRecords] = useState<MetricRecord[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [recordsError, setRecordsError] = useState<string | null>(null);
-    const [meta, setMeta] = useState<PaginationMeta>({
-        page: 1,
-        pageSize: 10,
-        totalItems: 0,
-        totalPages: 0,
-    });
-    const pagination = usePagination(10);
+    // Estado local para filtros
     const [selectedResourceId, setSelectedResourceId] = useState<string>('');
     const [selectedMetricKey, setSelectedMetricKey] = useState<string>('');
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
-    /**
-     * Carga registros con paginación servidor
-     */
-    const loadRecords = async () => {
-        if (!selectedResourceId || !selectedMetricKey) {
-            setRecords([]);
-            return;
-        }
-
-        setLoading(true);
-        setRecordsError(null);
-        try {
-            const response = await apiClient.getRecordsPaginated({
-                ...pagination.params,
-                resourceId: selectedResourceId,
-                metricKey: selectedMetricKey,
-            });
-            setRecords(response.data);
-            setMeta(response.meta);
-        } catch (err) {
-            console.error('Error al cargar registros:', err);
-            setRecordsError(err instanceof Error ? err.message : 'Error al cargar registros');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Fetch records cuando cambian los filtros o la paginación
-    useEffect(() => {
-        loadRecords();
-    }, [selectedResourceId, selectedMetricKey, pagination.params]);
+    // Hook genérico para datos paginados con filtros
+    const { 
+        data: records, 
+        meta, 
+        loading, 
+        error: recordsError, 
+        reload, 
+        pagination 
+    } = usePaginatedData<MetricRecord>({
+        fetchFn: (params) => recordsApi.getPaginated({
+            ...params,
+            resourceId: selectedResourceId,
+            metricKey: selectedMetricKey,
+        }),
+        initialPageSize: 10,
+        dependencies: [selectedResourceId, selectedMetricKey],
+    });
 
     // Resetear métrica cuando cambia el recurso
     useEffect(() => {
@@ -137,7 +112,7 @@ export const RecordsPage: React.FC = () => {
             try {
                 await deleteRecord(record.id);
                 success('Registro eliminado correctamente');
-                await loadRecords(); // Recargar con paginación
+                await reload(); // Recargar con paginación
             } catch (err) {
                 showError('Error al eliminar el registro');
             } finally {
@@ -173,7 +148,7 @@ export const RecordsPage: React.FC = () => {
                     <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-6 border border-gray-200 dark:border-gray-800 transition-colors duration-300">
                         <PermissionFeedback
                             message={permissionMessage || 'No tienes permisos para ver este módulo'}
-                            onRetry={() => loadRecords()}
+                            onRetry={() => reload()}
                         />
                     </div>
                 ) : (
@@ -404,7 +379,7 @@ export const RecordsPage: React.FC = () => {
 
                 {/* Modal de formulario */}
                 <RecordModal
-                    onSuccess={() => loadRecords()}
+                    onSuccess={() => reload()}
                 />
 
                 {/* Modal de confirmación */}

@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useResourcesStore } from '../stores/resourcesStore';
 import { useMetricsStore } from '../stores/metricsStore';
 import { useConfirmModal } from '../hooks/useConfirmModal';
+import { usePaginatedData } from '../hooks/usePaginatedData';
 import { PageHeader } from '../components/PageHeader';
 import { PermissionFeedback } from '../components/PermissionFeedback';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,12 +14,10 @@ import { ResourceModal } from '../components/ResourceModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { TableSkeleton } from '../components/TableSkeleton';
 import { ResourceFormData } from '../schemas/resourceFormSchema';
-import { Resource, apiClient } from '../services/apiClient';
+import { Resource, apiClient, resourcesApi } from '../services/apiClient';
 import { useToast } from '../hooks/useToast';
-import { usePagination } from '../hooks/usePagination';
 import { PaginationControls } from '../components/PaginationControls';
 import { SearchInput } from '../components/SearchInput';
-import type { PaginationMeta } from '../types/pagination';
 
 const ROLE_TYPE_LABELS: Record<string, string> = {
     DEV: 'Desarrollador',
@@ -55,17 +54,19 @@ export const ResourcesPage: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
-    // Estado local para datos paginados del servidor
-    const [resources, setResources] = useState<Resource[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [meta, setMeta] = useState<PaginationMeta>({
-        page: 1,
-        pageSize: 10,
-        totalItems: 0,
-        totalPages: 0,
+    // Hook genérico para datos paginados
+    const { 
+        data: resources, 
+        meta, 
+        loading, 
+        error, 
+        reload, 
+        pagination 
+    } = usePaginatedData<Resource>({
+        fetchFn: resourcesApi.getPaginated,
+        initialPageSize: 10,
     });
-    
+
     // Estado para estadísticas globales
     const [stats, setStats] = useState({
         totalResources: 0,
@@ -84,23 +85,6 @@ export const ResourcesPage: React.FC = () => {
     const { metrics, fetchMetrics } = useMetricsStore();
     const { confirm, ...confirmModalProps } = useConfirmModal();
     const { success, error: showError } = useToast();
-    const pagination = usePagination(10);
-
-    // Cargar recursos paginados del servidor
-    const loadResources = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await apiClient.getResourcesPaginated(pagination.params);
-            setResources(response.data);
-            setMeta(response.meta);
-        } catch (err) {
-            console.error('Error al cargar recursos:', err);
-            setError(err instanceof Error ? err.message : 'Error al cargar recursos');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     // Cargar estadísticas globales independientemente de la paginación
     const loadStats = async () => {
@@ -113,14 +97,9 @@ export const ResourcesPage: React.FC = () => {
     };
 
     useEffect(() => {
-        loadResources();
         fetchMetrics();
-    }, [pagination.params, fetchMetrics]);
-
-    // Cargar estadísticas al montar el componente
-    useEffect(() => {
         loadStats();
-    }, []);
+    }, [fetchMetrics]);
 
     const handleOpenModal = (resource?: Resource) => {
         setEditingResource(resource || null);
@@ -143,7 +122,7 @@ export const ResourcesPage: React.FC = () => {
                 success('Recurso creado correctamente');
             }
             handleCloseModal();
-            await loadResources(); // Recargar datos del servidor
+            await reload(); // Usar reload del hook
             await loadStats(); // Recargar estadísticas
         } catch (err) {
             console.error('Error al guardar recurso:', err);
@@ -167,7 +146,7 @@ export const ResourcesPage: React.FC = () => {
             try {
                 await deleteResource(resource.id);
                 success('Recurso eliminado correctamente');
-                await loadResources(); // Recargar datos del servidor
+                await reload(); // Usar reload del hook
                 await loadStats(); // Recargar estadísticas
             } catch (err) {
                 showError('Error al eliminar el recurso');
