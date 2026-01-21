@@ -7,6 +7,7 @@ import {
     UpdateUserData,
     ChangePasswordData,
 } from '../types/auth';
+import type { PaginationParams, PaginatedResponse } from '../types/pagination';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -84,6 +85,29 @@ class AuthAPI {
 
     async getAllUsers(): Promise<UserWithMetadata[]> {
         const response = await fetch(`${API_URL}/users`, {
+            method: 'GET',
+            headers: this.getHeaders(true),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch users');
+        }
+
+        return response.json();
+    }
+
+    async getAllUsersPaginated(params: PaginationParams): Promise<PaginatedResponse<UserWithMetadata>> {
+        const searchParams = new URLSearchParams();
+        if (params.page) searchParams.set('page', String(params.page));
+        if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
+        if (params.search) searchParams.set('search', params.search);
+        if (params.sortBy) searchParams.set('sortBy', params.sortBy);
+        if (params.sortDir) searchParams.set('sortDir', params.sortDir);
+
+        const queryString = searchParams.toString();
+        const url = queryString ? `${API_URL}/users?${queryString}` : `${API_URL}/users`;
+
+        const response = await fetch(url, {
             method: 'GET',
             headers: this.getHeaders(true),
         });

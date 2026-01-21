@@ -2,8 +2,31 @@
  * API Client - Servicio centralizado para comunicación con el backend
  */
 import { ErrorHandler } from '../utils/errors';
+import type { PaginationParams, PaginatedResponse } from '../types/pagination';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+// ============================================================================
+// Helper para construir query strings
+// ============================================================================
+
+/**
+ * Convierte objeto de params a query string
+ * Omite valores undefined/null
+ */
+type QueryParams = { [key: string]: unknown };
+function buildQueryString(params: QueryParams): string {
+  const searchParams = new URLSearchParams();
+  
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      searchParams.append(key, String(value));
+    }
+  });
+  
+  const qs = searchParams.toString();
+  return qs ? `?${qs}` : '';
+}
 
 // ============================================================================
 // Tipos compartidos
@@ -169,7 +192,13 @@ export const apiClient = {
   // --------------------------------------------------------------------------
   
   async getResources(): Promise<Resource[]> {
-    return fetchJSON<Resource[]>('/resources');
+    const response = await fetchJSON<PaginatedResponse<Resource>>('/resources');
+    return response.data;
+  },
+
+  async getResourcesPaginated(params: PaginationParams): Promise<PaginatedResponse<Resource>> {
+    const query = buildQueryString(params);
+    return fetchJSON<PaginatedResponse<Resource>>(`/resources${query}`);
   },
 
   async getResource(id: string): Promise<Resource> {
@@ -206,7 +235,13 @@ export const apiClient = {
 
   async getMetrics(resourceId?: string): Promise<Metric[]> {
     const query = resourceId ? `?resourceId=${resourceId}` : '';
-    return fetchJSON<Metric[]>(`/metrics${query}`);
+    const response = await fetchJSON<PaginatedResponse<Metric>>(`/metrics${query}`);
+    return response.data;
+  },
+
+  async getMetricsPaginated(params: PaginationParams): Promise<PaginatedResponse<Metric>> {
+    const query = buildQueryString(params);
+    return fetchJSON<PaginatedResponse<Metric>>(`/metrics${query}`);
   },
 
   async getMetric(id: string): Promise<Metric> {
@@ -253,6 +288,20 @@ export const apiClient = {
     const endpoint = queryString ? `/records?${queryString}` : '/records';
     
     return fetchJSON<Record[]>(endpoint);
+  },
+
+  async getRecordsPaginated(
+    paginationParams: PaginationParams,
+    filters?: {
+      resourceId?: string;
+      metricKey?: string;
+      fromWeek?: string;
+      toWeek?: string;
+    }
+  ): Promise<PaginatedResponse<Record>> {
+    const allParams = { ...paginationParams, ...filters };
+    const query = buildQueryString(allParams);
+    return fetchJSON<PaginatedResponse<Record>>(`/records${query}`);
   },
 
   async createRecord(data: {
