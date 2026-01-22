@@ -15,7 +15,7 @@ Feature: Autenticación en PulseOps
   Scenario: Login exitoso con credenciales válidas
     Given el usuario está en la página de login
     When ingresa el email "admin@pulseops.com"
-    And ingresa la contraseña "admin123"
+    And ingresa la contraseña "Admin1234!"
     And hace clic en el botón de login
     Then debe ser redirigido al dashboard
     And debe ver la URL "/dashboard"

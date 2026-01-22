@@ -72,7 +72,7 @@ export class LoginPage {
      * Login as admin with default credentials
      */
     loginAsAdmin(): void {
-        this.login('admin@pulseops.com', 'admin123');
+        this.login('admin@pulseops.com', 'Admin1234!');
     }
 
     /**

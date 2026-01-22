@@ -49,7 +49,7 @@ Feature: Autenticación en PulseOps
   Scenario: Login exitoso con credenciales válidas
     Given el usuario está en la página de login
     When ingresa el email "admin@pulseops.com"
-    And ingresa la contraseña "admin123"
+    And ingresa la contraseña "Admin1234!"
     And hace clic en el botón de login
     Then debe ser redirigido al dashboard
 ```
@@ -101,7 +101,7 @@ export class LoginPage {
   }
 
   loginAsAdmin(): void {
-    this.login('admin@pulseops.com', 'admin123');
+    this.login('admin@pulseops.com', 'Admin1234!');
   }
 }
 ```
@@ -299,7 +299,7 @@ npx cypress run --spec "cypress/e2e/features/pulseops/*.feature" --browser chrom
 
 ```
 Email: admin@pulseops.com
-Password: admin123
+Password: Admin1234!
 ```
 
 ## ⚠️ Notas Importantes

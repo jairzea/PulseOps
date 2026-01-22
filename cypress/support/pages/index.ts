@@ -1,8 +1,6 @@
 /**
- * 📄 Page Object Index
- * Exporta todas las páginas para fácil importación
+ * 📄 PulseOps Page Objects Index
+ * Exporta todos los Page Objects de PulseOps
  */
 
-export { default as HomePage } from './HomePage';
-export { default as ActionsPage } from './ActionsPage';
-export { default as QueryingPage } from './QueryingPage';
+export * from './pulseops';
