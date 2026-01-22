@@ -1,0 +1,51 @@
+{
+  "validUser": {
+    "name": "Juan Pérez",
+    "email": "juan.perez@example.com",
+    "age": "30",
+    "terms": true
+  },
+  "invalidUsers": [
+    {
+      "name": "ab",
+      "email": "invalid-email",
+      "age": "abc",
+      "terms": false,
+      "expectedErrors": {
+        "name": "El nombre debe tener al menos 3 caracteres",
+        "email": "El formato del email es inválido",
+        "age": "La edad debe ser un número",
+        "terms": "Debes aceptar los términos y condiciones"
+      }
+    },
+    {
+      "name": "",
+      "email": "",
+      "age": "",
+      "terms": false,
+      "expectedErrors": {
+        "name": "El nombre es obligatorio",
+        "email": "El email es obligatorio",
+        "age": "La edad es obligatoria",
+        "terms": "Debes aceptar los términos y condiciones"
+      }
+    }
+  ],
+  "testData": {
+    "emails": [
+      "test1@example.com",
+      "test2@example.com",
+      "test3@example.com"
+    ],
+    "names": [
+      "María García",
+      "Carlos López",
+      "Ana Martínez"
+    ],
+    "ages": [
+      "25",
+      "35",
+      "42"
+    ]
+  }
+}
