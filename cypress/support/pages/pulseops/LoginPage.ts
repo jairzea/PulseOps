@@ -8,10 +8,7 @@ export class LoginPage {
         passwordInput: 'input[type="password"]',
         rememberCheckbox: 'input[type="checkbox"]',
         loginButton: 'button[type="submit"]',
-        forgotPasswordLink: 'text=Forgot Password?',
-        loginHeading: 'text=Welcome to PulseOps',
         errorMessage: '[role="alert"], .error, .text-red-500',
-        logo: 'text=PulseOps',
     };
 
     /**
@@ -79,7 +76,7 @@ export class LoginPage {
      * Verify login page is displayed
      */
     verifyLoginPageDisplayed(): void {
-        cy.get(this.selectors.loginHeading).should('be.visible');
+        cy.contains('Welcome to PulseOps').should('be.visible');
         cy.get(this.selectors.emailInput).should('be.visible');
         cy.get(this.selectors.passwordInput).should('be.visible');
         cy.get(this.selectors.loginButton).should('be.visible');

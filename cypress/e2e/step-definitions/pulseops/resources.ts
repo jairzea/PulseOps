@@ -59,10 +59,6 @@ Then('cada recurso debe mostrar su nombre y tipo', () => {
     cy.get('table tbody tr, [role="row"]').first().should('be.visible');
 });
 
-Then('debe ver un mensaje de éxito', () => {
-    resourcesPage.verifySuccessMessage();
-});
-
 Then('el nuevo recurso debe aparecer en la lista', () => {
     cy.contains('Test Resource Cypress').should('be.visible');
 });

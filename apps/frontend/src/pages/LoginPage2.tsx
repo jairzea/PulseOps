@@ -22,7 +22,7 @@ export function LoginPage2() {
     // Redirigir si ya está autenticado
     useEffect(() => {
         if (isAuthenticated) {
-            navigate('/');
+            navigate('/dashboard');
         }
     }, [isAuthenticated, navigate]);
 

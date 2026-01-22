@@ -32,4 +32,4 @@ Feature: Autenticación en PulseOps
     Given el usuario está en la página de login
     When intenta hacer login sin ingresar credenciales
     Then el botón de login no debe permitir el envío
-    Or debe ver mensajes de validación
+    And debe ver mensajes de validación

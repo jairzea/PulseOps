@@ -34,6 +34,16 @@ function App() {
                             }
                         />
                         <Route
+                            path="/dashboard"
+                            element={
+                                <PrivateRoute>
+                                    <Layout>
+                                        <ResourceDashboard />
+                                    </Layout>
+                                </PrivateRoute>
+                            }
+                        />
+                        <Route
                             path="/resources"
                             element={
                                 <PrivateRoute>

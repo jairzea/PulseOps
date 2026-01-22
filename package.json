@@ -29,15 +29,29 @@
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
   },
+  "cypress-cucumber-preprocessor": {
+    "stepDefinitions": [
+      "cypress/e2e/step-definitions/**/*.{js,ts}",
+      "cypress/e2e/step-definitions/**/*.{js,ts}"
+    ],
+    "messages": {
+      "enabled": true
+    },
+    "json": {
+      "enabled": true,
+      "output": "cypress/reports/.jsons/cucumber-report.json"
+    },
+    "html": {
+      "enabled": true
+    }
+  },
   "devDependencies": {
-    "@badeball/cypress-cucumber-preprocessor": "^24.0.0",
-    "@bahmutov/cypress-esbuild-preprocessor": "^2.2.8",
+    "@badeball/cypress-cucumber-preprocessor": "^21.0.3",
     "cypress": "^15.9.0",
     "cypress-mochawesome-reporter": "^4.0.2",
-    "esbuild": "^0.27.2",
     "mochawesome": "^7.1.4",
     "mochawesome-merge": "^5.1.0",
     "mochawesome-report-generator": "^6.3.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.9.3"
   }
 }

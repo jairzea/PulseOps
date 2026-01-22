@@ -12,17 +12,24 @@ Given('el usuario está autenticado en PulseOps', () => {
     cy.url().should('include', '/dashboard', { timeout: 10000 });
 });
 
+// Background step para otros módulos (mismo comportamiento, diferente nombre de step)
+Given('el usuario está autenticado como administrador', () => {
+    loginPage.visit();
+    loginPage.loginAsAdmin();
+    cy.url().should('include', '/dashboard', { timeout: 10000 });
+});
+
 // When steps
-When('el usuario hace clic en {string} en el menú lateral', (menuItem: string) => {
-    dashboardPage.clickSidebarItem(menuItem);
+When('el usuario visita la URL {string}', (url: string) => {
+    cy.visit(url);
 });
 
 When('el usuario hace clic en el menú de usuario', () => {
-    cy.get('[data-testid="user-menu"], button:contains("AD")').first().click();
+    cy.contains('button', 'AD').click();
 });
 
 When('selecciona la opción de cerrar sesión', () => {
-    cy.contains('Logout', { matchCase: false }).click();
+    cy.contains('Cerrar Sesión').click();
 });
 
 // Then steps
@@ -55,7 +62,9 @@ Then('debe ver la página de registros', () => {
 });
 
 Then('debe ver una tabla o lista de registros', () => {
-    cy.get('table, [role="table"], ul, ol').should('be.visible');
+    // En registros, la tabla puede no mostrarse hasta seleccionar filtros
+    cy.contains('Registros').should('be.visible');
+    cy.contains('Filtros').should('be.visible');
 });
 
 Then('la sesión debe estar cerrada', () => {

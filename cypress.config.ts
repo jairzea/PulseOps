@@ -1,6 +1,6 @@
 import { defineConfig } from 'cypress';
-import createBundler from '@bahmutov/cypress-esbuild-preprocessor';
 import { addCucumberPreprocessorPlugin } from '@badeball/cypress-cucumber-preprocessor';
+import createBundler from '@bahmutov/cypress-esbuild-preprocessor';
 import { createEsbuildPlugin } from '@badeball/cypress-cucumber-preprocessor/esbuild';
 
 export default defineConfig({
@@ -36,19 +36,19 @@ export default defineConfig({
     },
     
     async setupNodeEvents(on, config) {
+      // Mochawesome reporter setup PRIMERO
+      require('cypress-mochawesome-reporter/plugin')(on);
+      
       // Cucumber preprocessor setup
       await addCucumberPreprocessorPlugin(on, config);
       
-      // Esbuild bundler setup with TypeScript support
+      // File preprocessor for .feature files
       on(
         'file:preprocessor',
         createBundler({
           plugins: [createEsbuildPlugin(config)],
         })
       );
-      
-      // Mochawesome reporter setup
-      require('cypress-mochawesome-reporter/plugin')(on);
       
       return config;
     },
