@@ -23,21 +23,21 @@
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,json,md}\"",
-    "test:playwright": "playwright test",
-    "test:playwright:headed": "playwright test --headed",
-    "test:playwright:ui": "playwright test --ui",
-    "test:playwright:debug": "playwright test --debug",
-    "test:playwright:report": "playwright show-report"
+    "format:check": "prettier --check \"**/*.{ts,tsx,json,md}\""
   },
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
   },
   "devDependencies": {
-    "@cucumber/cucumber": "^11.3.0",
-    "@playwright/test": "^1.57.0",
-    "playwright-bdd": "^8.4.2",
+    "@badeball/cypress-cucumber-preprocessor": "^24.0.0",
+    "@bahmutov/cypress-esbuild-preprocessor": "^2.2.8",
+    "cypress": "^15.9.0",
+    "cypress-mochawesome-reporter": "^4.0.2",
+    "esbuild": "^0.27.2",
+    "mochawesome": "^7.1.4",
+    "mochawesome-merge": "^5.1.0",
+    "mochawesome-report-generator": "^6.3.2",
     "typescript": "^5.3.3"
   }
 }

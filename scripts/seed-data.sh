@@ -15,7 +15,7 @@ RES1_JSON=$(curl -s -X POST "$BASE_URL/resources" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Juan Pérez",
-    "roleType": "developer",
+    "roleType": "DEV",
     "isActive": true
   }')
 
@@ -23,7 +23,7 @@ RES2_JSON=$(curl -s -X POST "$BASE_URL/resources" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Juanchito",
-    "roleType": "developer",
+    "roleType": "DEV",
     "isActive": true
   }')
 
@@ -92,7 +92,7 @@ for i in {0..11}; do
       \"resourceId\": \"$RESOURCE_1\",
       \"metricKey\": \"velocity\",
       \"value\": $VELOCITY_JP,
-      \"week\": $WEEK,
+      \"week\": \"$WEEK\",
       \"timestamp\": \"$TIMESTAMP\"
     }" > /dev/null
   
@@ -103,7 +103,7 @@ for i in {0..11}; do
       \"resourceId\": \"$RESOURCE_2\",
       \"metricKey\": \"velocity\",
       \"value\": $VELOCITY_JC,
-      \"week\": $WEEK,
+      \"week\": \"$WEEK\",
       \"timestamp\": \"$TIMESTAMP\"
     }" > /dev/null
   
@@ -114,7 +114,7 @@ for i in {0..11}; do
       \"resourceId\": \"$RESOURCE_1\",
       \"metricKey\": \"bugs\",
       \"value\": $BUGS_JP,
-      \"week\": $WEEK,
+      \"week\": \"$WEEK\",
       \"timestamp\": \"$TIMESTAMP\"
     }" > /dev/null
   
@@ -125,7 +125,7 @@ for i in {0..11}; do
       \"resourceId\": \"$RESOURCE_2\",
       \"metricKey\": \"bugs\",
       \"value\": $BUGS_JC,
-      \"week\": $WEEK,
+      \"week\": \"$WEEK\",
       \"timestamp\": \"$TIMESTAMP\"
     }" > /dev/null
   
