@@ -31,7 +31,7 @@ export const ConditionCard: React.FC<ConditionCardProps> = ({
     return (
         <div
             className={`
-                rounded-lg p-6 border-2 transition-all duration-300
+                rounded-lg p-6 border-2 transition-all duration-300 h-[180px] flex flex-col
                 ${isActive ? `${color.bg} ${color.border}` : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'}
             `}
         >
@@ -45,7 +45,6 @@ export const ConditionCard: React.FC<ConditionCardProps> = ({
             <div className={`text-3xl font-bold ${isActive ? color.text : 'text-gray-600 dark:text-gray-500'}`}>
                 {isActive && confidence !== undefined ? `${Math.round(confidence * 100)}%` : '--'}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">CONFIDENCE</div>
         </div>
     );
 };

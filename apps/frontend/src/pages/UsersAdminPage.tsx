@@ -124,7 +124,7 @@ export function UsersAdminPage() {
                 </div>
 
                 {/* Tabla de usuarios */}
-                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-500 ease-in-out min-h-[500px]">
+                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-500 ease-in-out">
                     {isLoading && <TableSkeleton columns={5} rows={6} showActions={true} />}
 
                     {!isLoading && (

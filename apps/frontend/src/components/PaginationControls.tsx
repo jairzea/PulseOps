@@ -44,7 +44,7 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
     const endItem = Math.min(page * pageSize, totalItems);
 
     return (
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-500 ease-in-out">
+        <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-500 ease-in-out">
             {/* Info de items */}
             <div className="flex items-center gap-4 transition-all duration-300">
                 <span className="text-sm text-gray-700 dark:text-gray-300 transition-colors duration-300">

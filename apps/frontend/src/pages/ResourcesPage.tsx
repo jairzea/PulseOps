@@ -208,7 +208,7 @@ export const ResourcesPage: React.FC = () => {
                 </div>
 
                 {/* Tabla de recursos */}
-                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-500 ease-in-out min-h-[500px]">
+                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-500 ease-in-out">
                     {loading && <TableSkeleton rows={5} columns={5} />}
 
                     {error && (

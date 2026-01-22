@@ -238,7 +238,7 @@ export const RecordsPage: React.FC = () => {
                         )}
 
                         {/* Tabla de registros */}
-                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-500 ease-in-out min-h-[400px]">
+                        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-500 ease-in-out">
                             {!selectedResourceId || !selectedMetricKey ? (
                                 <div className="p-8 text-center">
                                     <p className="text-gray-600 dark:text-gray-400">
@@ -340,7 +340,7 @@ export const RecordsPage: React.FC = () => {
                             )}
 
                             {/* Controles de paginación */}
-                            {!loading && records.length > 0 && (
+                            {!loading && records.length > 0 && selectedResourceId && selectedMetricKey && (
                                 <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800">
                                     <PaginationControls
                                         meta={meta}
