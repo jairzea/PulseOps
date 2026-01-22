@@ -1,12 +1,67 @@
-# PulseOps - Documentación
+# 📚 PulseOps - Documentación
 
-## 📚 Índice de Documentación
+## 🗂️ Estructura de Documentación
 
-### 🚀 Guías de Inicio
+```
+docs/
+├── README.md                        # Este archivo (índice principal)
+├── cypress/                         # 🧪 Documentación de Cypress E2E
+│   ├── INDEX.md                     # Índice de documentación Cypress
+│   ├── README.md                    # Guía completa de Cypress
+│   ├── IMPLEMENTATION.md            # Detalles de implementación
+│   └── DEPENDENCIES.md              # Guía de instalación
+├── guides/                          # 📖 Guías de desarrollo
+│   ├── Lienamiento de...md         # Lineamientos de pruebas automatizadas
+│   ├── DOCKER.md                   # Configuración Docker
+│   ├── QUICKSTART.md               # Inicio rápido
+│   └── PULSE_LOADER.md             # Carga de datos
+├── api/                            # 🌐 Documentación de API
+│   ├── API_TESTING.md              # Guía de testing de API
+│   └── PulseOps.postman...json     # Colección de Postman
+├── specs/                          # 📐 Especificaciones técnicas
+│   ├── Diseño de Interfaz...md     # Motor de análisis
+│   ├── ESPECIFICACIÓN FORMAL...md  # Dominio formal
+│   ├── Fórmulas de las...md        # Fórmulas de condiciones
+│   ├── Motor de analisis...md      # Motor de análisis
+│   └── RELACION_RECURSOS...md      # Relación recursos-métricas
+├── EXECUTIVE_SUMMARY.md            # 📊 Resumen ejecutivo del proyecto
+└── IMPLEMENTATION_SUMMARY.md       # 📋 Resumen de implementación actual
+```
 
-- [**QUICKSTART.md**](./guides/QUICKSTART.md) - Guía rápida para comenzar con el proyecto
-- [**DOCKER.md**](./guides/DOCKER.md) - Configuración y uso de Docker
-- [**PULSE_LOADER.md**](./guides/PULSE_LOADER.md) - Carga de datos y configuración inicial
+---
+
+## 📖 Documentación por Categoría
+
+### 🧪 Testing y Calidad
+
+#### Cypress E2E Testing
+- **[Cypress Index](./cypress/INDEX.md)** - Índice completo de documentación Cypress
+- **[Cypress README](./cypress/README.md)** - Guía completa de arquitectura
+- **[Implementation](./cypress/IMPLEMENTATION.md)** - Detalles de implementación
+- **[Dependencies](./cypress/DEPENDENCIES.md)** - Instalación y configuración
+- **[Lineamientos](./guides/Lienamiento%20de%20implementación%20de%20pruebas%20automatizadas.md)** - Estándares de pruebas
+
+#### API Testing
+- **[API Testing Guide](./api/API_TESTING.md)** - Guía de testing de API
+- **[Postman Collection](./api/PulseOps.postman_collection.json)** - Colección de endpoints
+
+### 📐 Especificaciones Técnicas
+
+#### Arquitectura del Sistema
+- **[Especificación Formal del Dominio](./specs/ESPECIFICACIÓN%20FORMAL%20DEL%20DOMINIO.md)** - Definición del modelo de dominio
+- **[Motor de Análisis](./specs/Motor%20de%20analisis%20de%20inclinación%20y%20condiciones.md)** - Especificación del motor
+- **[Diseño de Interfaz Técnica](./specs/Diseño%20de%20Interfaz%20Técnica%20–%20Motor%20de%20Análisis%20de%20Inclinación%20(v2).md)** - Interfaz del motor
+
+#### Lógica de Negocio
+- **[Fórmulas de Condiciones](./specs/Fórmulas%20de%20las%20condiciones.md)** - Fórmulas y cálculos
+- **[Relación Recursos-Métricas](./specs/RELACION_RECURSOS_METRICAS.md)** - Mapeo de recursos y métricas
+
+### 📊 Resúmenes Ejecutivos
+
+- **[Executive Summary](./EXECUTIVE_SUMMARY.md)** - Resumen ejecutivo del proyecto
+- **[Implementation Summary](./IMPLEMENTATION_SUMMARY.md)** - Estado actual de implementación
+
+---
 
 ### 📖 Especificaciones Técnicas
 
