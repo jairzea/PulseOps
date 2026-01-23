@@ -147,11 +147,25 @@ function Step1Formulas() {
 
         try {
             setSavingCondition(condition);
+            
+            // Guardar el playbook
             await apiClient.updatePlaybook(condition, {
                 title: pb.title,
                 steps: pb.steps.filter(s => s.trim() !== ''), // Filtrar pasos vacíos
                 isActive: pb.isActive
             });
+
+            // Guardar el color si fue editado
+            if (editedColors[condition]) {
+                const { conditionsApi } = await import('../services/api/conditionsApi');
+                await conditionsApi.updateColor(condition, editedColors[condition]);
+                // Limpiar el color editado después de guardar
+                setEditedColors(prev => {
+                    const { [condition]: _, ...rest } = prev;
+                    return rest;
+                });
+            }
+
             success(`Fórmula de ${condition} guardada correctamente`);
             await loadPlaybooks(); // Recargar para obtener versión actualizada
         } catch (error) {

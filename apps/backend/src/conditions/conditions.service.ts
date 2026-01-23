@@ -1,5 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { HubbardCondition } from '@pulseops/shared-types';
+import {
+  ConditionMetadata,
+  ConditionMetadataDocument,
+} from './schemas/condition-metadata.schema';
 
 export interface ConditionMetadataDto {
   condition: HubbardCondition;
@@ -19,11 +25,30 @@ export interface ConditionMetadataDto {
 
 @Injectable()
 export class ConditionsService {
+  constructor(
+    @InjectModel(ConditionMetadata.name)
+    private conditionMetadataModel: Model<ConditionMetadataDocument>,
+  ) {
+    // Inicializar metadata por defecto al arrancar
+    this.initializeDefaultMetadata();
+  }
+
   /**
-   * Retorna metadata de las 8 condiciones Hubbard oficiales.
-   * Orden jerárquico según filosofía Hubbard.
+   * Inicializa la metadata por defecto si no existe en la BD.
    */
-  getConditionsMetadata(): ConditionMetadataDto[] {
+  private async initializeDefaultMetadata(): Promise<void> {
+    const count = await this.conditionMetadataModel.countDocuments();
+    if (count === 0) {
+      const defaults = this.getDefaultMetadata();
+      await this.conditionMetadataModel.insertMany(defaults);
+      console.log('✅ Metadata de condiciones inicializada');
+    }
+  }
+
+  /**
+   * Retorna metadata por defecto de las 8 condiciones Hubbard.
+   */
+  private getDefaultMetadata(): ConditionMetadataDto[] {
     return [
       {
         condition: 'PODER' as HubbardCondition,
@@ -152,11 +177,87 @@ export class ConditionsService {
   }
 
   /**
+   * Retorna metadata de todas las condiciones desde BD o defaults.
+   */
+  async getConditionsMetadata(): Promise<ConditionMetadataDto[]> {
+    try {
+      const stored = await this.conditionMetadataModel
+        .find()
+        .sort({ order: 1 })
+        .lean()
+        .exec();
+
+      if (stored && stored.length > 0) {
+        return stored.map((doc) => ({
+          condition: doc.condition,
+          order: doc.order,
+          displayName: doc.displayName,
+          description: doc.description,
+          color: doc.color,
+          icon: doc.icon,
+          category: doc.category,
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading conditions metadata from DB:', error);
+    }
+
+    // Fallback a defaults si hay error o no hay datos
+    return this.getDefaultMetadata();
+  }
+
+  /**
    * Obtiene metadata de una condición específica.
    */
-  getConditionMetadata(
+  async getConditionMetadata(
     condition: HubbardCondition,
-  ): ConditionMetadataDto | undefined {
-    return this.getConditionsMetadata().find((c) => c.condition === condition);
+  ): Promise<ConditionMetadataDto | undefined> {
+    const all = await this.getConditionsMetadata();
+    return all.find((c) => c.condition === condition);
+  }
+
+  /**
+   * Actualiza el color glow de una condición específica.
+   */
+  async updateConditionColor(
+    condition: HubbardCondition,
+    glow: string,
+  ): Promise<ConditionMetadataDto> {
+    // Validar formato RGB
+    const rgbRegex = /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/;
+    if (!rgbRegex.test(glow)) {
+      throw new NotFoundException(
+        'Invalid RGB format. Expected: rgb(r, g, b)',
+      );
+    }
+
+    // Buscar o crear el documento
+    let doc = await this.conditionMetadataModel
+      .findOne({ condition })
+      .exec();
+
+    if (!doc) {
+      // Si no existe, crear con defaults
+      const defaults = this.getDefaultMetadata();
+      const defaultData = defaults.find((d) => d.condition === condition);
+      if (!defaultData) {
+        throw new NotFoundException(`Condition ${condition} not found`);
+      }
+      doc = new this.conditionMetadataModel(defaultData);
+    }
+
+    // Actualizar solo el glow
+    doc.color.glow = glow;
+    await doc.save();
+
+    return {
+      condition: doc.condition,
+      order: doc.order,
+      displayName: doc.displayName,
+      description: doc.description,
+      color: doc.color,
+      icon: doc.icon,
+      category: doc.category,
+    };
   }
 }
