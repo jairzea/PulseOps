@@ -11,6 +11,7 @@ import { LoadingButton } from '../components/LoadingButton';
 import { PermissionFeedback } from '../components/PermissionFeedback';
 import { useAuth } from '../contexts/AuthContext';
 import { useConditionsMetadata } from '../hooks/useConditionsMetadata';
+import { ColorPicker } from '../components/ColorPicker';
 
 // Step Components
 interface StepProps {
@@ -27,22 +28,8 @@ function Step1Formulas() {
     const [expandedCondition, setExpandedCondition] = useState<string | null>('AFLUENCIA');
     const [savingCondition, setSavingCondition] = useState<string | null>(null);
     const { success, error: showError } = useToast();
-    const { conditions: conditionsMetadata } = useConditionsMetadata();
+    const { conditions: conditionsMetadata, refetch: refetchConditionsMetadata } = useConditionsMetadata();
     const [editedColors, setEditedColors] = useState<Record<string, string>>({});
-
-    // Funciones de conversión de color
-    const rgbToHex = (rgb: string): string => {
-        const match = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-        if (!match) return '#000000';
-        const [, r, g, b] = match;
-        return '#' + [r, g, b].map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
-    };
-
-    const hexToRgb = (hex: string): string => {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        if (!result) return 'rgb(0, 0, 0)';
-        return `rgb(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)})`;
-    };
 
     const conditions = [
         { key: 'AFLUENCIA', name: 'AFLUENCIA', color: 'purple' },
@@ -147,7 +134,7 @@ function Step1Formulas() {
 
         try {
             setSavingCondition(condition);
-            
+
             // Guardar el playbook
             await apiClient.updatePlaybook(condition, {
                 title: pb.title,
@@ -159,7 +146,9 @@ function Step1Formulas() {
             if (editedColors[condition]) {
                 const { conditionsApi } = await import('../services/api/conditionsApi');
                 await conditionsApi.updateColor(condition, editedColors[condition]);
-                // Limpiar el color editado después de guardar
+                // Recargar metadatos de condiciones para obtener el nuevo color
+                await refetchConditionsMetadata();
+                // Limpiar el color editado después de recargar los metadatos
                 setEditedColors(prev => {
                     const { [condition]: _, ...rest } = prev;
                     return rest;
@@ -300,16 +289,15 @@ function Step1Formulas() {
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                 🎨 Color de resaltado
                                             </label>
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="color"
-                                                    value={rgbToHex(getConditionColor(key))}
-                                                    onChange={(e) => updateColor(key, hexToRgb(e.target.value))}
-                                                    className="w-16 h-10 rounded cursor-pointer border border-gray-300 dark:border-gray-600"
+                                            <div className="flex gap-2 items-center">
+                                                <ColorPicker
+                                                    value={getConditionColor(key)}
+                                                    onChange={(color) => updateColor(key, color)}
                                                 />
                                                 <div
-                                                    className="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg flex items-center justify-center"
+                                                    className="flex-1 px-3 py-2 bg-gray-900 border-2 rounded-lg flex items-center justify-center"
                                                     style={{
+                                                        borderColor: getConditionColor(key),
                                                         boxShadow: `0 0 20px ${getConditionColor(key).replace('rgb', 'rgba').replace(')', ', 0.4)')}, 0 0 40px ${getConditionColor(key).replace('rgb', 'rgba').replace(')', ', 0.2)')}`
                                                     }}
                                                 >
