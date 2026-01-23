@@ -179,19 +179,6 @@ function Step1Formulas() {
         return metadata?.color?.glow || 'rgb(59, 130, 246)';
     };
 
-    const updateColor = (condition: string, newColor: string) => {
-        setEditedColors(prev => ({
-            ...prev,
-            [condition]: newColor
-        }));
-    };
-
-    const getConditionColor = (condition: string): string => {
-        if (editedColors[condition]) return editedColors[condition];
-        const metadata = conditionsMetadata.find(c => c.condition === condition);
-        return metadata?.color?.glow || 'rgb(59, 130, 246)';
-    };
-
     if (loading) {
         return <PulseLoader size="md" variant="primary" text="Cargando fórmulas..." />;
     }
