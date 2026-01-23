@@ -295,13 +295,13 @@ function Step1Formulas() {
                                                     onChange={(color) => updateColor(key, color)}
                                                 />
                                                 <div
-                                                    className="flex-1 px-3 py-2 bg-gray-900 border-2 rounded-lg flex items-center justify-center"
+                                                    className="flex-1 px-3 py-2 bg-white dark:bg-gray-900 border-2 rounded-lg flex items-center justify-center transition-colors duration-300"
                                                     style={{
                                                         borderColor: getConditionColor(key),
                                                         boxShadow: `0 0 20px ${getConditionColor(key).replace('rgb', 'rgba').replace(')', ', 0.4)')}, 0 0 40px ${getConditionColor(key).replace('rgb', 'rgba').replace(')', ', 0.2)')}`
                                                     }}
                                                 >
-                                                    <span className="text-xs text-gray-400 font-mono">{getConditionColor(key)}</span>
+                                                    <span className="text-xs text-gray-900 dark:text-gray-400 font-mono">{getConditionColor(key)}</span>
                                                 </div>
                                             </div>
                                         </div>
