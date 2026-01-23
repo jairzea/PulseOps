@@ -1,11 +1,58 @@
+# Dependencies
 node_modules
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Build outputs
 dist
-*.log
+build
+.next
+out
+
+# Environment & Config
 .env
+.env.local
+.env.*.local
+*.local
+
+# Git
 .git
 .gitignore
+.gitattributes
+.github
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Documentation
 *.md
-apps/*/node_modules
-apps/*/dist
-packages/*/node_modules
-packages/*/dist
+docs
+
+# Testing
+coverage
+.nyc_output
+cypress/videos
+cypress/screenshots
+cypress/reports
+.cypress-cucumber-preprocessorrc.json
+cucumber-*.ndjson
+cucumber-*.html
+
+# Misc
+.DS_Store
+*.log
+tmp
+temp
+.cache
+.features-gen
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
