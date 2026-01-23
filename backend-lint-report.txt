@@ -1,0 +1,37 @@
+
+> @pulseops/backend@0.1.0 lint
+> eslint "{src,apps,libs,test}/**/*.ts" --fix
+
+
+/Users/jairzeapaez/Documents/Proyectos/unlimitech/pulseops/apps/backend/src/auth/guards/auth0.guard.ts
+  17:15  error  'context' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/jairzeapaez/Documents/Proyectos/unlimitech/pulseops/apps/backend/src/charts/schemas/chart.schema.ts
+  35:13  error  '_id' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  35:18  error  '__v' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/jairzeapaez/Documents/Proyectos/unlimitech/pulseops/apps/backend/src/metrics/schemas/metric.schema.ts
+  38:13  error  '_id' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  38:18  error  '__v' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/jairzeapaez/Documents/Proyectos/unlimitech/pulseops/apps/backend/src/records/schemas/metric-record.schema.ts
+  44:13  error  '_id' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  44:18  error  '__v' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/jairzeapaez/Documents/Proyectos/unlimitech/pulseops/apps/backend/src/resources/schemas/resource.schema.ts
+  30:13  error  '_id' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  30:18  error  '__v' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/jairzeapaez/Documents/Proyectos/unlimitech/pulseops/apps/backend/src/rules/schemas/metric-rule-config.schema.ts
+  52:13  error  '_id' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  52:18  error  '__v' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+✖ 11 problems (11 errors, 0 warnings)
+
+npm error Lifecycle script `lint` failed with error:
+npm error code 1
+npm error path /Users/jairzeapaez/Documents/Proyectos/unlimitech/pulseops/apps/backend
+npm error workspace @pulseops/backend@0.1.0
+npm error location /Users/jairzeapaez/Documents/Proyectos/unlimitech/pulseops/apps/backend
+npm error command failed
+npm error command sh -c eslint "{src,apps,libs,test}/**/*.ts" --fix

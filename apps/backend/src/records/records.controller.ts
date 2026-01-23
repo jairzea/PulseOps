@@ -15,7 +15,9 @@ import { DemoOrJwtAuthGuard } from '../auth/guards/demo-or-jwt.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
-import { CurrentUser } from '../common/decorators/current-user.decorator';import { PaginationQueryDto } from '../common/dto/pagination-query.dto';import { User } from '../common/interfaces/user.interface';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
+import { User } from '../common/interfaces/user.interface';
 
 @Controller('records')
 @UseGuards(DemoOrJwtAuthGuard)
@@ -24,7 +26,7 @@ export class RecordsController {
 
   @Post()
   async upsert(@Body() dto: CreateRecordDto, @CurrentUser() user: User | null) {
-    const createdBy = (user && (user as any).id) ? (user as any).id : 'system';
+    const createdBy = user && (user as any).id ? (user as any).id : 'system';
     return this.recordsService.upsert(dto, createdBy);
   }
 

@@ -69,13 +69,19 @@ export class RecordsService {
       toWeek?: string;
     } = {},
   ): Promise<PaginatedResponse<MetricRecord>> {
-    const { page = 1, pageSize = 10, search, sortBy = 'timestamp', sortDir = 'desc' } = paginationQuery;
+    const {
+      page = 1,
+      pageSize = 10,
+      search,
+      sortBy = 'timestamp',
+      sortDir = 'desc',
+    } = paginationQuery;
 
     // Construir filtros
     const query: any = {};
     if (filters.resourceId) query.resourceId = filters.resourceId;
     if (filters.metricKey) query.metricKey = filters.metricKey;
-    
+
     if (filters.fromWeek || filters.toWeek) {
       query.week = {};
       if (filters.fromWeek) query.week.$gte = filters.fromWeek;

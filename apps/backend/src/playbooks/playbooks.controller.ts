@@ -1,4 +1,12 @@
-import { Controller, Get, Put, Post, Param, Body, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Put,
+  Post,
+  Param,
+  Body,
+  BadRequestException,
+} from '@nestjs/common';
 import { PlaybooksService } from './playbooks.service';
 import { UpsertPlaybookDto } from './dto/upsert-playbook.dto';
 import { HubbardCondition } from './schemas/condition-playbook.schema';

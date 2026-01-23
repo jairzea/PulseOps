@@ -14,6 +14,7 @@ import { ConfigService } from '@nestjs/config';
 export class Auth0Guard implements CanActivate {
   constructor(private configService: ConfigService) {}
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   canActivate(context: ExecutionContext): boolean {
     const authMode = this.configService.get<string>('AUTH_MODE', 'demo');
 

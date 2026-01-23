@@ -226,15 +226,11 @@ export class ConditionsService {
     // Validar formato RGB
     const rgbRegex = /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/;
     if (!rgbRegex.test(glow)) {
-      throw new NotFoundException(
-        'Invalid RGB format. Expected: rgb(r, g, b)',
-      );
+      throw new NotFoundException('Invalid RGB format. Expected: rgb(r, g, b)');
     }
 
     // Buscar o crear el documento
-    let doc = await this.conditionMetadataModel
-      .findOne({ condition })
-      .exec();
+    let doc = await this.conditionMetadataModel.findOne({ condition }).exec();
 
     if (!doc) {
       // Si no existe, crear con defaults

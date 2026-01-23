@@ -27,6 +27,7 @@ export const ResourceSchema = SchemaFactory.createForClass(Resource);
 // Usar 'id' como identificador en vez de '_id'
 ResourceSchema.set('toJSON', {
   transform: (doc, ret) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { _id, __v, ...rest } = ret;
     return rest;
   },

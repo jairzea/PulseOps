@@ -61,12 +61,12 @@ export class ResourcesService {
 
   async remove(id: string): Promise<Resource | null> {
     const deleted = await this.resourceModel.findOneAndDelete({ id }).exec();
-    
+
     // Limpiar referencias en métricas
     if (deleted) {
       await this.updateMetricsRelation(id, []);
     }
-    
+
     return deleted;
   }
 

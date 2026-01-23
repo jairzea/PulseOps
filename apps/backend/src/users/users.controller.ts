@@ -34,7 +34,7 @@ export class UsersController {
   @Roles(UserRole.ADMIN)
   async findAll(@Query() query: PaginationQueryDto) {
     const result = await this.usersService.findAllPaginated(query, true);
-    
+
     return {
       data: result.data.map((user) => ({
         id: user._id.toString(),

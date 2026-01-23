@@ -35,6 +35,7 @@ export const MetricSchema = SchemaFactory.createForClass(Metric);
 
 MetricSchema.set('toJSON', {
   transform: (doc, ret) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { _id, __v, ...rest } = ret;
     return rest;
   },

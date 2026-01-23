@@ -13,7 +13,8 @@ export class DemoOrJwtAuthGuard implements CanActivate {
     if (authMode === 'demo') {
       // Si en modo demo se provee un Authorization header, intentar delegar
       // al guard JWT para permitir pruebas con tokens reales.
-      const authHeader = (request.headers && request.headers.authorization) || null;
+      const authHeader =
+        (request.headers && request.headers.authorization) || null;
       if (authHeader) {
         const JwtGuardClass = AuthGuard('jwt') as any;
         const jwtGuard = new JwtGuardClass();

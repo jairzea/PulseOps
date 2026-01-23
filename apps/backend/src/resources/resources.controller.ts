@@ -81,9 +81,9 @@ export class ResourcesController {
       exists: !!currentUser,
       id: currentUser?.id,
       role: currentUser?.role,
-      isAdmin: currentUser?.role === UserRole.ADMIN
+      isAdmin: currentUser?.role === UserRole.ADMIN,
     });
-    
+
     // Si hay parámetros de paginación explícitos, usar endpoint paginado
     if (page !== undefined || pageSize !== undefined || search !== undefined) {
       const paginationQuery: PaginationQueryDto = {
@@ -91,8 +91,12 @@ export class ResourcesController {
         pageSize: pageSize ? parseInt(pageSize, 10) : 10,
         search,
       };
-      const result = await this.usersService.findAllPaginated(paginationQuery, false, UserRole.USER);
-      
+      const result = await this.usersService.findAllPaginated(
+        paginationQuery,
+        false,
+        UserRole.USER,
+      );
+
       // Mapear usuarios a formato de recursos
       const resourceUsers = result.data.map((user) => ({
         id: user._id.toString(),
@@ -245,7 +249,10 @@ export class ResourcesController {
 
   // GET /resources/:id/metrics -> métricas asociadas al recurso
   @Get(':id/metrics')
-  async getResourceMetrics(@Param('id') id: string, @CurrentUser() currentUser: any) {
+  async getResourceMetrics(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: any,
+  ) {
     const isAdmin = currentUser?.role === UserRole.ADMIN;
     const isOwner = currentUser?.id === id;
     if (!isAdmin && !isOwner) {
@@ -263,8 +270,8 @@ export class ResourcesController {
   async create(@Body() dto: CreateResourceDto) {
     // El frontend crea recursos enviando { name, roleType, isActive, metricIds }
     // Mapeamos a la creación de User generando un email/contraseña seguros por defecto
-    const generatedEmail = `${dto.name.replace(/\s+/g, '.').toLowerCase()}.${uuidv4().slice(0,8)}@pulseops.local`;
-    const generatedPassword = uuidv4().slice(0,12);
+    const generatedEmail = `${dto.name.replace(/\s+/g, '.').toLowerCase()}.${uuidv4().slice(0, 8)}@pulseops.local`;
+    const generatedPassword = uuidv4().slice(0, 12);
 
     const registerPayload: RegisterDto = {
       email: generatedEmail,
@@ -273,7 +280,10 @@ export class ResourcesController {
       role: UserRole.USER,
       resourceProfile: {
         ...(dto.resourceProfile || {}),
-        resourceType: dto.roleType || (dto.resourceProfile && (dto.resourceProfile as any).resourceType) || undefined,
+        resourceType:
+          dto.roleType ||
+          (dto.resourceProfile && (dto.resourceProfile as any).resourceType) ||
+          undefined,
         metricIds: dto.metricIds || [],
       },
     } as any;
@@ -287,9 +297,15 @@ export class ResourcesController {
     // Sincronizar asociaciones en métricas si el frontend envió metricIds
     if (dto.metricIds !== undefined && dto.metricIds.length > 0) {
       try {
-        await this.metricsService.syncResourceAssociations(createdUser.id, dto.metricIds || []);
+        await this.metricsService.syncResourceAssociations(
+          createdUser.id,
+          dto.metricIds || [],
+        );
       } catch (err) {
-        console.warn('Error sincronizando asociaciones de métricas tras crear recurso:', err);
+        console.warn(
+          'Error sincronizando asociaciones de métricas tras crear recurso:',
+          err,
+        );
       }
     }
 
@@ -309,7 +325,9 @@ export class ResourcesController {
     const allowed: any = {};
 
     // Construir resourceProfile a partir del payload (roleType, metricIds o resourceProfile)
-    const rp: any = (dto as any).resourceProfile ? { ...(dto as any).resourceProfile } : {};
+    const rp: any = (dto as any).resourceProfile
+      ? { ...(dto as any).resourceProfile }
+      : {};
     if (dto.roleType !== undefined) rp.resourceType = dto.roleType;
     if (dto.metricIds !== undefined) rp.metricIds = dto.metricIds;
 
@@ -331,7 +349,10 @@ export class ResourcesController {
     // Sincronizar asociaciones en métricas si se actualizó la lista de metricIds
     if (dto.metricIds !== undefined) {
       try {
-        await this.metricsService.syncResourceAssociations(id, dto.metricIds || []);
+        await this.metricsService.syncResourceAssociations(
+          id,
+          dto.metricIds || [],
+        );
       } catch (err) {
         console.warn('Error sincronizando asociaciones de métricas:', err);
       }

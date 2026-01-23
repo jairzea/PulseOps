@@ -103,7 +103,9 @@ async function bootstrap() {
           createdMetrics.push(existing);
           console.log(`  ⚠ ${metric.label} ya existe — usando existente`);
         } catch (innerErr) {
-          console.warn(`  ! No se pudo recuperar métrica existente para key=${metric.key}`);
+          console.warn(
+            `  ! No se pudo recuperar métrica existente para key=${metric.key}`,
+          );
         }
       } else {
         throw err;

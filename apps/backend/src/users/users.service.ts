@@ -41,7 +41,13 @@ export class UsersService {
     includeInactive = false,
     roleFilter?: UserRole,
   ): Promise<PaginatedResponse<UserDocument>> {
-    const { page = 1, pageSize = 10, search, sortBy = 'createdAt', sortDir = 'desc' } = query;
+    const {
+      page = 1,
+      pageSize = 10,
+      search,
+      sortBy = 'createdAt',
+      sortDir = 'desc',
+    } = query;
 
     // Filtro base
     const filter: any = includeInactive ? {} : { isActive: true };
