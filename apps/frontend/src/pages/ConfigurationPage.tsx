@@ -269,7 +269,6 @@ function Step1Formulas() {
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                 Título de la fórmula
@@ -281,29 +280,6 @@ function Step1Formulas() {
                                                 className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                                 placeholder="Título de la fórmula..."
                                             />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                🎨 Color de resaltado
-                                            </label>
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="color"
-                                                    value={rgbToHex(getConditionColor(key))}
-                                                    onChange={(e) => updateColor(key, hexToRgb(e.target.value))}
-                                                    className="w-16 h-10 rounded cursor-pointer border border-gray-300 dark:border-gray-600"
-                                                />
-                                                <div
-                                                    className="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg flex items-center justify-center"
-                                                    style={{
-                                                        boxShadow: `0 0 20px ${getConditionColor(key).replace('rgb', 'rgba').replace(')', ', 0.4)')}, 0 0 40px ${getConditionColor(key).replace('rgb', 'rgba').replace(')', ', 0.2)')}`
-                                                    }}
-                                                >
-                                                    <span className="text-xs text-gray-400 font-mono">{getConditionColor(key)}</span>
-                                                </div>
-                                            </div>
-                                        </div>
                                         </div>
 
                                         <div>
@@ -1223,16 +1199,16 @@ export function ConfigurationPage() {
                         Gestiona las fórmulas, colores y umbrales del motor de análisis
                     </p>
                 </div>
-                        {/* Active Configuration Info */}
-                        {errorConfig ? (
-                            <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
-                                <PermissionFeedback
-                                    message={errorConfig}
-                                    onRetry={loadConfigurations}
-                                />
-                            </div>
-                        ) : (
-                            activeConfig && (
+                {/* Active Configuration Info */}
+                {errorConfig ? (
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                        <PermissionFeedback
+                            message={errorConfig}
+                            onRetry={loadConfigurations}
+                        />
+                    </div>
+                ) : (
+                    activeConfig && (
                         <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
                             <div className="flex items-center justify-between">
                                 <div>
