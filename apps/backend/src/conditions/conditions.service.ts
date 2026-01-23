@@ -11,6 +11,7 @@ export interface ConditionMetadataDto {
     badge: string;
     text: string;
     border: string;
+    glow: string;
   };
   icon: string;
   category: 'superior' | 'normal' | 'crisis' | 'technical';
@@ -35,6 +36,7 @@ export class ConditionsService {
           badge: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/50',
           text: 'text-yellow-300',
           border: 'border-yellow-500',
+          glow: 'rgb(234, 179, 8)',
         },
         icon: '⚡',
         category: 'superior',
@@ -50,6 +52,7 @@ export class ConditionsService {
           badge: 'bg-purple-500/20 text-purple-300 border-purple-500/50',
           text: 'text-purple-300',
           border: 'border-purple-500',
+          glow: 'rgb(168, 85, 247)',
         },
         icon: '🔄',
         category: 'superior',
@@ -64,6 +67,7 @@ export class ConditionsService {
           badge: 'bg-green-500/20 text-green-300 border-green-500/50',
           text: 'text-green-300',
           border: 'border-green-500',
+          glow: 'rgb(34, 197, 94)',
         },
         icon: '📈',
         category: 'superior',
@@ -79,6 +83,7 @@ export class ConditionsService {
           badge: 'bg-blue-500/20 text-blue-300 border-blue-500/50',
           text: 'text-blue-300',
           border: 'border-blue-500',
+          glow: 'rgb(59, 130, 246)',
         },
         icon: '✅',
         category: 'normal',
@@ -93,6 +98,7 @@ export class ConditionsService {
           badge: 'bg-orange-500/20 text-orange-300 border-orange-500/50',
           text: 'text-orange-300',
           border: 'border-orange-500',
+          glow: 'rgb(249, 115, 22)',
         },
         icon: '⚠️',
         category: 'crisis',
@@ -107,6 +113,7 @@ export class ConditionsService {
           badge: 'bg-red-500/20 text-red-300 border-red-500/50',
           text: 'text-red-300',
           border: 'border-red-500',
+          glow: 'rgb(239, 68, 68)',
         },
         icon: '🔴',
         category: 'crisis',
@@ -121,6 +128,7 @@ export class ConditionsService {
           badge: 'bg-gray-500/20 text-gray-300 border-gray-500/50',
           text: 'text-gray-300',
           border: 'border-gray-500',
+          glow: 'rgb(107, 114, 128)',
         },
         icon: '❌',
         category: 'crisis',
@@ -135,6 +143,7 @@ export class ConditionsService {
           badge: 'bg-gray-600/20 text-gray-400 border-gray-600/50',
           text: 'text-gray-400',
           border: 'border-gray-600',
+          glow: 'rgb(75, 85, 99)',
         },
         icon: '📊',
         category: 'technical',

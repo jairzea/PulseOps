@@ -28,12 +28,24 @@ export const ConditionCard: React.FC<ConditionCardProps> = ({
     const { displayName, icon, color, category } = metadata;
     const categoryLabel = CATEGORY_LABELS[category] || 'STATUS';
 
+    // Debug: Log color object when active
+    React.useEffect(() => {
+        if (isActive) {
+            console.log('🎨 Active condition color:', displayName, color);
+        }
+    }, [isActive, displayName, color]);
+
     return (
         <div
             className={`
-                rounded-lg p-6 border-2 transition-all duration-300 h-[180px] flex flex-col
+                rounded-lg p-6 border-2 transition-all duration-700 h-[180px] flex flex-col
                 ${isActive ? `${color.bg} ${color.border}` : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'}
             `}
+            style={{
+                boxShadow: isActive && color.glow 
+                    ? `0 0 30px ${color.glow.replace('rgb(', 'rgba(').replace(')', ', 0.5)')}, 0 0 60px ${color.glow.replace('rgb(', 'rgba(').replace(')', ', 0.25)')}, 0 10px 40px ${color.glow.replace('rgb(', 'rgba(').replace(')', ', 0.2)')}`
+                    : 'none',
+            }}
         >
             <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">{displayName.toUpperCase()}</h3>

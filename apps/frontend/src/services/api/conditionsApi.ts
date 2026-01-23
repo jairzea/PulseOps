@@ -13,6 +13,7 @@ export interface ConditionMetadata {
     badge: string;
     text: string;
     border: string;
+    glow: string;
   };
   icon: string;
   category: 'superior' | 'normal' | 'crisis' | 'technical';
