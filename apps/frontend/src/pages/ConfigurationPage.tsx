@@ -10,6 +10,7 @@ import { PulseLoader } from '../components/PulseLoader';
 import { LoadingButton } from '../components/LoadingButton';
 import { PermissionFeedback } from '../components/PermissionFeedback';
 import { useAuth } from '../contexts/AuthContext';
+import { ConditionColorsConfig } from '../components/ConditionColorsConfig';
 
 // Step Components
 interface StepProps {
@@ -1029,6 +1030,7 @@ export function ConfigurationPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [errorConfig, setErrorConfig] = useState<string | null>(null);
     const [currentStep, setCurrentStep] = useState(1);
+    const [activeTab, setActiveTab] = useState<'colors' | 'thresholds'>('colors');
     const [editedThresholds, setEditedThresholds] =
         useState<ConditionThresholds | null>(null);
 
@@ -1139,23 +1141,59 @@ export function ConfigurationPage() {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                        Configuración de Umbrales
+                        Configuración del Sistema
                     </h1>
                     <p className="text-gray-400">
-                        Ajusta los umbrales que determinan las condiciones operativas
+                        Gestiona los colores, umbrales y fórmulas del motor de análisis
                     </p>
                 </div>
 
-                {/* Active Configuration Info */}
-                {errorConfig ? (
-                    <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
-                        <PermissionFeedback
-                            message={errorConfig}
-                            onRetry={loadConfigurations}
-                        />
+                {/* Tabs */}
+                <div className="mb-8 border-b border-gray-200 dark:border-gray-700">
+                    <nav className="-mb-px flex space-x-8">
+                        <button
+                            onClick={() => setActiveTab('colors')}
+                            className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                                activeTab === 'colors'
+                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                            }`}
+                        >
+                            🎨 Colores de Condiciones
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('thresholds')}
+                            className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                                activeTab === 'thresholds'
+                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                            }`}
+                        >
+                            ⚙️ Umbrales y Fórmulas
+                        </button>
+                    </nav>
+                </div>
+
+                {/* Colors Tab */}
+                {activeTab === 'colors' && (
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                        <ConditionColorsConfig />
                     </div>
-                ) : (
-                    activeConfig && (
+                )}
+
+                {/* Thresholds Tab */}
+                {activeTab === 'thresholds' && (
+                    <>
+                        {/* Active Configuration Info */}
+                        {errorConfig ? (
+                            <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                                <PermissionFeedback
+                                    message={errorConfig}
+                                    onRetry={loadConfigurations}
+                                />
+                            </div>
+                        ) : (
+                            activeConfig && (
                         <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -1351,6 +1389,8 @@ export function ConfigurationPage() {
                             ]}
                         />
                     </div>
+                )}
+                    </>
                 )}
             </div>
         </div>
