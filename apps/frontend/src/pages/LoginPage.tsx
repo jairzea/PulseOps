@@ -38,7 +38,7 @@ export function LoginPage() {
     // Redirigir si ya está autenticado (solo si no está animando)
     useEffect(() => {
         if (isAuthenticated && !isAnimating) {
-            navigate('/');
+            navigate('/dashboard');
         }
     }, [isAuthenticated, navigate, isAnimating]);
 
@@ -90,7 +90,7 @@ export function LoginPage() {
                 }
 
                 // Navegar inmediatamente al dashboard con estado de animación
-                navigate('/', { state: { fromLogin: true } });
+                navigate('/dashboard', { state: { fromLogin: true } });
 
                 // Forzar scroll al inicio de manera agresiva
                 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });

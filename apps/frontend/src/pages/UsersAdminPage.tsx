@@ -124,7 +124,7 @@ export function UsersAdminPage() {
                 </div>
 
                 {/* Tabla de usuarios */}
-                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-500 ease-in-out min-h-[500px]">
+                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-500 ease-in-out">
                     {isLoading && <TableSkeleton columns={5} rows={6} showActions={true} />}
 
                     {!isLoading && (
@@ -284,41 +284,13 @@ export function UsersAdminPage() {
                                 </label>
                                 <select
                                     value={formData.role}
-                                    onChange={(e) => {
-                                        const newRole = e.target.value as 'admin' | 'user';
-                                        setFormData({ ...formData, role: newRole });
-                                        // Si cambia a 'user' y hay recursos, preseleccionar el primero
-                                        if (newRole === 'user' && resources.length > 0 && !selectedResourceId) {
-                                            setSelectedResourceId(resources[0].id);
-                                        }
-                                        // Si cambia a 'admin', limpiar selección
-                                        if (newRole === 'admin') {
-                                            setSelectedResourceId(null);
-                                        }
-                                    }}
+                                    onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'user' })}
                                     className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value="user">Usuario</option>
                                     <option value="admin">Administrador</option>
                                 </select>
                             </div>
-                            {/* Selector de recurso: preseleccionado y deshabilitado cuando el rol es 'user' */}
-                            {formData.role === 'user' && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Recurso asociado
-                                    </label>
-                                    <ResourceSelector
-                                        selectedId={selectedResourceId}
-                                        onSelect={(id) => setSelectedResourceId(id)}
-                                        loading={loadingResources}
-                                        disabled={true}
-                                    />
-                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                        El recurso se asigna automáticamente para usuarios con rol "Usuario"
-                                    </p>
-                                </div>
-                            )}
                             <div className="flex gap-3 pt-4">
                                 <button
                                     type="submit"

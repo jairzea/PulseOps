@@ -24,6 +24,7 @@ export class ConditionMetadata {
       badge: String,
       text: String,
       border: String,
+      glow: String,
     },
     required: true,
   })
@@ -32,6 +33,7 @@ export class ConditionMetadata {
     badge: string;
     text: string;
     border: string;
+    glow: string;
   };
 
   @Prop({ required: true })

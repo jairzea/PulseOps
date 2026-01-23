@@ -10,6 +10,7 @@ import { PulseLoader } from '../components/PulseLoader';
 import { LoadingButton } from '../components/LoadingButton';
 import { PermissionFeedback } from '../components/PermissionFeedback';
 import { useAuth } from '../contexts/AuthContext';
+import { useConditionsMetadata } from '../hooks/useConditionsMetadata';
 
 // Step Components
 interface StepProps {
@@ -26,6 +27,22 @@ function Step1Formulas() {
     const [expandedCondition, setExpandedCondition] = useState<string | null>('AFLUENCIA');
     const [savingCondition, setSavingCondition] = useState<string | null>(null);
     const { success, error: showError } = useToast();
+    const { conditions: conditionsMetadata } = useConditionsMetadata();
+    const [editedColors, setEditedColors] = useState<Record<string, string>>({});
+
+    // Funciones de conversión de color
+    const rgbToHex = (rgb: string): string => {
+        const match = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+        if (!match) return '#000000';
+        const [, r, g, b] = match;
+        return '#' + [r, g, b].map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+    };
+
+    const hexToRgb = (hex: string): string => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        if (!result) return 'rgb(0, 0, 0)';
+        return `rgb(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)})`;
+    };
 
     const conditions = [
         { key: 'AFLUENCIA', name: 'AFLUENCIA', color: 'purple' },
@@ -130,11 +147,25 @@ function Step1Formulas() {
 
         try {
             setSavingCondition(condition);
+            
+            // Guardar el playbook
             await apiClient.updatePlaybook(condition, {
                 title: pb.title,
                 steps: pb.steps.filter(s => s.trim() !== ''), // Filtrar pasos vacíos
                 isActive: pb.isActive
             });
+
+            // Guardar el color si fue editado
+            if (editedColors[condition]) {
+                const { conditionsApi } = await import('../services/api/conditionsApi');
+                await conditionsApi.updateColor(condition, editedColors[condition]);
+                // Limpiar el color editado después de guardar
+                setEditedColors(prev => {
+                    const { [condition]: _, ...rest } = prev;
+                    return rest;
+                });
+            }
+
             success(`Fórmula de ${condition} guardada correctamente`);
             await loadPlaybooks(); // Recargar para obtener versión actualizada
         } catch (error) {
@@ -147,6 +178,19 @@ function Step1Formulas() {
 
     const toggleCondition = (condition: string) => {
         setExpandedCondition(prev => prev === condition ? null : condition);
+    };
+
+    const updateColor = (condition: string, newColor: string) => {
+        setEditedColors(prev => ({
+            ...prev,
+            [condition]: newColor
+        }));
+    };
+
+    const getConditionColor = (condition: string): string => {
+        if (editedColors[condition]) return editedColors[condition];
+        const metadata = conditionsMetadata.find(c => c.condition === condition);
+        return metadata?.color?.glow || 'rgb(59, 130, 246)';
     };
 
     if (loading) {
@@ -238,17 +282,41 @@ function Step1Formulas() {
                                         </LoadingButton>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Título de la fórmula
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={playbook.title}
-                                            onChange={(e) => updatePlaybook(key, 'title', e.target.value)}
-                                            className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                            placeholder="Título de la fórmula..."
-                                        />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                Título de la fórmula
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={playbook.title}
+                                                onChange={(e) => updatePlaybook(key, 'title', e.target.value)}
+                                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                                placeholder="Título de la fórmula..."
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                🎨 Color de resaltado
+                                            </label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="color"
+                                                    value={rgbToHex(getConditionColor(key))}
+                                                    onChange={(e) => updateColor(key, hexToRgb(e.target.value))}
+                                                    className="w-16 h-10 rounded cursor-pointer border border-gray-300 dark:border-gray-600"
+                                                />
+                                                <div
+                                                    className="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg flex items-center justify-center"
+                                                    style={{
+                                                        boxShadow: `0 0 20px ${getConditionColor(key).replace('rgb', 'rgba').replace(')', ', 0.4)')}, 0 0 40px ${getConditionColor(key).replace('rgb', 'rgba').replace(')', ', 0.2)')}`
+                                                    }}
+                                                >
+                                                    <span className="text-xs text-gray-400 font-mono">{getConditionColor(key)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div className="space-y-3">
@@ -1139,13 +1207,12 @@ export function ConfigurationPage() {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                        Configuración de Umbrales
+                        Configuración del Sistema
                     </h1>
                     <p className="text-gray-400">
-                        Ajusta los umbrales que determinan las condiciones operativas
+                        Gestiona las fórmulas, colores y umbrales del motor de análisis
                     </p>
                 </div>
-
                 {/* Active Configuration Info */}
                 {errorConfig ? (
                     <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">

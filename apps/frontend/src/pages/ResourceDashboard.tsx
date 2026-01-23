@@ -16,6 +16,8 @@ import { useAuth } from '../contexts/AuthContext';
 export function ResourceDashboard() {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const [selectedMetricKey, setSelectedMetricKey] = useState<string | null>(null);
+  const [visuallyActiveCondition, setVisuallyActiveCondition] = useState<string | null>(null);
+  const [chartLineColor, setChartLineColor] = useState<string | undefined>(undefined);
   const conditionsContainerRef = useRef<HTMLDivElement>(null);
   const conditionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const prevUserIdRef = useRef<string | undefined>();
@@ -168,17 +170,58 @@ export function ResourceDashboard() {
     }
   }, [selectedResourceId, selectedMetricKey, evaluate]);
 
-  // Auto-scroll to active condition
+  // Auto-scroll to active condition with smooth animation
   useEffect(() => {
     if (analysis?.evaluation?.condition) {
-      const activeConditionElement = conditionRefs.current.get(analysis.evaluation.condition);
-      if (activeConditionElement) {
-        activeConditionElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'center',
-        });
-      }
+      // Primero quitar el resaltado visual
+      setVisuallyActiveCondition(null);
+
+      // Small delay to allow the scale animation to start
+      const timer = setTimeout(() => {
+        const activeConditionElement = conditionRefs.current.get(analysis.evaluation.condition);
+        if (activeConditionElement && conditionsContainerRef.current) {
+          const container = conditionsContainerRef.current;
+          const cardRect = activeConditionElement.getBoundingClientRect();
+          const containerRect = container.getBoundingClientRect();
+
+          // Calculate the scroll position to center the card
+          const scrollLeft = activeConditionElement.offsetLeft - (containerRect.width / 2) + (cardRect.width / 2);
+          const startScroll = container.scrollLeft;
+          const distance = scrollLeft - startScroll;
+          const duration = 2000; // 2 segundos para el scroll
+          const startTime = performance.now();
+
+          const animateScroll = (currentTime: number) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Ease in-out cubic para suavidad
+            const easeProgress = progress < 0.5
+              ? 4 * progress * progress * progress
+              : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+            container.scrollLeft = startScroll + (distance * easeProgress);
+
+            if (progress < 1) {
+              requestAnimationFrame(animateScroll);
+            } else {
+              // Una vez terminado el scroll, aplicar el resaltado
+              setTimeout(() => {
+                setVisuallyActiveCondition(analysis.evaluation.condition);
+                // Cambiar el color del gráfico con un delay adicional
+                setTimeout(() => {
+                  const color = conditions.find(c => c.condition === analysis.evaluation.condition)?.color.glow;
+                  setChartLineColor(color);
+                }, 500); // Medio segundo después del resaltado
+              }, 100);
+            }
+          };
+
+          requestAnimationFrame(animateScroll);
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
     }
   }, [analysis?.evaluation?.condition]);
 
@@ -227,10 +270,10 @@ export function ResourceDashboard() {
       {/* Main Content */}
       <main className="max-w-[1800px] mx-auto px-6 py-6">
         {/* Condition Cards - Horizontal Slider */}
-        <div className="mb-6 relative">
+        <div className="mb-6 relative -mx-6">
           <div
             ref={conditionsContainerRef}
-            className="flex gap-4 overflow-x-auto pb-4 scroll-smooth scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800"
+            className="flex gap-4 overflow-x-auto py-8 px-6 scroll-smooth scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800"
             style={{ scrollbarWidth: 'thin' }}
           >
             {loadingConditions ? (
@@ -245,29 +288,42 @@ export function ResourceDashboard() {
                 </div>
               ))
             ) : (
-              conditions.map((conditionMeta) => (
-                <div
-                  key={conditionMeta.condition}
-                  ref={(el) => {
-                    if (el) {
-                      conditionRefs.current.set(conditionMeta.condition, el);
-                    } else {
-                      conditionRefs.current.delete(conditionMeta.condition);
-                    }
-                  }}
-                  className="flex-shrink-0 w-64 transition-transform duration-300 ease-out hover:scale-105"
-                >
-                  <ConditionCard
-                    metadata={conditionMeta}
-                    isActive={analysis?.evaluation?.condition === conditionMeta.condition}
-                    confidence={
-                      analysis?.evaluation?.condition === conditionMeta.condition
-                        ? analysis?.evaluation?.confidence
-                        : undefined
-                    }
-                  />
-                </div>
-              ))
+              conditions.map((conditionMeta, index) => {
+                const isActive = visuallyActiveCondition === conditionMeta.condition;
+                const activeIndex = conditions.findIndex(c => c.condition === visuallyActiveCondition);
+                const isPrevious = activeIndex !== -1 && index === activeIndex - 1;
+                const isNext = activeIndex !== -1 && index === activeIndex + 1;
+
+                return (
+                  <div
+                    key={conditionMeta.condition}
+                    ref={(el) => {
+                      if (el) {
+                        conditionRefs.current.set(conditionMeta.condition, el);
+                      } else {
+                        conditionRefs.current.delete(conditionMeta.condition);
+                      }
+                    }}
+                    className={`flex-shrink-0 w-64 relative transition-all duration-[2000ms] ease-in-out ${isActive ? 'z-20' : 'z-0 hover:scale-105'
+                      }`}
+                    style={{
+                      transformOrigin: 'center center',
+                      transform: `scale(${isActive ? '1.15' : '1'}) translateX(${isPrevious ? '-12px' : isNext ? '12px' : '0px'
+                        })`,
+                    }}
+                  >
+                    <ConditionCard
+                      metadata={conditionMeta}
+                      isActive={isActive}
+                      confidence={
+                        isActive
+                          ? analysis?.evaluation?.confidence
+                          : undefined
+                      }
+                    />
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
@@ -280,6 +336,7 @@ export function ResourceDashboard() {
               records={records}
               metricName={selectedMetric?.label || 'Metric'}
               loading={loadingRecords}
+              lineColor={chartLineColor}
             />
           </div>
 

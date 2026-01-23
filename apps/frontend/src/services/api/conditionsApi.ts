@@ -13,6 +13,7 @@ export interface ConditionMetadata {
     badge: string;
     text: string;
     border: string;
+    glow: string;
   };
   icon: string;
   category: 'superior' | 'normal' | 'crisis' | 'technical';
@@ -23,6 +24,7 @@ export interface ConditionMetadata {
  */
 export interface ConditionsApi {
   getMetadata(): Promise<ConditionMetadata[]>;
+  updateColor(condition: string, glow: string): Promise<ConditionMetadata>;
 }
 
 /**
@@ -33,6 +35,13 @@ class ConditionsApiImpl implements ConditionsApi {
 
   async getMetadata(): Promise<ConditionMetadata[]> {
     return httpClient.get<ConditionMetadata[]>(`${this.basePath}/metadata`);
+  }
+
+  async updateColor(condition: string, glow: string): Promise<ConditionMetadata> {
+    return httpClient.patch<ConditionMetadata>(
+      `${this.basePath}/${condition}/color`,
+      { glow }
+    );
   }
 }
 

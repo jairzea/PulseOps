@@ -7,6 +7,7 @@ interface HistoricalChartProps {
   records: Record[];
   metricName: string;
   loading?: boolean;
+  lineColor?: string;
 }
 
 interface ChartDataPoint {
@@ -16,7 +17,7 @@ interface ChartDataPoint {
   timestamp: string;
 }
 
-export const HistoricalChart = memo(function HistoricalChart({ records, metricName, loading = false }: HistoricalChartProps) {
+export const HistoricalChart = memo(function HistoricalChart({ records, metricName, loading = false, lineColor = '#3B82F6' }: HistoricalChartProps) {
   const { theme } = useTheme();
 
   // Componente personalizado para el tooltip
@@ -137,6 +138,18 @@ export const HistoricalChart = memo(function HistoricalChart({ records, metricNa
       </h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={chartData}>
+          <defs>
+            <filter id="line-glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+              <feFlood floodColor={lineColor || '#3B82F6'} floodOpacity="0.4" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
           <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#374151' : '#E5E7EB'} />
           <XAxis
             dataKey="week"
@@ -155,11 +168,12 @@ export const HistoricalChart = memo(function HistoricalChart({ records, metricNa
           <Line
             type="monotone"
             dataKey="value"
-            stroke="#3B82F6"
+            stroke={lineColor}
             strokeWidth={2}
             name="Valor Real"
-            dot={{ fill: '#3B82F6', r: 4 }}
+            dot={{ fill: lineColor || '#3B82F6', r: 4 }}
             activeDot={{ r: 6 }}
+            filter="url(#line-glow)"
           />
           <Line
             type="monotone"
