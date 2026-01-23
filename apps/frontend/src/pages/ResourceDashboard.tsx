@@ -17,6 +17,7 @@ export function ResourceDashboard() {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const [selectedMetricKey, setSelectedMetricKey] = useState<string | null>(null);
   const [visuallyActiveCondition, setVisuallyActiveCondition] = useState<string | null>(null);
+  const [chartLineColor, setChartLineColor] = useState<string | undefined>(undefined);
   const conditionsContainerRef = useRef<HTMLDivElement>(null);
   const conditionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const prevUserIdRef = useRef<string | undefined>();
@@ -207,6 +208,11 @@ export function ResourceDashboard() {
               // Una vez terminado el scroll, aplicar el resaltado
               setTimeout(() => {
                 setVisuallyActiveCondition(analysis.evaluation.condition);
+                // Cambiar el color del gráfico con un delay adicional
+                setTimeout(() => {
+                  const color = conditions.find(c => c.condition === analysis.evaluation.condition)?.color.glow;
+                  setChartLineColor(color);
+                }, 500); // Medio segundo después del resaltado
               }, 100);
             }
           };
@@ -224,12 +230,6 @@ export function ResourceDashboard() {
     console.log('[Dashboard] Selected metric:', { selectedMetricKey, metric, metricsCount: metrics?.length });
     return metric;
   }, [metrics, selectedMetricKey]);
-
-  const lineColor = useMemo(() => {
-    return visuallyActiveCondition 
-      ? conditions.find(c => c.condition === visuallyActiveCondition)?.color.glow 
-      : undefined;
-  }, [visuallyActiveCondition, conditions]);
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
@@ -336,7 +336,7 @@ export function ResourceDashboard() {
               records={records}
               metricName={selectedMetric?.label || 'Metric'}
               loading={loadingRecords}
-              lineColor={lineColor}
+              lineColor={chartLineColor}
             />
           </div>
 
