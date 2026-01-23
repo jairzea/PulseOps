@@ -100,6 +100,7 @@ export const useResourcesStore = create<ResourcesState>((set, get) => ({
             await get().fetchResources();
             set({ loading: false });
         } catch (error) {
+            console.log("error", error)
             const errorMessage = error instanceof AppError ? error.getUserMessage() : 'Error al eliminar recurso';
             set({ error: errorMessage, loading: false });
             throw error;

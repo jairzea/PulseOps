@@ -1,5 +1,17 @@
 # PulseOps – Documento de Conocimiento y Contexto
 
+## Migration Log (Frontend refactor por carpetas)
+
+- Iteración 1 (assets) — 20/01/2026:
+  - Acción: intenté mover `src/assets/**` → `src/shared/assets/**` y actualizar imports que apuntaban a `../assets/`.
+  - Archivos afectados: `src/pages/LoginPage.tsx`, `src/pages/LoginPage2.tsx`, `src/components/Toast.tsx`, `src/components/ShredderLoader.tsx`, `src/components/ConfirmModal.tsx` (imports actualizados temporalmente).
+  - Validación: ejecuté `npm run typecheck` y `npm run build`. El `tsc` devolvió errores existentes en el repo (no relacionados con el move de assets).
+  - Resultado: revertí los cambios (moví los assets de vuelta a `src/assets` y restauré los imports). No se realizó commit.
+  - Estado: revertido — pendiente repetir la iteración tras resolver errores de `tsc` preexistentes o ejecutar la migración en pasos más seguros.
+
+  - Próximo paso sugerido: corregir los errores de `tsc` o aislar la migración de assets en trozos (mover solo `animations/` y JSON primero), volver a intentar la iteración 1.
+
+
 # Instrucción obligatoria para la IA
 
 Este documento debe ser tratado como **memoria persistente del proyecto**.
@@ -105,6 +117,20 @@ PulseOps convierte ese proceso frágil en:
 ---
 
 ## 5. Fuentes de datos
+
+## Unificación Recursos y Usuarios (MVP)
+
+Breve decisión arquitectural tomada para el MVP:
+
+- **Un Recurso es un Usuario**: no habrá colección separada de "resources" en la capa de persistencia; la entidad única será `User`.
+- **Perfil de recurso opcional**: la entidad `User` incluye un campo opcional `resourceProfile` que contiene los datos específicos de operación (rol operativo, tipo de recurso, estado, etc.).
+- **Endpoints**: se mantiene la ruta `/resources` como *vista/proxy* sobre el servicio de usuarios. Comportamiento esperado:
+  - `GET /resources` → lista usuarios con `role === 'user'` (mapea solo campos visibles para UI).
+  - `POST /resources` → crea un `User` con `role = 'user'` y opcional `resourceProfile`.
+  - `PATCH /resources/:id` → actualiza únicamente `resourceProfile` y `isActive` (soft-delete con `isActive=false`).
+- **Motivación**: simplificar el modelo (single source of truth), evitar inconsistencias y facilitar operaciones transversales (auth, reporting, auditoría).
+- **Notas de implementación**: migración parcial posible — existe código legado (`resources.service`, `resource.schema`) que debe eliminarse o migrarse; durante MVP se implementó un proxy en `ResourcesController` que delega en `UsersService`.
+
 
 ### 5.1 Archivo (principal)
 

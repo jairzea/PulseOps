@@ -10,12 +10,12 @@ import {
 } from '@nestjs/common';
 import { ChartsService } from './charts.service';
 import { CreateChartDto, UpdateChartDto } from './dto/chart.dto';
-import { DemoAuthGuard } from '../auth/guards/demo-auth.guard';
+import { DemoOrJwtAuthGuard } from '../auth/guards/demo-or-jwt.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { User } from '../common/interfaces/user.interface';
 
 @Controller('charts')
-@UseGuards(DemoAuthGuard)
+@UseGuards(DemoOrJwtAuthGuard)
 export class ChartsController {
   constructor(private readonly chartsService: ChartsService) {}
 

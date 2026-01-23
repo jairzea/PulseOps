@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useResources } from '../hooks/useResources';
+// import { useResources } from '../hooks/useResources'; // Ya no se necesita - AutocompleteInfinite maneja los datos
 import { useMetrics } from '../hooks/useMetrics';
+// import { apiClient } from '../services/apiClient';
 import { useAnalysis } from '../hooks/useAnalysis';
 import { useConditionsMetadata } from '../hooks/useConditionsMetadata';
 import { ResourceSelector } from '../components/ResourceSelector';
@@ -10,15 +11,22 @@ import { ConditionFormula } from '../components/ConditionFormula';
 import { ConditionCard } from '../components/ConditionCard';
 import { RecordModal } from '../components/RecordModal';
 import { useRecordsStore } from '../stores/recordsStore';
+import { useAuth } from '../contexts/AuthContext';
 
 export function ResourceDashboard() {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const [selectedMetricKey, setSelectedMetricKey] = useState<string | null>(null);
+  const [visuallyActiveCondition, setVisuallyActiveCondition] = useState<string | null>(null);
+  const [chartLineColor, setChartLineColor] = useState<string | undefined>(undefined);
   const conditionsContainerRef = useRef<HTMLDivElement>(null);
   const conditionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const prevUserIdRef = useRef<string | undefined>();
 
-  const { resources, loading: loadingResources } = useResources();
+  // const { resources, loading: loadingResources } = useResources(); // Ya no se necesita
+  const { user } = useAuth();
   const { metrics, loading: loadingMetrics } = useMetrics({ resourceId: selectedResourceId });
+  // const [userMetrics, setUserMetrics] = useState<any[]>([]);
+  // const [loadingUserMetrics, setLoadingUserMetrics] = useState(false);
   const { conditions, loading: loadingConditions } = useConditionsMetadata();
 
   // Usar Zustand store para fetch de records
@@ -28,14 +36,44 @@ export function ResourceDashboard() {
     fetchRecords,
     setModalOpen,
     isModalOpen,
-    lastCreatedRecord
+    lastCreatedRecord,
+    reset: resetRecordsStore,
   } = useRecordsStore();
 
-  const { result: analysis, loading: loadingAnalysis, evaluate } = useAnalysis();
+  const { result: analysis, loading: loadingAnalysis, evaluate, reset: resetAnalysis } = useAnalysis();
+
+  // Debug: Monitorear cambios en records y analysis
+  useEffect(() => {
+    console.log('[Dashboard] Data state:', {
+      recordsCount: records?.length,
+      hasAnalysis: !!analysis,
+      analysisCondition: analysis?.evaluation?.condition,
+      loadingRecords,
+      loadingAnalysis
+    });
+  }, [records, analysis, loadingRecords, loadingAnalysis]);
+
+  // Resetear estado SOLO cuando realmente cambia el usuario (logout/login)
+  useEffect(() => {
+    const currentUserId = user?.id;
+    const prevUserId = prevUserIdRef.current;
+
+    // Solo resetear si el ID del usuario realmente cambió (no en el primer render)
+    if (prevUserId !== undefined && currentUserId !== prevUserId) {
+      resetAnalysis();
+      resetRecordsStore();
+      setSelectedResourceId(null);
+      setSelectedMetricKey(null);
+    }
+
+    // Actualizar ref con el ID actual
+    prevUserIdRef.current = currentUserId;
+  }, [user?.id, resetAnalysis, resetRecordsStore]);
 
   // Fetch records cuando cambian resource/metric
   useEffect(() => {
     if (selectedResourceId && selectedMetricKey) {
+      console.log('[Dashboard] Fetching records:', { selectedResourceId, selectedMetricKey });
       fetchRecords({
         resourceId: selectedResourceId,
         metricKey: selectedMetricKey,
@@ -43,16 +81,59 @@ export function ResourceDashboard() {
     }
   }, [selectedResourceId, selectedMetricKey, fetchRecords]);
 
-  // Auto-select first resource and metric when loaded
+  // Auto-select resource for non-admin users
   useEffect(() => {
-    if (!selectedResourceId && resources.length > 0) {
-      setSelectedResourceId(resources[0].id);
+    // If user is not admin, force their own resource
+    if (user && user.role !== 'admin') {
+      if (user.id && user.id !== selectedResourceId) {
+        setSelectedResourceId(user.id);
+      }
     }
-  }, [resources, selectedResourceId]);
+    // Para usuarios admin, ya no auto-seleccionamos el primer recurso
+    // El usuario debe seleccionar manualmente desde el dropdown
+  }, [user, selectedResourceId]);
+
+  // Para usuarios no-admin, obtener métricas directamente desde el resource detail
+  // Este código está deshabilitado porque ya no se usa userMetrics state
+  /*
+  useEffect(() => {
+    const loadUserMetrics = async () => {
+      if (!user || user.role === 'admin' || !user.id) return;
+      try {
+        setLoadingUserMetrics(true);
+        const rd: any = await apiClient.getResource(user.id);
+        const rms = rd.resourceMetrics || [];
+        if (rms.length === 0) {
+          // Fallback: intentar obtener métricas por resourceId (/metrics?resourceId=...)
+          try {
+            const byQuery = await apiClient.getMetrics(user.id);
+            setUserMetrics(byQuery || []);
+          } catch (e) {
+            setUserMetrics([]);
+          }
+        } else {
+          setUserMetrics(rms);
+        }
+      } catch (err) {
+        setUserMetrics([]);
+      } finally {
+        setLoadingUserMetrics(false);
+      }
+    };
+
+    loadUserMetrics();
+  }, [user]);
+  */
 
   // Auto-select first metric when metrics change or resource changes
   useEffect(() => {
-    if (metrics.length > 0) {
+    // Solo auto-seleccionar métrica si hay un recurso seleccionado
+    if (!selectedResourceId) {
+      setSelectedMetricKey(null);
+      return;
+    }
+
+    if (Array.isArray(metrics) && metrics.length > 0) {
       // Si no hay métrica seleccionada O la métrica actual no está en la lista de métricas del recurso
       const currentMetricExists = metrics.some(m => m.key === selectedMetricKey);
       if (!selectedMetricKey || !currentMetricExists) {
@@ -62,7 +143,7 @@ export function ResourceDashboard() {
       // Si no hay métricas, limpiar la selección
       setSelectedMetricKey(null);
     }
-  }, [metrics]);
+  }, [metrics, selectedResourceId, selectedMetricKey]);
 
   // Detectar cuando se cierra el modal (indica que se creó un registro)
   const prevModalOpen = useRef(isModalOpen);
@@ -81,32 +162,74 @@ export function ResourceDashboard() {
   // Trigger analysis when resource or metric changes
   useEffect(() => {
     if (selectedResourceId && selectedMetricKey) {
+      console.log('[Dashboard] Triggering analysis:', { selectedResourceId, selectedMetricKey });
       evaluate({
         resourceId: selectedResourceId,
         metricKey: selectedMetricKey,
       });
-      console.log("select", selectedMetricKey)
     }
   }, [selectedResourceId, selectedMetricKey, evaluate]);
 
-  // Auto-scroll to active condition
+  // Auto-scroll to active condition with smooth animation
   useEffect(() => {
     if (analysis?.evaluation?.condition) {
-      const activeConditionElement = conditionRefs.current.get(analysis.evaluation.condition);
-      if (activeConditionElement) {
-        activeConditionElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'center',
-        });
-      }
+      // Primero quitar el resaltado visual
+      setVisuallyActiveCondition(null);
+
+      // Small delay to allow the scale animation to start
+      const timer = setTimeout(() => {
+        const activeConditionElement = conditionRefs.current.get(analysis.evaluation.condition);
+        if (activeConditionElement && conditionsContainerRef.current) {
+          const container = conditionsContainerRef.current;
+          const cardRect = activeConditionElement.getBoundingClientRect();
+          const containerRect = container.getBoundingClientRect();
+
+          // Calculate the scroll position to center the card
+          const scrollLeft = activeConditionElement.offsetLeft - (containerRect.width / 2) + (cardRect.width / 2);
+          const startScroll = container.scrollLeft;
+          const distance = scrollLeft - startScroll;
+          const duration = 2000; // 2 segundos para el scroll
+          const startTime = performance.now();
+
+          const animateScroll = (currentTime: number) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Ease in-out cubic para suavidad
+            const easeProgress = progress < 0.5
+              ? 4 * progress * progress * progress
+              : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+            container.scrollLeft = startScroll + (distance * easeProgress);
+
+            if (progress < 1) {
+              requestAnimationFrame(animateScroll);
+            } else {
+              // Una vez terminado el scroll, aplicar el resaltado
+              setTimeout(() => {
+                setVisuallyActiveCondition(analysis.evaluation.condition);
+                // Cambiar el color del gráfico con un delay adicional
+                setTimeout(() => {
+                  const color = conditions.find(c => c.condition === analysis.evaluation.condition)?.color.glow;
+                  setChartLineColor(color);
+                }, 500); // Medio segundo después del resaltado
+              }, 100);
+            }
+          };
+
+          requestAnimationFrame(animateScroll);
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
     }
   }, [analysis?.evaluation?.condition]);
 
-  const selectedMetric = useMemo(
-    () => metrics.find((m) => m.key === selectedMetricKey),
-    [metrics, selectedMetricKey]
-  );
+  const selectedMetric = useMemo(() => {
+    const metric = Array.isArray(metrics) ? metrics.find((m) => m.key === selectedMetricKey) : undefined;
+    console.log('[Dashboard] Selected metric:', { selectedMetricKey, metric, metricsCount: metrics?.length });
+    return metric;
+  }, [metrics, selectedMetricKey]);
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
@@ -116,17 +239,17 @@ export function ResourceDashboard() {
           <div className="flex items-center justify-between">
             {/* Selectors */}
             <div className="flex items-center gap-3">
-              <ResourceSelector
-                resources={resources}
-                selectedId={selectedResourceId}
-                onSelect={setSelectedResourceId}
-                loading={loadingResources}
-              />
+              {user && user.role === 'admin' && (
+                <ResourceSelector
+                  selectedId={selectedResourceId}
+                  onSelect={setSelectedResourceId}
+                />
+              )}
               <MetricSelector
-                metrics={metrics}
                 selectedKey={selectedMetricKey}
                 onSelect={setSelectedMetricKey}
                 loading={loadingMetrics}
+                resourceId={selectedResourceId}
               />
             </div>
 
@@ -147,10 +270,10 @@ export function ResourceDashboard() {
       {/* Main Content */}
       <main className="max-w-[1800px] mx-auto px-6 py-6">
         {/* Condition Cards - Horizontal Slider */}
-        <div className="mb-6 relative">
+        <div className="mb-6 relative -mx-6">
           <div
             ref={conditionsContainerRef}
-            className="flex gap-4 overflow-x-auto pb-4 scroll-smooth scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800"
+            className="flex gap-4 overflow-x-auto py-8 px-6 scroll-smooth scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800"
             style={{ scrollbarWidth: 'thin' }}
           >
             {loadingConditions ? (
@@ -165,29 +288,42 @@ export function ResourceDashboard() {
                 </div>
               ))
             ) : (
-              conditions.map((conditionMeta) => (
-                <div
-                  key={conditionMeta.condition}
-                  ref={(el) => {
-                    if (el) {
-                      conditionRefs.current.set(conditionMeta.condition, el);
-                    } else {
-                      conditionRefs.current.delete(conditionMeta.condition);
-                    }
-                  }}
-                  className="flex-shrink-0 w-64 transition-transform duration-300 ease-out hover:scale-105"
-                >
-                  <ConditionCard
-                    metadata={conditionMeta}
-                    isActive={analysis?.evaluation?.condition === conditionMeta.condition}
-                    confidence={
-                      analysis?.evaluation?.condition === conditionMeta.condition
-                        ? analysis.evaluation.confidence
-                        : undefined
-                    }
-                  />
-                </div>
-              ))
+              conditions.map((conditionMeta, index) => {
+                const isActive = visuallyActiveCondition === conditionMeta.condition;
+                const activeIndex = conditions.findIndex(c => c.condition === visuallyActiveCondition);
+                const isPrevious = activeIndex !== -1 && index === activeIndex - 1;
+                const isNext = activeIndex !== -1 && index === activeIndex + 1;
+
+                return (
+                  <div
+                    key={conditionMeta.condition}
+                    ref={(el) => {
+                      if (el) {
+                        conditionRefs.current.set(conditionMeta.condition, el);
+                      } else {
+                        conditionRefs.current.delete(conditionMeta.condition);
+                      }
+                    }}
+                    className={`flex-shrink-0 w-64 relative transition-all duration-[2000ms] ease-in-out ${isActive ? 'z-20' : 'z-0 hover:scale-105'
+                      }`}
+                    style={{
+                      transformOrigin: 'center center',
+                      transform: `scale(${isActive ? '1.15' : '1'}) translateX(${isPrevious ? '-12px' : isNext ? '12px' : '0px'
+                        })`,
+                    }}
+                  >
+                    <ConditionCard
+                      metadata={conditionMeta}
+                      isActive={isActive}
+                      confidence={
+                        isActive
+                          ? analysis?.evaluation?.confidence
+                          : undefined
+                      }
+                    />
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
@@ -200,6 +336,7 @@ export function ResourceDashboard() {
               records={records}
               metricName={selectedMetric?.label || 'Metric'}
               loading={loadingRecords}
+              lineColor={chartLineColor}
             />
           </div>
 
@@ -222,27 +359,27 @@ export function ResourceDashboard() {
                   <div className="animate-pulse h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
                 </div>
               ) : analysis?.evaluation?.inclination?.value != null ? (
-                <div className="space-y-6">
+                <div className="space-y-6 transition-all duration-700 ease-in-out">
                   {/* Inclinación */}
-                  <div>
+                  <div className="transition-all duration-700 ease-in-out">
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Inclinación</div>
                     <div className="flex items-baseline gap-2">
-                      <span className={`text-3xl font-bold ${analysis.evaluation.inclination.value > 0 ? 'text-green-600 dark:text-green-400' : analysis.evaluation.inclination.value < 0 ? 'text-red-600 dark:text-red-400' : 'text-yellow-600 dark:text-yellow-400'
+                      <span className={`text-3xl font-bold transition-colors duration-700 ease-in-out ${(analysis?.evaluation?.inclination?.value ?? 0) > 0 ? 'text-green-600 dark:text-green-400' : (analysis?.evaluation?.inclination?.value ?? 0) < 0 ? 'text-red-600 dark:text-red-400' : 'text-yellow-600 dark:text-yellow-400'
                         }`}>
-                        {analysis.evaluation.inclination.value > 0 ? '+' : ''}{analysis.evaluation.inclination.value.toFixed(1)}%
+                        {(analysis?.evaluation?.inclination?.value ?? 0) > 0 ? '+' : ''}{(analysis?.evaluation?.inclination?.value ?? 0).toFixed(1)}%
                       </span>
-                      <span className="text-2xl">{analysis.evaluation.inclination.value > 0 ? '↗' : analysis.evaluation.inclination.value < 0 ? '↘' : '→'}</span>
+                      <span className="text-2xl transition-transform duration-700 ease-in-out">{(analysis?.evaluation?.inclination?.value ?? 0) > 0 ? '↗' : (analysis?.evaluation?.inclination?.value ?? 0) < 0 ? '↘' : '→'}</span>
                     </div>
                   </div>
 
                   {/* Cambio */}
-                  <div>
+                  <div className="transition-all duration-700 ease-in-out">
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Cambio</div>
-                    <div className="text-xl font-semibold text-gray-900 dark:text-white">
-                      {records.length >= 2 ? (
+                    <div className="text-xl font-semibold text-gray-900 dark:text-white transition-all duration-700 ease-in-out">
+                      {records && records.length >= 2 ? (
                         <>
                           {records[records.length - 2].value} → {records[records.length - 1].value}
-                          <span className="text-blue-600 dark:text-blue-400 ml-2">
+                          <span className="text-blue-600 dark:text-blue-400 ml-2 transition-colors duration-700 ease-in-out">
                             ({records[records.length - 1].value > records[records.length - 2].value ? '+' : ''}
                             {(records[records.length - 1].value - records[records.length - 2].value).toFixed(0)})
                           </span>
@@ -252,13 +389,13 @@ export function ResourceDashboard() {
                   </div>
 
                   {/* Alertas */}
-                  <div>
+                  <div className="transition-all duration-700 ease-in-out">
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Alertas</div>
                     <div className="space-y-2">
-                      {analysis.evaluation?.signals && analysis.evaluation.signals.length > 0 ? (
+                      {analysis?.evaluation?.signals && analysis.evaluation.signals.length > 0 ? (
                         analysis.evaluation.signals.slice(0, 2).map((signal, idx) => (
-                          <div key={idx} className="flex items-center gap-2">
-                            <span className={`px-2 py-1 rounded text-xs font-semibold ${signal.severity === 'HIGH' ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
+                          <div key={idx} className="flex items-center gap-2 transition-all duration-700 ease-in-out animate-fade-in">
+                            <span className={`px-2 py-1 rounded text-xs font-semibold transition-colors duration-700 ease-in-out ${signal.severity === 'HIGH' ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' :
                               signal.severity === 'MEDIUM' ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300' :
                                 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300'
                               }`}>
@@ -274,7 +411,7 @@ export function ResourceDashboard() {
                   </div>
                 </div>
               ) : (
-                <div className="text-center text-gray-600 dark:text-gray-500 py-8">
+                <div className="text-center text-gray-600 dark:text-gray-500 py-8 transition-opacity duration-500">
                   Select a resource and metric to view analysis
                 </div>
               )}
@@ -287,9 +424,7 @@ export function ResourceDashboard() {
       </main>
 
       {/* Record Modal */}
-      <RecordModal
-        resources={resources}
-      />
+      <RecordModal />
     </div>
   );
 }

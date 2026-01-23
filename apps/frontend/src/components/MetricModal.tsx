@@ -11,7 +11,7 @@ import { useToast } from '../hooks/useToast';
 
 interface MetricModalProps {
     isOpen: boolean;
-    onClose: () => void;
+    onClose: (reload?: boolean) => void;
     editingMetric: Metric | null;
     resources: Resource[];
 }
@@ -31,7 +31,7 @@ export const MetricModal: React.FC<MetricModalProps> = ({ isOpen, onClose, editi
                 await createMetric(data);
                 success('Métrica creada correctamente');
             }
-            onClose();
+            onClose(true); // Pasar true para indicar que debe recargar
         } catch (err) {
             console.error('Error al guardar métrica:', err);
             showError(err instanceof Error ? err.message : 'Error al guardar la métrica');
@@ -56,11 +56,11 @@ export const MetricModal: React.FC<MetricModalProps> = ({ isOpen, onClose, editi
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity duration-300 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-all duration-500 ease-in-out p-4"
             onClick={handleBackdropClick}
         >
             <div
-                className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700 transition-colors duration-300 transform transition-all duration-300 scale-100"
+                className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700 transition-all duration-500 ease-in-out transform scale-100 hover:shadow-3xl"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -71,7 +71,7 @@ export const MetricModal: React.FC<MetricModalProps> = ({ isOpen, onClose, editi
                     <button
                         onClick={handleClose}
                         disabled={isSubmitting}
-                        className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors disabled:opacity-50"
+                        className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-all duration-300 ease-in-out hover:scale-110 hover:rotate-90 disabled:opacity-50"
                         aria-label="Cerrar"
                     >
                         <svg

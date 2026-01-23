@@ -1,158 +1,258 @@
-# Guía Rápida - Resource Dashboard
+# 🚀 Quick Start Guide - Cypress E2E Testing
 
-## 🚀 Iniciar el Proyecto
+## ⚡ Inicio Rápido en 5 Pasos
 
-### 1. Iniciar MongoDB
-
+### Paso 1️⃣: Actualizar Node.js
 ```bash
-docker compose -f docker-compose.dev.yml up -d
+# Verificar versión actual
+node --version
+# Si es v17.9.0, actualizar a v20+
+
+# Con nvm (recomendado)
+nvm install 20
+nvm use 20
+
+# Verificar
+node --version  # Debe mostrar v20.x.x
 ```
 
-### 2. Iniciar Backend
-
+### Paso 2️⃣: Instalar Dependencias
 ```bash
-cd apps/backend
-npm run dev
+cd /Users/jairzeapaez/Documents/Proyectos/unlimitech/pulseops
+npm install --legacy-peer-deps
 ```
 
-Backend en: `http://localhost:3000`
+⏱️ **Tiempo estimado**: 5-10 minutos
 
-### 3. Iniciar Frontend
-
+### Paso 3️⃣: Verificar Instalación
 ```bash
-cd apps/frontend
-npm run dev
+npx cypress verify
+npx cypress version
 ```
 
-Frontend en: `http://localhost:5173`
-
-## 📊 Poblar con Datos de Prueba
-
-### Opción A: Usando Postman
-
-1. Importa `PulseOps.postman_collection.json`
-2. Ejecuta los requests en este orden:
-   - Create Resource (Team Alpha)
-   - Create Metric (Bugs Open)
-   - Create Record (varias semanas)
-   - Evaluate Analysis
-
-### Opción B: Usando curl
-
-```bash
-# 1. Crear un recurso
-curl -X POST http://localhost:3000/resources \
-  -H "Content-Type: application/json" \
-  -d '{
-    "resourceId": "team-alpha",
-    "name": "Team Alpha",
-    "type": "TEAM",
-    "description": "Core development team"
-  }'
-
-# 2. Crear una métrica
-curl -X POST http://localhost:3000/metrics \
-  -H "Content-Type: application/json" \
-  -d '{
-    "metricKey": "bugs-open",
-    "name": "Open Bugs",
-    "description": "Number of open bugs",
-    "unit": "bugs",
-    "targetDirection": "LOWER_IS_BETTER"
-  }'
-
-# 3. Crear registros históricos
-curl -X POST http://localhost:3000/records \
-  -H "Content-Type: application/json" \
-  -d '{
-    "resourceId": "team-alpha",
-    "metricKey": "bugs-open",
-    "week": "2026-W01",
-    "value": 15
-  }'
-
-curl -X POST http://localhost:3000/records \
-  -H "Content-Type: application/json" \
-  -d '{
-    "resourceId": "team-alpha",
-    "metricKey": "bugs-open",
-    "week": "2026-W02",
-    "value": 12
-  }'
-
-curl -X POST http://localhost:3000/records \
-  -H "Content-Type: application/json" \
-  -d '{
-    "resourceId": "team-alpha",
-    "metricKey": "bugs-open",
-    "week": "2026-W03",
-    "value": 8
-  }'
-
-# 4. Ejecutar análisis
-curl "http://localhost:3000/analysis/evaluate?resourceId=team-alpha&metricKey=bugs-open"
+Deberías ver:
+```
+✔  Verified Cypress! 
+Cypress version: 15.9.0
 ```
 
-## ✅ Verificar que Funciona
-
-1. Abre `http://localhost:5173`
-2. Deberías ver:
-   - Selector de recursos con "Team Alpha"
-   - Selector de métricas con "Open Bugs"
-   - Gráfico con 3 puntos y línea de tendencia
-   - Condición operativa (probablemente "OK" o "MEJORANDO")
-   - Fórmula aplicada con pasos
-
-## 🎨 Features del Dashboard
-
-### Selectores
-- Cambiar recurso → actualiza todo automáticamente
-- Cambiar métrica → recalcula análisis y gráfico
-
-### Gráfico
-- Línea azul = valores reales
-- Línea morada punteada = tendencia lineal
-- Hover para ver detalles
-
-### Resumen de Condición
-- Badge con % de confianza
-- Inclinación (positiva/negativa)
-- Señales detectadas
-- Timestamp de evaluación
-
-### Fórmula
-- Pasos numerados
-- Basado en condiciones de Hubbard
-- UI educativa
-
-## 🐛 Troubleshooting
-
-### "No resources available"
-→ Backend no está corriendo o no hay datos
-→ Ejecuta los curls de arriba
-
-### "No data available" en el gráfico
-→ No hay records para esa combinación recurso+métrica
-→ Crea records con los curls
-
-### Error de conexión
-→ Verifica que backend esté en puerto 3000
-→ Revisa CORS en backend (debe permitir localhost:5173)
-
-### TypeScript errors
+### Paso 4️⃣: Abrir Cypress
 ```bash
-npm run typecheck
+npm run cypress:open
 ```
 
-## 📝 Próximos Pasos
+Selecciona:
+1. **E2E Testing**
+2. **Chrome** (recomendado)
+3. Aparecerán las 6 features
 
-- Agregar más recursos y métricas
-- Poblar con datos realistas (varias semanas)
-- Probar diferentes condiciones (EMERGENCIA, PELIGRO, etc.)
-- Experimentar con diferentes tipos de métricas
+### Paso 5️⃣: Ejecutar Primera Prueba
+- Haz clic en `01-title-validation.feature`
+- Observa la ejecución en vivo
+- ✅ Prueba exitosa!
 
-## 📚 Documentación
+---
 
-- [Frontend DASHBOARD.md](apps/frontend/DASHBOARD.md)
-- [Backend README](apps/backend/README.md)
-- [API Testing](API_TESTING.md)
+## 📚 Archivos Importantes
+
+### 📖 Documentación
+- **[CYPRESS_README.md](./CYPRESS_README.md)** - Documentación completa
+- **[DEPENDENCIES.md](./DEPENDENCIES.md)** - Guía de instalación
+- **[IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)** - Resumen técnico
+
+### 🧪 Código de Ejemplo
+- **[cypress/examples/usage-examples.ts](./cypress/examples/usage-examples.ts)** - 12 ejemplos prácticos
+
+### ⚙️ Configuración
+- **[cypress.config.ts](./cypress.config.ts)** - Configuración principal
+- **[.eslintrc.json](./.eslintrc.json)** - Reglas de linting
+- **[.prettierrc](./.prettierrc)** - Formato de código
+
+---
+
+## 🎯 Comandos Más Usados
+
+### Ejecutar Pruebas
+
+```bash
+# Modo interactivo (recomendado para desarrollo)
+npm run cypress:open
+
+# Modo headless (CI/CD)
+npm run cypress:run
+
+# Ejecutar en Chrome con interfaz visible
+npm run test:e2e:chrome
+
+# Ejecutar prueba específica
+npx cypress run --spec "cypress/e2e/features/01-title-validation.feature"
+```
+
+### Linting y Formato
+
+```bash
+# Verificar errores
+npm run lint
+
+# Corregir automáticamente
+npm run lint:fix
+
+# Formatear código
+npm run format
+```
+
+---
+
+## 🏗️ Estructura Rápida
+
+```
+cypress/
+├── e2e/
+│   ├── features/           # 📝 6 archivos .feature (Gherkin)
+│   └── step-definitions/   # 🔧 6 archivos .ts (Steps)
+├── support/
+│   ├── pages/             # 📄 3 Page Objects (Home, Actions, Querying)
+│   ├── widgets/           # 🔧 6 Widgets (Button, Input, Checkbox, etc.)
+│   ├── utils/             # 🛠️ TestTags recursivo
+│   ├── commands.ts        # Comandos personalizados
+│   └── e2e.ts            # Configuración global
+├── fixtures/              # 📦 Datos de prueba
+└── examples/             # 🎓 Ejemplos de uso
+```
+
+---
+
+## 💡 Ejemplos Rápidos
+
+### Usar un Widget
+
+```typescript
+import { InputWidget, ButtonWidget } from '../support/widgets';
+
+// InputWidget
+const emailInput = new InputWidget('email-input');
+emailInput.type('test@example.com');
+emailInput.shouldHaveValue('test@example.com');
+
+// ButtonWidget
+const submitButton = new ButtonWidget('submit-btn');
+submitButton.click();
+submitButton.shouldBeEnabled();
+```
+
+### Usar TestTags
+
+```typescript
+import { TestTags } from '../support/utils/testTags';
+
+const formTags = TestTags.create('login-form');
+const emailId = formTags.child('email').create();
+// Resultado: 'cy-login-form-email'
+
+cy.get(`[data-testid="${emailId}"]`).type('user@example.com');
+```
+
+### Usar Page Object
+
+```typescript
+import { HomePage } from '../support/pages';
+
+const homePage = new HomePage();
+homePage.visit();
+homePage.goToActions();
+homePage.shouldHaveUrl('/commands/actions');
+```
+
+---
+
+## 🐛 Problemas Comunes
+
+### ❌ Error: "Cypress binary not found"
+```bash
+npx cypress install
+npx cypress verify
+```
+
+### ❌ Error: "Cannot find module"
+```bash
+npm install --legacy-peer-deps
+```
+
+### ❌ Error: "Node version"
+Actualiza Node.js a v20+:
+```bash
+nvm install 20
+nvm use 20
+```
+
+### ❌ Tests fallan en Kitchen Sink
+Verifica que estás conectado a internet y que https://example.cypress.io está accesible.
+
+---
+
+## 📊 Ver Reportes
+
+### Ejecutar tests y generar reporte
+```bash
+npm run cypress:run
+```
+
+### Abrir reporte HTML
+```bash
+open mochawesome-report/mochawesome.html
+```
+
+El reporte incluye:
+- ✅ Tests pasados/fallidos
+- ⏱️ Tiempos de ejecución
+- 📸 Screenshots de fallos
+- 📊 Gráficas y estadísticas
+
+---
+
+## 🎓 Próximos Pasos
+
+1. **Lee la documentación completa**: [CYPRESS_README.md](./CYPRESS_README.md)
+2. **Estudia los ejemplos**: [cypress/examples/usage-examples.ts](./cypress/examples/usage-examples.ts)
+3. **Ejecuta todas las features**: `npm run cypress:open`
+4. **Crea tu primer test personalizado**
+5. **Implementa página de validación de formulario** (opcional)
+
+---
+
+## 📞 Recursos Adicionales
+
+- [Cypress Documentation](https://docs.cypress.io/)
+- [Cucumber Best Practices](https://cucumber.io/docs/bdd/)
+- [Page Object Pattern](https://martinfowler.com/bliki/PageObject.html)
+- [TypeScript with Cypress](https://docs.cypress.io/guides/tooling/typescript-support)
+
+---
+
+## ✅ Checklist de Verificación
+
+Antes de considerar el setup completo, verifica:
+
+- [ ] Node.js v20+ instalado
+- [ ] Dependencias instaladas (`npm install`)
+- [ ] Cypress verificado (`npx cypress verify`)
+- [ ] Tests ejecutándose en modo interactivo (`npm run cypress:open`)
+- [ ] Al menos 1 feature pasando exitosamente
+- [ ] Reportes generándose correctamente
+- [ ] ESLint sin errores (`npm run lint`)
+- [ ] Código formateado (`npm run format`)
+
+---
+
+**🎉 ¡Listo para empezar!**
+
+Si tienes algún problema, consulta:
+- [DEPENDENCIES.md](./DEPENDENCIES.md) - Troubleshooting de instalación
+- [CYPRESS_README.md](./CYPRESS_README.md) - Documentación completa
+- [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md) - Detalles técnicos
+
+---
+
+**Autor**: GitHub Copilot  
+**Fecha**: Enero 2026  
+**Versión**: 1.0.0

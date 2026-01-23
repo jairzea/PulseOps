@@ -9,10 +9,11 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto, RegisterDto, ChangePasswordDto } from './dto/user.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { DemoOrJwtAuthGuard } from '../auth/guards/demo-or-jwt.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import {
@@ -21,26 +22,31 @@ import {
 } from '../auth/decorators/current-user.decorator';
 import { UserRole } from './schemas/user.schema';
 import * as bcrypt from 'bcryptjs';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 
 @Controller('users')
-@UseGuards(JwtAuthGuard)
+@UseGuards(DemoOrJwtAuthGuard)
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Get()
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
-  async findAll() {
-    const users = await this.usersService.findAll(true);
-    return users.map((user) => ({
-      id: user._id.toString(),
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      isActive: user.isActive,
-      lastLogin: user.lastLogin,
-      createdAt: user.createdAt,
-    }));
+  async findAll(@Query() query: PaginationQueryDto) {
+    const result = await this.usersService.findAllPaginated(query, true);
+    
+    return {
+      data: result.data.map((user) => ({
+        id: user._id.toString(),
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin,
+        createdAt: user.createdAt,
+      })),
+      meta: result.meta,
+    };
   }
 
   @Get(':id')
@@ -133,7 +139,12 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id') id: string) {
+  async delete(@Param('id') id: string, @Query('hard') hard?: string) {
+    if (hard === 'true') {
+      await this.usersService.hardDelete(id);
+      return;
+    }
+
     await this.usersService.delete(id);
   }
 }

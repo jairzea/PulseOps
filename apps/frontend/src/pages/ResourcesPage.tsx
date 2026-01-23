@@ -2,17 +2,22 @@
  * ResourcesPage - Gestión de recursos (desarrolladores, líderes técnicos, etc.)
  * CRUD completo con componentes reutilizables
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useResourcesStore } from '../stores/resourcesStore';
 import { useMetricsStore } from '../stores/metricsStore';
 import { useConfirmModal } from '../hooks/useConfirmModal';
+import { usePaginatedData } from '../hooks/usePaginatedData';
 import { PageHeader } from '../components/PageHeader';
+import { PermissionFeedback } from '../components/PermissionFeedback';
+import { useAuth } from '../contexts/AuthContext';
 import { ResourceModal } from '../components/ResourceModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { TableSkeleton } from '../components/TableSkeleton';
 import { ResourceFormData } from '../schemas/resourceFormSchema';
-import { Resource } from '../services/apiClient';
+import { Resource, apiClient, resourcesApi } from '../services/apiClient';
 import { useToast } from '../hooks/useToast';
+import { PaginationControls } from '../components/PaginationControls';
+import { SearchInput } from '../components/SearchInput';
 
 const ROLE_TYPE_LABELS: Record<string, string> = {
     DEV: 'Desarrollador',
@@ -21,18 +26,60 @@ const ROLE_TYPE_LABELS: Record<string, string> = {
 };
 
 export const ResourcesPage: React.FC = () => {
+    const { user } = useAuth();
+
+    // Bloquear acceso para usuarios con rol 'user'
+    if (user?.role === 'user') {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <PageHeader
+                        title="Recursos"
+                        description="Gestiona los recursos del equipo (desarrolladores, líderes técnicos, etc.)"
+                    />
+                    <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors duration-300">
+                        <PermissionFeedback
+                            title="Acceso restringido"
+                            message="No tienes permisos para acceder a este módulo. Solo los administradores pueden gestionar recursos."
+                        />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     // Estado local de UI
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingResource, setEditingResource] = useState<Resource | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
-    // Zustand solo para datos globales
+    // Memorizar fetchFn para evitar re-renders innecesarios
+    const fetchResources = useCallback((params: any) => resourcesApi.getPaginated(params), []);
+
+    // Hook genérico para datos paginados
     const {
-        resources,
+        data: resources,
+        meta,
         loading,
         error,
-        fetchResources,
+        reload,
+        pagination
+    } = usePaginatedData<Resource>({
+        fetchFn: fetchResources,
+        initialPageSize: 10,
+    });
+
+    // Estado para estadísticas globales
+    const [stats, setStats] = useState({
+        totalResources: 0,
+        activeResources: 0,
+        devResources: 0,
+        tlResources: 0,
+    });
+
+    // Zustand solo para crear/actualizar/eliminar
+    const {
         createResource,
         updateResource,
         deleteResource,
@@ -42,10 +89,24 @@ export const ResourcesPage: React.FC = () => {
     const { confirm, ...confirmModalProps } = useConfirmModal();
     const { success, error: showError } = useToast();
 
+    // Cargar estadísticas globales independientemente de la paginación
+    const loadStats = useCallback(async () => {
+        try {
+            console.log('[ResourcesPage] Cargando stats...');
+            const statsData = await apiClient.getResourcesStats();
+            console.log('[ResourcesPage] Stats cargados:', statsData);
+            setStats(statsData);
+        } catch (err) {
+            console.error('[ResourcesPage] Error al cargar estadísticas:', err);
+        }
+    }, []);
+
+    // Cargar métricas y stats solo al montar
     useEffect(() => {
-        fetchResources();
         fetchMetrics();
-    }, [fetchResources, fetchMetrics]);
+        loadStats();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleOpenModal = (resource?: Resource) => {
         setEditingResource(resource || null);
@@ -68,6 +129,8 @@ export const ResourcesPage: React.FC = () => {
                 success('Recurso creado correctamente');
             }
             handleCloseModal();
+            await reload(); // Usar reload del hook
+            await loadStats(); // Recargar estadísticas
         } catch (err) {
             console.error('Error al guardar recurso:', err);
             showError(err instanceof Error ? err.message : 'Error al guardar el recurso');
@@ -90,6 +153,8 @@ export const ResourcesPage: React.FC = () => {
             try {
                 await deleteResource(resource.id);
                 success('Recurso eliminado correctamente');
+                await reload(); // Usar reload del hook
+                await loadStats(); // Recargar estadísticas
             } catch (err) {
                 showError('Error al eliminar el recurso');
             } finally {
@@ -98,10 +163,6 @@ export const ResourcesPage: React.FC = () => {
             }
         }
     };
-
-    const activeResources = resources.filter((r) => r.isActive);
-    const devResources = resources.filter((r) => r.roleType === 'DEV');
-    const tlResources = resources.filter((r) => r.roleType === 'TL');
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
@@ -116,60 +177,48 @@ export const ResourcesPage: React.FC = () => {
                 />
 
                 {/* Estadísticas */}
-                {!loading && !error && resources.length > 0 && (
-                    <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/50 dark:to-blue-800/30 rounded-lg border border-blue-200 dark:border-blue-700/50 p-4">
+                {stats.totalResources > 0 && (
+                    <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4 fade-in">
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/50 dark:to-blue-800/30 rounded-lg border border-blue-200 dark:border-blue-700/50 p-4 transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-600">
                             <p className="text-blue-600 dark:text-blue-300 text-sm font-medium">Total de Recursos</p>
-                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{resources.length}</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.totalResources}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/50 dark:to-green-800/30 rounded-lg border border-green-200 dark:border-green-700/50 p-4">
+                        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/50 dark:to-green-800/30 rounded-lg border border-green-200 dark:border-green-700/50 p-4 transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-xl hover:border-green-300 dark:hover:border-green-600">
                             <p className="text-green-600 dark:text-green-300 text-sm font-medium">Recursos Activos</p>
-                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{activeResources.length}</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.activeResources}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/50 dark:to-purple-800/30 rounded-lg border border-purple-200 dark:border-purple-700/50 p-4">
+                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/50 dark:to-purple-800/30 rounded-lg border border-purple-200 dark:border-purple-700/50 p-4 transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-xl hover:border-purple-300 dark:hover:border-purple-600">
                             <p className="text-purple-600 dark:text-purple-300 text-sm font-medium">Desarrolladores</p>
-                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{devResources.length}</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.devResources}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-orange-900/50 to-orange-800/30 rounded-lg border border-orange-700/50 p-4">
+                        <div className="bg-gradient-to-br from-orange-900/50 to-orange-800/30 rounded-lg border border-orange-700/50 p-4 transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-xl hover:border-orange-600">
                             <p className="text-orange-600 dark:text-orange-300 text-sm font-medium">Líderes Técnicos</p>
-                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{tlResources.length}</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.tlResources}</p>
                         </div>
                     </div>
                 )}
 
+                {/* Barra de búsqueda */}
+                <div className="mb-6">
+                    <SearchInput
+                        value={pagination.search}
+                        onChange={pagination.setSearch}
+                        placeholder="Buscar por nombre, rol o ID..."
+                    />
+                </div>
+
                 {/* Tabla de recursos */}
-                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors duration-300">
+                <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-500 ease-in-out">
                     {loading && <TableSkeleton rows={5} columns={5} />}
 
                     {error && (
-                        <div className="p-8 text-center">
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-900/20 mb-4">
-                                <svg
-                                    className="w-8 h-8 text-red-500"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
-                            </div>
-                            <p className="text-red-500 font-medium mb-2">Error al cargar recursos</p>
-                            <p className="text-gray-600 dark:text-gray-400 text-sm">{error || 'Error desconocido'}</p>
-                            <button
-                                onClick={() => fetchResources()}
-                                className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors"
-                            >
-                                Reintentar
-                            </button>
-                        </div>
+                        <PermissionFeedback
+                            message={typeof error === 'string' ? error : String(error)}
+                            onRetry={reload}
+                        />
                     )}
 
-                    {!loading && !error && resources.length === 0 && (
+                    {!loading && !error && meta.totalItems === 0 && (
                         <div className="p-12 text-center">
                             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-800 mb-4">
                                 <svg
@@ -197,7 +246,7 @@ export const ResourcesPage: React.FC = () => {
                     )}
 
                     {!loading && !error && resources.length > 0 && (
-                        <table className="w-full">
+                        <table className="w-full fade-in">
                             <thead className="bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
@@ -219,7 +268,7 @@ export const ResourcesPage: React.FC = () => {
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                                 {resources.map((resource) => (
-                                    <tr key={resource.id} className="hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors">
+                                    <tr key={resource.id} className="hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all duration-200 ease-in-out">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
                                                 <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
@@ -266,7 +315,7 @@ export const ResourcesPage: React.FC = () => {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => handleOpenModal(resource)}
-                                                    className="p-2 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                                    className="p-2 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all duration-200 ease-in-out hover:scale-105"
                                                     title="Editar recurso"
                                                 >
                                                     <svg
@@ -304,6 +353,19 @@ export const ResourcesPage: React.FC = () => {
                                 ))}
                             </tbody>
                         </table>
+                    )}
+
+                    {!loading && !error && resources.length > 0 && (
+                        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+                            <PaginationControls
+                                meta={meta}
+                                page={pagination.page}
+                                pageSize={pagination.pageSize}
+                                onPageSizeChange={pagination.setPageSize}
+                                onPrevPage={pagination.prevPage}
+                                onNextPage={pagination.nextPage}
+                            />
+                        </div>
                     )}
                 </div>
             </div>

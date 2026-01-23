@@ -1,19 +1,37 @@
-import { Resource } from '../services/apiClient';
-import { Autocomplete } from './Autocomplete';
+import { useCallback } from 'react';
+import { apiClient } from '../services/apiClient';
+import { AutocompleteInfinite } from './AutocompleteInfinite';
 
 interface ResourceSelectorProps {
-    resources: Resource[];
     selectedId: string | null;
     onSelect: (resourceId: string) => void;
     loading?: boolean;
+    disabled?: boolean;
 }
 
 export function ResourceSelector({
-    resources,
     selectedId,
     onSelect,
     loading = false,
+    disabled = false,
 }: ResourceSelectorProps) {
+    // Memoizar fetchFunction para evitar re-renders innecesarios
+    const fetchFunction = useCallback(async (page: number, search: string, pageSize: number) => {
+        const response = await apiClient.getResourcesPaginated({
+            page,
+            pageSize,
+            search: search || undefined,
+        });
+        return {
+            data: response.data.map(r => ({
+                value: r.id,
+                label: r.name,
+                description: r.roleType,
+            })),
+            meta: response.meta,
+        };
+    }, []);
+
     if (loading) {
         return (
             <div className="animate-pulse">
@@ -24,16 +42,13 @@ export function ResourceSelector({
 
     return (
         <div className="min-w-[200px]">
-            <Autocomplete
-                options={resources.map(resource => ({
-                    value: resource.id,
-                    label: resource.name,
-                    description: resource.roleType
-                }))}
+            <AutocompleteInfinite
                 value={selectedId || ''}
                 onChange={onSelect}
-                placeholder={resources.length === 0 ? 'No resources available' : 'Select a resource'}
-                disabled={resources.length === 0}
+                fetchFunction={fetchFunction}
+                placeholder="Select a resource"
+                disabled={disabled}
+                pageSize={15}
             />
         </div>
     );

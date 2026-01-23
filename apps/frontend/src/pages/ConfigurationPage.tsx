@@ -7,6 +7,11 @@ import type {
 } from '@pulseops/shared-types';
 import { useToast } from '../hooks/useToast';
 import { PulseLoader } from '../components/PulseLoader';
+import { LoadingButton } from '../components/LoadingButton';
+import { PermissionFeedback } from '../components/PermissionFeedback';
+import { useAuth } from '../contexts/AuthContext';
+import { useConditionsMetadata } from '../hooks/useConditionsMetadata';
+import { ColorPicker } from '../components/ColorPicker';
 
 // Step Components
 interface StepProps {
@@ -17,11 +22,14 @@ interface StepProps {
 
 // Paso 1: Fórmulas de Condiciones (Playbooks)
 function Step1Formulas() {
-    const [playbooks, setPlaybooks] = useState<Playbook[]>([]);
     const [editedPlaybooks, setEditedPlaybooks] = useState<Record<string, Playbook>>({});
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [expandedCondition, setExpandedCondition] = useState<string | null>('AFLUENCIA');
+    const [savingCondition, setSavingCondition] = useState<string | null>(null);
     const { success, error: showError } = useToast();
+    const { conditions: conditionsMetadata, refetch: refetchConditionsMetadata } = useConditionsMetadata();
+    const [editedColors, setEditedColors] = useState<Record<string, string>>({});
 
     const conditions = [
         { key: 'AFLUENCIA', name: 'AFLUENCIA', color: 'purple' },
@@ -49,16 +57,18 @@ function Step1Formulas() {
         try {
             setLoading(true);
             const data = await apiClient.getAllPlaybooks();
-            setPlaybooks(data);
             // Inicializar editedPlaybooks con los datos cargados
             const edited: Record<string, Playbook> = {};
             data.forEach(pb => {
                 edited[pb.condition] = { ...pb };
             });
             setEditedPlaybooks(edited);
+            setError(null);
         } catch (error) {
             console.error('Error loading playbooks:', error);
-            showError('No se pudieron cargar las fórmulas');
+            const msg = 'No se pudieron cargar las fórmulas';
+            setError(msg);
+            showError(msg);
         } finally {
             setLoading(false);
         }
@@ -123,16 +133,35 @@ function Step1Formulas() {
         if (!pb) return;
 
         try {
+            setSavingCondition(condition);
+
+            // Guardar el playbook
             await apiClient.updatePlaybook(condition, {
                 title: pb.title,
                 steps: pb.steps.filter(s => s.trim() !== ''), // Filtrar pasos vacíos
                 isActive: pb.isActive
             });
+
+            // Guardar el color si fue editado
+            if (editedColors[condition]) {
+                const { conditionsApi } = await import('../services/api/conditionsApi');
+                await conditionsApi.updateColor(condition, editedColors[condition]);
+                // Recargar metadatos de condiciones para obtener el nuevo color
+                await refetchConditionsMetadata();
+                // Limpiar el color editado después de recargar los metadatos
+                setEditedColors(prev => {
+                    const { [condition]: _, ...rest } = prev;
+                    return rest;
+                });
+            }
+
             success(`Fórmula de ${condition} guardada correctamente`);
             await loadPlaybooks(); // Recargar para obtener versión actualizada
         } catch (error) {
             console.error('Error saving playbook:', error);
             showError(`No se pudo guardar la fórmula de ${condition}`);
+        } finally {
+            setSavingCondition(null);
         }
     };
 
@@ -140,8 +169,30 @@ function Step1Formulas() {
         setExpandedCondition(prev => prev === condition ? null : condition);
     };
 
+    const updateColor = (condition: string, newColor: string) => {
+        setEditedColors(prev => ({
+            ...prev,
+            [condition]: newColor
+        }));
+    };
+
+    const getConditionColor = (condition: string): string => {
+        if (editedColors[condition]) return editedColors[condition];
+        const metadata = conditionsMetadata.find(c => c.condition === condition);
+        return metadata?.color?.glow || 'rgb(59, 130, 246)';
+    };
+
     if (loading) {
         return <PulseLoader size="md" variant="primary" text="Cargando fórmulas..." />;
+    }
+
+    if (error) {
+        return (
+            <PermissionFeedback
+                message={error}
+                onRetry={loadPlaybooks}
+            />
+        );
     }
 
     return (
@@ -207,28 +258,53 @@ function Step1Formulas() {
                                             />
                                             <span className="text-sm text-gray-700 dark:text-gray-300">Activa</span>
                                         </label>
-                                        <button
+                                        <LoadingButton
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 savePlaybook(key);
                                             }}
-                                            className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded transition-colors"
+                                            loading={savingCondition === key}
+                                            variant="primary"
+                                            className="text-xs px-3 py-1"
                                         >
                                             💾 Guardar
-                                        </button>
+                                        </LoadingButton>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Título de la fórmula
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={playbook.title}
-                                            onChange={(e) => updatePlaybook(key, 'title', e.target.value)}
-                                            className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                            placeholder="Título de la fórmula..."
-                                        />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                Título de la fórmula
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={playbook.title}
+                                                onChange={(e) => updatePlaybook(key, 'title', e.target.value)}
+                                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                                placeholder="Título de la fórmula..."
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                🎨 Color de resaltado
+                                            </label>
+                                            <div className="flex gap-2 items-center">
+                                                <ColorPicker
+                                                    value={getConditionColor(key)}
+                                                    onChange={(color) => updateColor(key, color)}
+                                                />
+                                                <div
+                                                    className="flex-1 px-3 py-2 bg-white dark:bg-gray-900 border-2 rounded-lg flex items-center justify-center transition-colors duration-300"
+                                                    style={{
+                                                        borderColor: getConditionColor(key),
+                                                        boxShadow: `0 0 20px ${getConditionColor(key).replace('rgb', 'rgba').replace(')', ', 0.4)')}, 0 0 40px ${getConditionColor(key).replace('rgb', 'rgba').replace(')', ', 0.2)')}`
+                                                    }}
+                                                >
+                                                    <span className="text-xs text-gray-900 dark:text-gray-400 font-mono">{getConditionColor(key)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div className="space-y-3">
@@ -289,6 +365,7 @@ function Step1Formulas() {
 
 // Paso 2: Condiciones Principales
 function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
+    void thresholds;
     return (
         <div className="space-y-8">
             <div>
@@ -525,6 +602,7 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
 
 // Paso 3: Configuración de Señales
 function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
+    void thresholds;
     return (
         <div className="space-y-8">
             <div>
@@ -831,6 +909,7 @@ function Step4Review({ thresholds, configName }: Step4ReviewProps) {
 
 // Paso 4: Fórmulas de Condiciones
 function Step4Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
+    void thresholds;
     const conditions = [
         { key: 'afluencia', name: 'AFLUENCIA', color: 'purple' },
         { key: 'normal', name: 'NORMAL', color: 'green' },
@@ -931,6 +1010,9 @@ function Step4Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
     );
 }
 
+// Mantener referencia a Step4Formulas para evitar error de "declarado pero no usado"
+void Step4Formulas;
+
 interface SummaryCardProps {
     title: string;
     color: 'purple' | 'green' | 'yellow' | 'red' | 'cyan' | 'gray';
@@ -977,8 +1059,31 @@ function SummaryCard({ title, color, items }: SummaryCardProps) {
  * Página de configuración de umbrales y condiciones - Wizard de 3 pasos
  */
 export function ConfigurationPage() {
+    const { user } = useAuth();
+
+    // Bloquear acceso para usuarios con rol 'user'
+    if (user?.role === 'user') {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Configuración</h1>
+                        <p className="text-gray-600 dark:text-gray-400">Gestiona los umbrales y fórmulas del motor de análisis</p>
+                    </div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden transition-colors duration-300">
+                        <PermissionFeedback
+                            title="Acceso restringido"
+                            message="No tienes permisos para acceder a este módulo. Solo los administradores pueden gestionar la configuración del sistema."
+                        />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     const [activeConfig, setActiveConfig] = useState<AnalysisConfiguration | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [errorConfig, setErrorConfig] = useState<string | null>(null);
     const [currentStep, setCurrentStep] = useState(1);
     const [editedThresholds, setEditedThresholds] =
         useState<ConditionThresholds | null>(null);
@@ -997,7 +1102,9 @@ export function ConfigurationPage() {
             setActiveConfig(active);
         } catch (error) {
             console.error('Error loading configurations:', error);
-            showError('No se pudieron cargar las configuraciones');
+            const msg = 'No se pudieron cargar las configuraciones';
+            setErrorConfig(msg);
+            showError(msg);
         } finally {
             setIsLoading(false);
         }
@@ -1088,56 +1195,63 @@ export function ConfigurationPage() {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                        Configuración de Umbrales
+                        Configuración del Sistema
                     </h1>
                     <p className="text-gray-400">
-                        Ajusta los umbrales que determinan las condiciones operativas
+                        Gestiona las fórmulas, colores y umbrales del motor de análisis
                     </p>
                 </div>
-
                 {/* Active Configuration Info */}
-                {activeConfig && (
-                    <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-                                    {activeConfig.name}
-                                </h2>
-                                {activeConfig.description && (
-                                    <p className="text-gray-400 text-sm">{activeConfig.description}</p>
-                                )}
-                                <div className="mt-3 text-xs text-gray-600 dark:text-gray-500">
-                                    <span>Versión: {activeConfig.version}</span>
-                                    <span className="mx-3">•</span>
-                                    <span>
-                                        Actualizada:{' '}
-                                        {new Date(activeConfig.updatedAt).toLocaleString('es-ES')}
+                {errorConfig ? (
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                        <PermissionFeedback
+                            message={errorConfig}
+                            onRetry={loadConfigurations}
+                        />
+                    </div>
+                ) : (
+                    activeConfig && (
+                        <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+                                        {activeConfig.name}
+                                    </h2>
+                                    {activeConfig.description && (
+                                        <p className="text-gray-400 text-sm">{activeConfig.description}</p>
+                                    )}
+                                    <div className="mt-3 text-xs text-gray-600 dark:text-gray-500">
+                                        <span>Versión: {activeConfig.version}</span>
+                                        <span className="mx-3">•</span>
+                                        <span>
+                                            Actualizada:{' '}
+                                            {new Date(activeConfig.updatedAt).toLocaleString('es-ES')}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="px-3 py-1 bg-green-600/20 text-green-600 dark:text-green-400 text-sm rounded-full border border-green-200 dark:border-green-600/30">
+                                        Activa
                                     </span>
+                                    {!isEditing ? (
+                                        <button
+                                            onClick={handleEdit}
+                                            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                                        >
+                                            Editar Configuración
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={handleCancel}
+                                            className="px-6 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
+                                        >
+                                            Cancelar
+                                        </button>
+                                    )}
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <span className="px-3 py-1 bg-green-600/20 text-green-600 dark:text-green-400 text-sm rounded-full border border-green-200 dark:border-green-600/30">
-                                    Activa
-                                </span>
-                                {!isEditing ? (
-                                    <button
-                                        onClick={handleEdit}
-                                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                                    >
-                                        Editar Configuración
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={handleCancel}
-                                        className="px-6 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
-                                    >
-                                        Cancelar
-                                    </button>
-                                )}
-                            </div>
                         </div>
-                    </div>
-                )}
+                    ))}
 
                 {/* Wizard Steps */}
                 {isEditing && (

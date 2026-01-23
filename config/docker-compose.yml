@@ -1,0 +1,55 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: pulseops-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: pulseops
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - pulseops-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/pulseops --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: pulseops-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongodb:27017/pulseops
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - pulseops-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    container_name: pulseops-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    depends_on:
+      - backend
+    networks:
+      - pulseops-network
+
+networks:
+  pulseops-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:

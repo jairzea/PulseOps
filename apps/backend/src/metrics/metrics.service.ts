@@ -9,6 +9,11 @@ import {
   DuplicateResourceException,
   DatabaseException,
 } from '../common/exceptions/app.exception';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
+import {
+  PaginatedResponse,
+  createPaginatedResponse,
+} from '../common/interfaces/paginated-response.interface';
 
 @Injectable()
 export class MetricsService {
@@ -52,6 +57,54 @@ export class MetricsService {
     }
   }
 
+  /**
+   * Listado paginado de métricas con búsqueda
+   * @param query - Parámetros de paginación y búsqueda
+   * @returns Response paginada con métricas
+   */
+  async findAllPaginated(
+    query: PaginationQueryDto,
+  ): Promise<PaginatedResponse<Metric>> {
+    try {
+      const {
+        page = 1,
+        pageSize = 10,
+        search,
+        sortBy = 'label',
+        sortDir = 'asc',
+      } = query;
+
+      // Filtro de búsqueda (label, key, description)
+      const filter: any = {};
+      if (search) {
+        filter.$or = [
+          { label: { $regex: search, $options: 'i' } },
+          { key: { $regex: search, $options: 'i' } },
+          { description: { $regex: search, $options: 'i' } },
+        ];
+      }
+
+      const skip = (page - 1) * pageSize;
+      const sortOrder = sortDir === 'asc' ? 1 : -1;
+
+      const [data, totalItems] = await Promise.all([
+        this.metricModel
+          .find(filter)
+          .sort({ [sortBy]: sortOrder })
+          .skip(skip)
+          .limit(pageSize)
+          .exec(),
+        this.metricModel.countDocuments(filter).exec(),
+      ]);
+
+      return createPaginatedResponse(data, page, pageSize, totalItems);
+    } catch (error) {
+      throw new DatabaseException('Error al obtener las métricas paginadas', {
+        originalError: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
   async findByKey(key: string): Promise<Metric | null> {
     try {
       const metric = await this.metricModel.findOne({ key }).exec();
@@ -74,11 +127,11 @@ export class MetricsService {
       const updated = await this.metricModel
         .findOneAndUpdate({ id }, dto, { new: true })
         .exec();
-      
+
       if (!updated) {
         throw new ResourceNotFoundException('Métrica', id);
       }
-      
+
       return updated;
     } catch (error) {
       if (error instanceof ResourceNotFoundException) {
@@ -93,7 +146,7 @@ export class MetricsService {
   async delete(id: string): Promise<{ deleted: boolean; id: string }> {
     try {
       const metric = await this.metricModel.findOne({ id }).exec();
-      
+
       if (!metric) {
         throw new ResourceNotFoundException('Métrica', id);
       }
@@ -133,6 +186,45 @@ export class MetricsService {
         originalError: error instanceof Error ? error.message : String(error),
         resourceId,
       });
+    }
+  }
+
+  /**
+   * Sincroniza las asociaciones entre una lista de métricas y un recurso.
+   * - Añade `resourceId` a `resourceIds` de métricas cuyo `id` está en `metricIds`.
+   * - Elimina `resourceId` de métricas cuyo `id` no está en `metricIds`.
+   */
+  async syncResourceAssociations(
+    resourceId: string,
+    metricIds: string[],
+  ): Promise<void> {
+    try {
+      // Añadir resourceId a métricas seleccionadas
+      if (metricIds && metricIds.length > 0) {
+        await this.metricModel
+          .updateMany(
+            { id: { $in: metricIds }, resourceIds: { $ne: resourceId } },
+            { $addToSet: { resourceIds: resourceId } },
+          )
+          .exec();
+      }
+
+      // Eliminar resourceId de métricas que ya no deben referenciar al recurso
+      await this.metricModel
+        .updateMany(
+          { id: { $nin: metricIds || [] }, resourceIds: resourceId },
+          { $pull: { resourceIds: resourceId } },
+        )
+        .exec();
+    } catch (error) {
+      throw new DatabaseException(
+        'Error sincronizando asociaciones de métricas',
+        {
+          originalError: error instanceof Error ? error.message : String(error),
+          resourceId,
+          metricIds,
+        },
+      );
     }
   }
 }

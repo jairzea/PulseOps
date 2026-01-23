@@ -7,20 +7,83 @@ interface HistoricalChartProps {
   records: Record[];
   metricName: string;
   loading?: boolean;
+  lineColor?: string;
 }
 
 interface ChartDataPoint {
   week: string;
   value: number;
   trend: number;
+  timestamp: string;
 }
 
-export const HistoricalChart = memo(function HistoricalChart({ records, metricName, loading = false }: HistoricalChartProps) {
+export const HistoricalChart = memo(function HistoricalChart({ records, metricName, loading = false, lineColor = '#3B82F6' }: HistoricalChartProps) {
   const { theme } = useTheme();
+
+  // Componente personalizado para el tooltip
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload as ChartDataPoint;
+      const date = new Date(data.timestamp);
+      const formattedDate = date.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+
+      return (
+        <div
+          style={{
+            backgroundColor: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+            border: `1px solid ${theme === 'dark' ? '#374151' : '#D1D5DB'}`,
+            borderRadius: '0.375rem',
+            color: theme === 'dark' ? '#F9FAFB' : '#111827',
+            padding: '12px',
+            position: 'relative',
+          }}
+        >
+          {/* Fecha en la esquina superior derecha */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '8px',
+              right: '8px',
+              fontSize: '10px',
+              color: theme === 'dark' ? '#9CA3AF' : '#6B7280',
+            }}
+          >
+            {formattedDate}
+          </div>
+
+          {/* Contenido principal del tooltip */}
+          <div style={{ marginTop: '16px' }}>
+            <p style={{ color: theme === 'dark' ? '#9CA3AF' : '#6B7280', marginBottom: '8px', fontSize: '14px' }}>
+              {label}
+            </p>
+            {payload.map((entry, index) => (
+              <p
+                key={`item-${index}`}
+                style={{
+                  color: entry.color,
+                  fontSize: '14px',
+                  marginBottom: '4px',
+                  fontWeight: 500,
+                }}
+              >
+                {entry.name}: {typeof entry.value === 'number' ? entry.value.toFixed(2) : entry.value}
+              </p>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   // Solo mostrar skeleton si está loading Y no hay datos
   // Esto permite que el gráfico permanezca visible mientras carga nuevos datos
-  if (loading && records.length === 0) {
+  if (loading && (!records || records.length === 0)) {
     return (
       <div className="w-full h-96 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse transition-colors duration-300 flex items-center justify-center">
         <div className="text-gray-500">Loading chart data...</div>
@@ -28,7 +91,7 @@ export const HistoricalChart = memo(function HistoricalChart({ records, metricNa
     );
   }
 
-  if (records.length === 0) {
+  if (!records || records.length === 0) {
     return (
       <div className="w-full h-96 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center border border-gray-200 dark:border-gray-700 transition-colors duration-300">
         <div className="text-center">
@@ -64,6 +127,7 @@ export const HistoricalChart = memo(function HistoricalChart({ records, metricNa
       week: formatWeek(record.week),
       value: record.value,
       trend: Number(trendValue.toFixed(2)),
+      timestamp: record.timestamp,
     };
   });
 
@@ -74,6 +138,18 @@ export const HistoricalChart = memo(function HistoricalChart({ records, metricNa
       </h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={chartData}>
+          <defs>
+            <filter id="line-glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+              <feFlood floodColor={lineColor || '#3B82F6'} floodOpacity="0.4" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
           <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#374151' : '#E5E7EB'} />
           <XAxis
             dataKey="week"
@@ -84,15 +160,7 @@ export const HistoricalChart = memo(function HistoricalChart({ records, metricNa
             stroke={theme === 'dark' ? '#9CA3AF' : '#6B7280'}
             tick={{ fill: theme === 'dark' ? '#9CA3AF' : '#6B7280' }}
           />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: theme === 'dark' ? '#1F2937' : '#FFFFFF',
-              border: `1px solid ${theme === 'dark' ? '#374151' : '#D1D5DB'}`,
-              borderRadius: '0.375rem',
-              color: theme === 'dark' ? '#F9FAFB' : '#111827',
-            }}
-            labelStyle={{ color: theme === 'dark' ? '#9CA3AF' : '#6B7280' }}
-          />
+          <Tooltip content={<CustomTooltip />} />
           <Legend
             wrapperStyle={{ color: theme === 'dark' ? '#9CA3AF' : '#6B7280' }}
             iconType="line"
@@ -100,11 +168,12 @@ export const HistoricalChart = memo(function HistoricalChart({ records, metricNa
           <Line
             type="monotone"
             dataKey="value"
-            stroke="#3B82F6"
+            stroke={lineColor}
             strokeWidth={2}
             name="Valor Real"
-            dot={{ fill: '#3B82F6', r: 4 }}
+            dot={{ fill: lineColor || '#3B82F6', r: 4 }}
             activeDot={{ r: 6 }}
+            filter="url(#line-glow)"
           />
           <Line
             type="monotone"

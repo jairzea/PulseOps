@@ -24,7 +24,13 @@ export interface ErrorHandlerCallbacks {
 export class ErrorHandler {
   private static defaultCallbacks: ErrorHandlerCallbacks = {
     onAnyError: (error) => {
-      console.error('[ErrorHandler]', error.getUserMessage(), error);
+      // No mostrar errores de "No records found" como errores críticos
+      const isNoRecordsError = error.getUserMessage()?.includes('No records found');
+      if (isNoRecordsError) {
+        console.debug('[ErrorHandler] No records found:', error.getUserMessage());
+      } else {
+        console.error('[ErrorHandler]', error.getUserMessage(), error);
+      }
     },
   };
 

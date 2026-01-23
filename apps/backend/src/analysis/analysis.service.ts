@@ -3,6 +3,7 @@ import { RecordsService } from '../records/records.service';
 import { RulesService } from '../rules/rules.service';
 import { PlaybooksService } from '../playbooks/playbooks.service';
 import { analysisEngine } from '@pulseops/analysis-engine';
+import { ConfigurationService } from '../configuration/configuration.service';
 import {
   MetricSeries,
   MetricConditionEvaluation,
@@ -26,6 +27,7 @@ export class AnalysisService {
     private readonly recordsService: RecordsService,
     private readonly rulesService: RulesService,
     private readonly playbooksService: PlaybooksService,
+    private readonly configurationService: ConfigurationService,
   ) {}
 
   async evaluate(
@@ -60,9 +62,13 @@ export class AnalysisService {
     // 4. Determinar windowSize final
     const finalWindowSize = windowSize || activeRule?.windowSize || 2;
 
-    // 5. Invocar motor de análisis
+    // 5. Obtener configuración activa y pasar umbrales al motor
+    const activeConfig =
+      await this.configurationService.getActiveConfiguration();
+
     const evaluation = analysisEngine.analyzeWithConditions(series, {
       size: finalWindowSize,
+      thresholds: activeConfig.thresholds,
     });
 
     // 6. Obtener playbook para la condición detectada

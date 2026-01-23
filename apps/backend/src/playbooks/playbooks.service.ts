@@ -15,10 +15,11 @@ export class PlaybooksService {
   ) {}
 
   /**
-   * Obtener todos los playbooks activos
+   * Obtener todos los playbooks (activos e inactivos)
+   * Se usa en la página de configuración para poder gestionar todas las condiciones
    */
   async findAll(): Promise<ConditionPlaybook[]> {
-    return this.playbookModel.find({ isActive: true }).exec();
+    return this.playbookModel.find({}).exec();
   }
 
   /**

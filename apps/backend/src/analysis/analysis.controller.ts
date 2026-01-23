@@ -1,9 +1,9 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { AnalysisService } from './analysis.service';
-import { DemoAuthGuard } from '../auth/guards/demo-auth.guard';
+import { DemoOrJwtAuthGuard } from '../auth/guards/demo-or-jwt.guard';
 
 @Controller('analysis')
-@UseGuards(DemoAuthGuard)
+@UseGuards(DemoOrJwtAuthGuard)
 export class AnalysisController {
   constructor(private readonly analysisService: AnalysisService) {}
 

@@ -7,6 +7,7 @@ import {
     UpdateUserData,
     ChangePasswordData,
 } from '../types/auth';
+import type { PaginationParams, PaginatedResponse } from '../types/pagination';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -95,6 +96,29 @@ class AuthAPI {
         return response.json();
     }
 
+    async getAllUsersPaginated(params: PaginationParams): Promise<PaginatedResponse<UserWithMetadata>> {
+        const searchParams = new URLSearchParams();
+        if (params.page) searchParams.set('page', String(params.page));
+        if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
+        if (params.search) searchParams.set('search', params.search);
+        if (params.sortBy) searchParams.set('sortBy', params.sortBy);
+        if (params.sortDir) searchParams.set('sortDir', params.sortDir);
+
+        const queryString = searchParams.toString();
+        const url = queryString ? `${API_URL}/users?${queryString}` : `${API_URL}/users`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: this.getHeaders(true),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch users');
+        }
+
+        return response.json();
+    }
+
     async getUserById(id: string): Promise<UserWithMetadata> {
         const response = await fetch(`${API_URL}/users/${id}`, {
             method: 'GET',
@@ -151,14 +175,23 @@ class AuthAPI {
         }
     }
 
-    async deleteUser(id: string): Promise<void> {
-        const response = await fetch(`${API_URL}/users/${id}`, {
+    async deleteUser(id: string, hard = false): Promise<void> {
+        const url = `${API_URL}/users/${id}${hard ? '?hard=true' : ''}`;
+        const response = await fetch(url, {
             method: 'DELETE',
             headers: this.getHeaders(true),
         });
 
         if (!response.ok) {
-            throw new Error('Failed to delete user');
+            const errorText = await response.text();
+            let errMsg = 'Failed to delete user';
+            try {
+                const parsed = JSON.parse(errorText);
+                errMsg = parsed.message || errMsg;
+            } catch (e) {
+                if (errorText) errMsg = errorText;
+            }
+            throw new Error(errMsg);
         }
     }
 }

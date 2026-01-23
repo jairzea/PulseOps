@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { ThemeSwitch } from './ThemeSwitch';
+import { useAvatarAnimation } from '../hooks/useAvatarAnimation';
 
 export const Header: React.FC = () => {
     const location = useLocation();
@@ -12,23 +13,11 @@ export const Header: React.FC = () => {
     const { user, logout } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-    const [isAnimating, setIsAnimating] = useState(false);
-    const [showAvatar, setShowAvatar] = useState(true);
     const menuRef = useRef<HTMLDivElement>(null);
     const userMenuRef = useRef<HTMLDivElement>(null);
-    const avatarRef = useRef<HTMLButtonElement>(null);
 
-    // Detectar si venimos del login para ocultar y mostrar el avatar con fade-in
-    useEffect(() => {
-        if (location.state?.fromLogin) {
-            setShowAvatar(false);
-            // Mostrar el avatar con fade-in después de que termine la animación del clon
-            const timer = setTimeout(() => {
-                setShowAvatar(true);
-            }, 2000);
-            return () => clearTimeout(timer);
-        }
-    }, [location]);
+    // Hook para manejo de animaciones de avatar
+    const { avatarRef, showAvatar, isAnimating, animateLogout } = useAvatarAnimation();
 
     // Cerrar menú al hacer clic fuera
     useEffect(() => {
@@ -50,58 +39,11 @@ export const Header: React.FC = () => {
     };
 
     const handleLogout = () => {
-        if (avatarRef.current && !isAnimating) {
-            setIsAnimating(true);
-
-            // Obtener posición actual del avatar
-            const avatarRect = avatarRef.current.getBoundingClientRect();
-
-            // Crear clon del avatar
-            const clone = avatarRef.current.cloneNode(true) as HTMLElement;
-            clone.style.position = 'fixed';
-            clone.style.top = `${avatarRect.top}px`;
-            clone.style.left = `${avatarRect.left}px`;
-            clone.style.width = `${avatarRect.width}px`;
-            clone.style.height = `${avatarRect.height}px`;
-            clone.style.zIndex = '9999';
-            clone.style.transition = 'all 2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-            clone.style.pointerEvents = 'none';
-
-            document.body.appendChild(clone);
-
-            // Ocultar avatar original
-            if (avatarRef.current) {
-                avatarRef.current.style.opacity = '0';
-            }
-
-            // Ejecutar logout y navegar
+        animateLogout(() => {
             logout();
             setIsUserMenuOpen(false);
             navigate('/login', { state: { fromLogout: true } });
-
-            // Animar al centro de la pantalla
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    // Calcular centro exacto de la pantalla
-                    const avatarSize = 80; // Tamaño final del avatar (mismo que en login)
-                    const centerX = (window.innerWidth - avatarSize) / 2;
-                    const centerY = (window.innerHeight - avatarSize) / 2;
-
-                    clone.style.top = `${centerY}px`;
-                    clone.style.left = `${centerX}px`;
-                    clone.style.width = '80px';
-                    clone.style.height = '80px';
-                });
-            });
-
-            // Remover clon después de la animación
-            setTimeout(() => {
-                if (document.body.contains(clone)) {
-                    document.body.removeChild(clone);
-                }
-                setIsAnimating(false);
-            }, 2000);
-        }
+        });
     };
 
     return (
@@ -268,7 +210,7 @@ export const Header: React.FC = () => {
                                     animation: showAvatar ? 'avatarFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards' : 'none'
                                 }}
                             >
-                                {user?.name?.substring(0, 2).toUpperCase() || 'US'}
+                                {user?.email?.substring(0, 2).toUpperCase() || 'US'}
                             </button>
 
                             {/* User Dropdown Menu */}

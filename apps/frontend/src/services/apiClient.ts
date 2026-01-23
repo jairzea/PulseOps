@@ -1,331 +1,163 @@
 /**
- * API Client - Servicio centralizado para comunicación con el backend
+ * API Client - Facade de compatibilidad para servicios API
+ * @deprecated Use servicios específicos: metricsApi, resourcesApi, recordsApi, etc.
+ * Este facade se mantiene para compatibilidad con código existente.
  */
-import { ErrorHandler } from '../utils/errors';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// Re-exportar tipos de los servicios específicos
+export type { 
+  Resource, 
+  ResourceStats,
+  CreateResourceDto, 
+  UpdateResourceDto 
+} from './api/resourcesApi';
 
-// ============================================================================
-// Tipos compartidos
-// ============================================================================
+export type { 
+  Metric, 
+  CreateMetricDto, 
+  UpdateMetricDto 
+} from './api/metricsApi';
 
-export interface Resource {
-  id: string;
-  name: string;
-  roleType: 'DEV' | 'TL' | 'OTHER';
-  isActive: boolean;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { 
+  Record, 
+  CreateRecordDto, 
+  UpdateRecordDto 
+} from './api/recordsApi';
 
-export interface Metric {
-  id: string;
-  key: string;
-  label: string;
-  description?: string;
-  unit?: string;
-  periodType?: string;
-  resourceIds?: string[];
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { 
+  AnalysisResult, 
+  EvaluateParams 
+} from './api/analysisApi';
 
-export interface Record {
-  id: string;
-  resourceId: string;
-  metricKey: string;
-  week: string;
-  timestamp: string;
-  value: number;
-  source?: string;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { 
+  ConditionMetadata 
+} from './api/conditionsApi';
 
-export interface AnalysisResult {
-  series: {
-    metricId: string;
-    points: Array<{ timestamp: string; value: number }>;
-  };
-  evaluation: {
-    metricId: string;
-    windowUsed: number;
-    periodType: string;
-    inclination: {
-      value: number;
-      previousValue: number;
-      currentValue: number;
-      delta: number;
-      isValid: boolean;
-    };
-    direction: string;
-    condition: string;
-    reason: {
-      code: string;
-      explanation: string;
-      threshold?: number;
-    };
-    signals: Array<{
-      type: string;
-      severity: string;
-      explanation: string;
-      windowUsed?: number;
-      evidence?: any;
-    }>;
-    evaluatedAt: string;
-    confidence: number;
-  };
-  appliedRuleConfig: any | null;
-  playbook: {
-    condition: string;
-    title: string;
-    steps: string[];
-    version: number;
-  } | null;
-}
+export type { 
+  Playbook, 
+  UpdatePlaybookDto 
+} from './api/playbooksApi';
 
-export interface ConditionMetadata {
-  condition: string;
-  order: number;
-  displayName: string;
-  description: string;
-  color: {
-    bg: string;
-    badge: string;
-    text: string;
-    border: string;
-  };
-  icon: string;
-  category: 'superior' | 'normal' | 'crisis' | 'technical';
-}
+// Importar servicios específicos
+import { metricsApi } from './api/metricsApi';
+import { resourcesApi } from './api/resourcesApi';
+import { recordsApi } from './api/recordsApi';
+import { analysisApi } from './api/analysisApi';
+import { conditionsApi } from './api/conditionsApi';
+import { playbooksApi } from './api/playbooksApi';
+import type { PaginationParams } from '../types/pagination';
 
-export interface Playbook {
-  _id?: string;
-  condition: string;
-  title: string;
-  steps: string[];
-  version: number;
-  isActive: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
 
-// ============================================================================
-// Utilidades HTTP
-// ============================================================================
-
-async function fetchJSON<T>(
-  endpoint: string,
-  options?: RequestInit
-): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
-  
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
-    });
-
-    if (!response.ok) {
-      // Delegar al ErrorHandler para procesar errores HTTP
-      return await ErrorHandler.handleHttpError(response);
-    }
-
-    return response.json();
-  } catch (error) {
-    // Delegar al ErrorHandler para procesar errores genéricos (network, etc)
-    return ErrorHandler.handleGenericError(error);
-  }
-}
-
-// ============================================================================
-// API Client
-// ============================================================================
-
+/**
+ * API Client Facade - Mantiene compatibilidad con código existente
+ * @deprecated Migrar gradualmente a servicios específicos
+ */
 export const apiClient = {
   // --------------------------------------------------------------------------
   // Resources
   // --------------------------------------------------------------------------
   
-  async getResources(): Promise<Resource[]> {
-    return fetchJSON<Resource[]>('/resources');
+  getResources: async () => await resourcesApi.getAll(),
+  
+  getResourcesPaginated: async (params: PaginationParams) => 
+    await resourcesApi.getPaginated(params),
+
+  getResourcesStats: async () => {
+    const stats = await resourcesApi.getStats();
+    return {
+      totalResources: stats.totalResources || 0,
+      activeResources: stats.activeResources || 0,
+      devResources: stats.devResources || 0,
+      tlResources: stats.tlResources || 0,
+    };
   },
 
-  async getResource(id: string): Promise<Resource> {
-    return fetchJSON<Resource>(`/resources/${id}`);
+  getResource: async (id: string) => await resourcesApi.getById(id),
+
+  getResourceMetrics: async (id: string) => {
+    return await metricsApi.getAll(id);
   },
 
-  async getResourceMetrics(id: string): Promise<Metric[]> {
-    return fetchJSON<Metric[]>(`/resources/${id}/metrics`);
-  },
+  createResource: async (data: any) => await resourcesApi.create(data),
 
-  async createResource(data: Partial<Resource>): Promise<Resource> {
-    return fetchJSON<Resource>('/resources', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
+  updateResource: async (id: string, data: any) => await resourcesApi.update(id, data),
 
-  async updateResource(id: string, data: Partial<Resource>): Promise<Resource> {
-    return fetchJSON<Resource>(`/resources/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-  },
-
-  async deleteResource(id: string): Promise<void> {
-    return fetchJSON<void>(`/resources/${id}`, {
-      method: 'DELETE',
-    });
-  },
+  deleteResource: async (id: string) => await resourcesApi.delete(id),
 
   // --------------------------------------------------------------------------
   // Metrics
   // --------------------------------------------------------------------------
 
-  async getMetrics(resourceId?: string): Promise<Metric[]> {
-    const query = resourceId ? `?resourceId=${resourceId}` : '';
-    return fetchJSON<Metric[]>(`/metrics${query}`);
-  },
+  getMetrics: async (resourceId?: string) => await metricsApi.getAll(resourceId),
 
-  async getMetric(id: string): Promise<Metric> {
-    return fetchJSON<Metric>(`/metrics/${id}`);
-  },
+  getMetricsPaginated: async (params: PaginationParams) => 
+    await metricsApi.getPaginated(params),
 
-  async createMetric(data: Partial<Metric>): Promise<Metric> {
-    return fetchJSON<Metric>('/metrics', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
+  getMetric: async (id: string) => await metricsApi.getById(id),
 
-  async updateMetric(id: string, data: Partial<Metric>): Promise<Metric> {
-    return fetchJSON<Metric>(`/metrics/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-  },
+  createMetric: async (data: any) => await metricsApi.create(data),
 
-  async deleteMetric(id: string): Promise<{ deleted: boolean; id: string }> {
-    return fetchJSON<{ deleted: boolean; id: string }>(`/metrics/${id}`, {
-      method: 'DELETE',
-    });
+  updateMetric: async (id: string, data: any) => await metricsApi.update(id, data),
+
+  deleteMetric: async (id: string) => {
+    await metricsApi.delete(id);
+    return { deleted: true, id };
   },
 
   // --------------------------------------------------------------------------
   // Records
   // --------------------------------------------------------------------------
 
-  async getRecords(params?: {
-    resourceId?: string;
-    metricKey?: string;
-    fromWeek?: string;
-    toWeek?: string;
-  }): Promise<Record[]> {
-    const query = new URLSearchParams();
-    if (params?.resourceId) query.set('resourceId', params.resourceId);
-    if (params?.metricKey) query.set('metricKey', params.metricKey);
-    if (params?.fromWeek) query.set('fromWeek', params.fromWeek);
-    if (params?.toWeek) query.set('toWeek', params.toWeek);
+  getRecords: async (params?: { resourceId?: string; metricKey?: string }) => 
+    await recordsApi.getAll(params?.resourceId, params?.metricKey),
 
-    const queryString = query.toString();
-    const endpoint = queryString ? `/records?${queryString}` : '/records';
-    
-    return fetchJSON<Record[]>(endpoint);
-  },
+  getRecordsPaginated: async (paginationParams: PaginationParams, filters?: any) =>
+    await recordsApi.getPaginated({ ...paginationParams, ...filters }),
 
-  async createRecord(data: {
-    resourceId: string;
-    metricKey: string;
-    week: string;
-    timestamp: string;
-    value: number;
-    source?: string;
-  }): Promise<Record> {
-    return fetchJSON<Record>('/records', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
+  createRecord: async (data: any) => await recordsApi.create(data),
 
-  async upsertRecord(data: {
-    resourceId: string;
-    metricKey: string;
-    week: string;
-    timestamp: string;
-    value: number;
-    source?: string;
-  }): Promise<Record> {
-    return fetchJSON<Record>('/records', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
+  upsertRecord: async (data: any) => await recordsApi.create(data),
 
-  async deleteRecord(id: string): Promise<{ deleted: boolean }> {
-    return fetchJSON<{ deleted: boolean }>(`/records/${id}`, {
-      method: 'DELETE',
-    });
+  deleteRecord: async (id: string) => {
+    await recordsApi.delete(id);
+    return { deleted: true };
   },
 
   // --------------------------------------------------------------------------
   // Analysis
   // --------------------------------------------------------------------------
 
-  async evaluate(params: {
-    resourceId: string;
-    metricKey: string;
-    windowSize?: number;
-  }): Promise<AnalysisResult> {
-    const query = new URLSearchParams();
-    query.set('resourceId', params.resourceId);
-    query.set('metricKey', params.metricKey);
-    if (params.windowSize) query.set('windowSize', params.windowSize.toString());
-
-    return fetchJSON<AnalysisResult>(`/analysis/evaluate?${query.toString()}`);
-  },
+  evaluate: async (params: { resourceId: string; metricKey: string; windowSize?: number }) =>
+    await analysisApi.evaluate(params),
 
   // --------------------------------------------------------------------------
   // Conditions
   // --------------------------------------------------------------------------
 
-  async getConditionsMetadata(): Promise<ConditionMetadata[]> {
-    return fetchJSON<ConditionMetadata[]>('/conditions/metadata');
-  },
+  getConditionsMetadata: async () => await conditionsApi.getMetadata(),
 
   // --------------------------------------------------------------------------
   // Playbooks
   // --------------------------------------------------------------------------
 
-  async getAllPlaybooks(): Promise<Playbook[]> {
-    return fetchJSON<Playbook[]>('/playbooks');
-  },
+  getAllPlaybooks: async () => await playbooksApi.getAll(),
 
-  async getPlaybookByCondition(condition: string): Promise<Playbook | null> {
-    return fetchJSON<Playbook | null>(`/playbooks/${condition}`);
-  },
+  getPlaybookByCondition: async (condition: string) => 
+    await playbooksApi.getByCondition(condition),
 
-  async updatePlaybook(condition: string, data: {
-    title: string;
-    steps: string[];
-    version?: number;
-    isActive?: boolean;
-  }): Promise<Playbook> {
-    return fetchJSON<Playbook>(`/playbooks/${condition}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-  },
+  updatePlaybook: async (condition: string, data: any) => 
+    await playbooksApi.update(condition, data),
 
-  async seedPlaybooks(): Promise<{ message: string; created: number }> {
-    return fetchJSON<{ message: string; created: number }>('/playbooks/seed', {
-      method: 'POST',
-    });
-  },
+  seedPlaybooks: async () => await playbooksApi.seed(),
 };
+
+// Export specific APIs for direct usage (recommended)
+export { 
+  metricsApi, 
+  resourcesApi, 
+  recordsApi, 
+  analysisApi, 
+  conditionsApi, 
+  playbooksApi 
+};
+

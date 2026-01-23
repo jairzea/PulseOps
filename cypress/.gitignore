@@ -1,0 +1,26 @@
+# Cypress
+cypress/screenshots/
+cypress/videos/
+cypress/downloads/
+cypress/results/
+
+# Reportes
+mochawesome-report/
+cypress-coverage/
+.nyc_output/
+
+# Cucumber
+cucumber-messages.ndjson
+cucumber-report.json
+
+# Test artifacts
+*.mp4
+*.png
+*.jpg
+*.jpeg
+
+# Logs
+cypress/logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

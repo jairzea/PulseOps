@@ -91,9 +91,24 @@ async function bootstrap() {
 
   const createdMetrics = [];
   for (const metric of metrics) {
-    const created = await metricsService.create(metric, 'system-seed');
-    createdMetrics.push(created);
-    console.log(`  ✓ ${created.label}`);
+    try {
+      const created = await metricsService.create(metric, 'system-seed');
+      createdMetrics.push(created);
+      console.log(`  ✓ ${created.label}`);
+    } catch (err: any) {
+      // Si ya existe, intentar recuperar la métrica existente y continuar
+      if (err && err.errorCode === 'DUPLICATE_RESOURCE') {
+        try {
+          const existing = await metricsService.findByKey(metric.key);
+          createdMetrics.push(existing);
+          console.log(`  ⚠ ${metric.label} ya existe — usando existente`);
+        } catch (innerErr) {
+          console.warn(`  ! No se pudo recuperar métrica existente para key=${metric.key}`);
+        }
+      } else {
+        throw err;
+      }
+    }
   }
 
   // ============================================================================
