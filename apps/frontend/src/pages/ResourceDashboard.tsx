@@ -225,6 +225,12 @@ export function ResourceDashboard() {
     return metric;
   }, [metrics, selectedMetricKey]);
 
+  const lineColor = useMemo(() => {
+    return visuallyActiveCondition 
+      ? conditions.find(c => c.condition === visuallyActiveCondition)?.color.glow 
+      : undefined;
+  }, [visuallyActiveCondition, conditions]);
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
       {/* Dashboard Controls */}
@@ -330,7 +336,7 @@ export function ResourceDashboard() {
               records={records}
               metricName={selectedMetric?.label || 'Metric'}
               loading={loadingRecords}
-              lineColor={analysis?.evaluation?.condition ? conditions.find(c => c.condition === analysis.evaluation.condition)?.color.glow : undefined}
+              lineColor={lineColor}
             />
           </div>
 
