@@ -7,6 +7,7 @@ interface HistoricalChartProps {
   records: Record[];
   metricName: string;
   loading?: boolean;
+  lineColor?: string;
 }
 
 interface ChartDataPoint {
@@ -16,7 +17,7 @@ interface ChartDataPoint {
   timestamp: string;
 }
 
-export const HistoricalChart = memo(function HistoricalChart({ records, metricName, loading = false }: HistoricalChartProps) {
+export const HistoricalChart = memo(function HistoricalChart({ records, metricName, loading = false, lineColor = '#3B82F6' }: HistoricalChartProps) {
   const { theme } = useTheme();
 
   // Componente personalizado para el tooltip
@@ -155,7 +156,7 @@ export const HistoricalChart = memo(function HistoricalChart({ records, metricNa
           <Line
             type="monotone"
             dataKey="value"
-            stroke="#3B82F6"
+            stroke={lineColor}
             strokeWidth={2}
             name="Valor Real"
             dot={{ fill: '#3B82F6', r: 4 }}

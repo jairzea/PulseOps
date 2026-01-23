@@ -330,6 +330,7 @@ export function ResourceDashboard() {
               records={records}
               metricName={selectedMetric?.label || 'Metric'}
               loading={loadingRecords}
+              lineColor={analysis?.evaluation?.condition ? conditions.find(c => c.condition === analysis.evaluation.condition)?.color.glow : undefined}
             />
           </div>
 
