@@ -42,7 +42,7 @@ export const ConditionCard: React.FC<ConditionCardProps> = ({
                 ${isActive ? `${color.bg} ${color.border}` : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'}
             `}
             style={{
-                boxShadow: isActive && color.glow 
+                boxShadow: isActive && color.glow
                     ? `0 0 30px ${color.glow.replace('rgb(', 'rgba(').replace(')', ', 0.5)')}, 0 0 60px ${color.glow.replace('rgb(', 'rgba(').replace(')', ', 0.25)')}, 0 10px 40px ${color.glow.replace('rgb(', 'rgba(').replace(')', ', 0.2)')}`
                     : 'none',
             }}

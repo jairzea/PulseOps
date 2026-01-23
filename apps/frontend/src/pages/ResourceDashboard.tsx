@@ -174,7 +174,7 @@ export function ResourceDashboard() {
     if (analysis?.evaluation?.condition) {
       // Primero quitar el resaltado visual
       setVisuallyActiveCondition(null);
-      
+
       // Small delay to allow the scale animation to start
       const timer = setTimeout(() => {
         const activeConditionElement = conditionRefs.current.get(analysis.evaluation.condition);
@@ -182,25 +182,25 @@ export function ResourceDashboard() {
           const container = conditionsContainerRef.current;
           const cardRect = activeConditionElement.getBoundingClientRect();
           const containerRect = container.getBoundingClientRect();
-          
+
           // Calculate the scroll position to center the card
           const scrollLeft = activeConditionElement.offsetLeft - (containerRect.width / 2) + (cardRect.width / 2);
           const startScroll = container.scrollLeft;
           const distance = scrollLeft - startScroll;
           const duration = 2000; // 2 segundos para el scroll
           const startTime = performance.now();
-          
+
           const animateScroll = (currentTime: number) => {
             const elapsed = currentTime - startTime;
             const progress = Math.min(elapsed / duration, 1);
-            
+
             // Ease in-out cubic para suavidad
             const easeProgress = progress < 0.5
               ? 4 * progress * progress * progress
               : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-            
+
             container.scrollLeft = startScroll + (distance * easeProgress);
-            
+
             if (progress < 1) {
               requestAnimationFrame(animateScroll);
             } else {
@@ -210,11 +210,11 @@ export function ResourceDashboard() {
               }, 100);
             }
           };
-          
+
           requestAnimationFrame(animateScroll);
         }
       }, 100);
-      
+
       return () => clearTimeout(timer);
     }
   }, [analysis?.evaluation?.condition]);
@@ -287,7 +287,7 @@ export function ResourceDashboard() {
                 const activeIndex = conditions.findIndex(c => c.condition === visuallyActiveCondition);
                 const isPrevious = activeIndex !== -1 && index === activeIndex - 1;
                 const isNext = activeIndex !== -1 && index === activeIndex + 1;
-                
+
                 return (
                   <div
                     key={conditionMeta.condition}
@@ -298,14 +298,12 @@ export function ResourceDashboard() {
                         conditionRefs.current.delete(conditionMeta.condition);
                       }
                     }}
-                    className={`flex-shrink-0 w-64 relative transition-all duration-[2000ms] ease-in-out ${
-                      isActive ? 'z-50' : 'z-0 hover:scale-105'
-                    }`}
+                    className={`flex-shrink-0 w-64 relative transition-all duration-[2000ms] ease-in-out ${isActive ? 'z-20' : 'z-0 hover:scale-105'
+                      }`}
                     style={{
                       transformOrigin: 'center center',
-                      transform: `scale(${isActive ? '1.15' : '1'}) translateX(${
-                        isPrevious ? '-12px' : isNext ? '12px' : '0px'
-                      })`,
+                      transform: `scale(${isActive ? '1.15' : '1'}) translateX(${isPrevious ? '-12px' : isNext ? '12px' : '0px'
+                        })`,
                     }}
                   >
                     <ConditionCard
