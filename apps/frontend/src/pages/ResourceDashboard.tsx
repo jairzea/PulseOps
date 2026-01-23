@@ -183,7 +183,7 @@ export function ResourceDashboard() {
           const scrollLeft = activeConditionElement.offsetLeft - (containerRect.width / 2) + (cardRect.width / 2);
           const startScroll = container.scrollLeft;
           const distance = scrollLeft - startScroll;
-          const duration = 1500; // 1.5 segundos para el scroll
+          const duration = 2000; // 2 segundos sincronizado con la transición de las tarjetas
           const startTime = performance.now();
           
           const animateScroll = (currentTime: number) => {
@@ -204,7 +204,7 @@ export function ResourceDashboard() {
           
           requestAnimationFrame(animateScroll);
         }
-      }, 300);
+      }, 100);
       
       return () => clearTimeout(timer);
     }
