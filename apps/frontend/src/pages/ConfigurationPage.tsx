@@ -43,22 +43,6 @@ function Step1Formulas() {
         if (!result) return 'rgb(0, 0, 0)';
         return `rgb(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)})`;
     };
-    const { conditions: conditionsMetadata } = useConditionsMetadata();
-    const [editedColors, setEditedColors] = useState<Record<string, string>>({});
-
-    // Funciones de conversión de color
-    const rgbToHex = (rgb: string): string => {
-        const match = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-        if (!match) return '#000000';
-        const [, r, g, b] = match;
-        return '#' + [r, g, b].map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
-    };
-
-    const hexToRgb = (hex: string): string => {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        if (!result) return 'rgb(0, 0, 0)';
-        return `rgb(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)})`;
-    };
 
     const conditions = [
         { key: 'AFLUENCIA', name: 'AFLUENCIA', color: 'purple' },
