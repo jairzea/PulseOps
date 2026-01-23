@@ -10,7 +10,7 @@ import { PulseLoader } from '../components/PulseLoader';
 import { LoadingButton } from '../components/LoadingButton';
 import { PermissionFeedback } from '../components/PermissionFeedback';
 import { useAuth } from '../contexts/AuthContext';
-import { ConditionColorsConfig } from '../components/ConditionColorsConfig';
+import { useConditionsMetadata } from '../hooks/useConditionsMetadata';
 
 // Step Components
 interface StepProps {
@@ -27,6 +27,38 @@ function Step1Formulas() {
     const [expandedCondition, setExpandedCondition] = useState<string | null>('AFLUENCIA');
     const [savingCondition, setSavingCondition] = useState<string | null>(null);
     const { success, error: showError } = useToast();
+    const { conditions: conditionsMetadata } = useConditionsMetadata();
+    const [editedColors, setEditedColors] = useState<Record<string, string>>({});
+
+    // Funciones de conversión de color
+    const rgbToHex = (rgb: string): string => {
+        const match = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+        if (!match) return '#000000';
+        const [, r, g, b] = match;
+        return '#' + [r, g, b].map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+    };
+
+    const hexToRgb = (hex: string): string => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        if (!result) return 'rgb(0, 0, 0)';
+        return `rgb(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)})`;
+    };
+    const { conditions: conditionsMetadata } = useConditionsMetadata();
+    const [editedColors, setEditedColors] = useState<Record<string, string>>({});
+
+    // Funciones de conversión de color
+    const rgbToHex = (rgb: string): string => {
+        const match = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+        if (!match) return '#000000';
+        const [, r, g, b] = match;
+        return '#' + [r, g, b].map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+    };
+
+    const hexToRgb = (hex: string): string => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        if (!result) return 'rgb(0, 0, 0)';
+        return `rgb(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)})`;
+    };
 
     const conditions = [
         { key: 'AFLUENCIA', name: 'AFLUENCIA', color: 'purple' },
@@ -150,6 +182,32 @@ function Step1Formulas() {
         setExpandedCondition(prev => prev === condition ? null : condition);
     };
 
+    const updateColor = (condition: string, newColor: string) => {
+        setEditedColors(prev => ({
+            ...prev,
+            [condition]: newColor
+        }));
+    };
+
+    const getConditionColor = (condition: string): string => {
+        if (editedColors[condition]) return editedColors[condition];
+        const metadata = conditionsMetadata.find(c => c.condition === condition);
+        return metadata?.color?.glow || 'rgb(59, 130, 246)';
+    };
+
+    const updateColor = (condition: string, newColor: string) => {
+        setEditedColors(prev => ({
+            ...prev,
+            [condition]: newColor
+        }));
+    };
+
+    const getConditionColor = (condition: string): string => {
+        if (editedColors[condition]) return editedColors[condition];
+        const metadata = conditionsMetadata.find(c => c.condition === condition);
+        return metadata?.color?.glow || 'rgb(59, 130, 246)';
+    };
+
     if (loading) {
         return <PulseLoader size="md" variant="primary" text="Cargando fórmulas..." />;
     }
@@ -239,17 +297,65 @@ function Step1Formulas() {
                                         </LoadingButton>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Título de la fórmula
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={playbook.title}
-                                            onChange={(e) => updatePlaybook(key, 'title', e.target.value)}
-                                            className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                            placeholder="Título de la fórmula..."
-                                        />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                Título de la fórmula
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={playbook.title}
+                                                onChange={(e) => updatePlaybook(key, 'title', e.target.value)}
+                                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                                placeholder="Título de la fórmula..."
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                🎨 Color de resaltado
+                                            </label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="color"
+                                                    value={rgbToHex(getConditionColor(key))}
+                                                    onChange={(e) => updateColor(key, hexToRgb(e.target.value))}
+                                                    className="w-16 h-10 rounded cursor-pointer border border-gray-300 dark:border-gray-600"
+                                                />
+                                                <div
+                                                    className="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg flex items-center justify-center"
+                                                    style={{
+                                                        boxShadow: `0 0 20px ${getConditionColor(key).replace('rgb', 'rgba').replace(')', ', 0.4)')}, 0 0 40px ${getConditionColor(key).replace('rgb', 'rgba').replace(')', ', 0.2)')}`
+                                                    }}
+                                                >
+                                                    <span className="text-xs text-gray-400 font-mono">{getConditionColor(key)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                🎨 Color de resaltado
+                                            </label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="color"
+                                                    value={rgbToHex(getConditionColor(key))}
+                                                    onChange={(e) => updateColor(key, hexToRgb(e.target.value))}
+                                                    className="w-16 h-10 rounded cursor-pointer border border-gray-300 dark:border-gray-600"
+                                                />
+                                                <div
+                                                    className="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg flex items-center justify-center"
+                                                    style={{
+                                                        boxShadow: `0 0 20px ${getConditionColor(key).replace('rgb', 'rgba').replace(')', ', 0.4)')}, 0 0 40px ${getConditionColor(key).replace('rgb', 'rgba').replace(')', ', 0.2)')}`
+                                                    }}
+                                                >
+                                                    <span className="text-xs text-gray-400 font-mono">{getConditionColor(key)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div className="space-y-3">
@@ -1030,7 +1136,6 @@ export function ConfigurationPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [errorConfig, setErrorConfig] = useState<string | null>(null);
     const [currentStep, setCurrentStep] = useState(1);
-    const [activeTab, setActiveTab] = useState<'colors' | 'thresholds'>('colors');
     const [editedThresholds, setEditedThresholds] =
         useState<ConditionThresholds | null>(null);
 
@@ -1144,46 +1249,9 @@ export function ConfigurationPage() {
                         Configuración del Sistema
                     </h1>
                     <p className="text-gray-400">
-                        Gestiona los colores, umbrales y fórmulas del motor de análisis
+                        Gestiona las fórmulas, colores y umbrales del motor de análisis
                     </p>
                 </div>
-
-                {/* Tabs */}
-                <div className="mb-8 border-b border-gray-200 dark:border-gray-700">
-                    <nav className="-mb-px flex space-x-8">
-                        <button
-                            onClick={() => setActiveTab('colors')}
-                            className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                                activeTab === 'colors'
-                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                            }`}
-                        >
-                            🎨 Colores de Condiciones
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('thresholds')}
-                            className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                                activeTab === 'thresholds'
-                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                            }`}
-                        >
-                            ⚙️ Umbrales y Fórmulas
-                        </button>
-                    </nav>
-                </div>
-
-                {/* Colors Tab */}
-                {activeTab === 'colors' && (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
-                        <ConditionColorsConfig />
-                    </div>
-                )}
-
-                {/* Thresholds Tab */}
-                {activeTab === 'thresholds' && (
-                    <>
                         {/* Active Configuration Info */}
                         {errorConfig ? (
                             <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
@@ -1389,8 +1457,6 @@ export function ConfigurationPage() {
                             ]}
                         />
                     </div>
-                )}
-                    </>
                 )}
             </div>
         </div>
