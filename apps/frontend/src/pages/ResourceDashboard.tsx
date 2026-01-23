@@ -16,6 +16,7 @@ import { useAuth } from '../contexts/AuthContext';
 export function ResourceDashboard() {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const [selectedMetricKey, setSelectedMetricKey] = useState<string | null>(null);
+  const [visuallyActiveCondition, setVisuallyActiveCondition] = useState<string | null>(null);
   const conditionsContainerRef = useRef<HTMLDivElement>(null);
   const conditionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const prevUserIdRef = useRef<string | undefined>();
@@ -171,6 +172,9 @@ export function ResourceDashboard() {
   // Auto-scroll to active condition with smooth animation
   useEffect(() => {
     if (analysis?.evaluation?.condition) {
+      // Primero quitar el resaltado visual
+      setVisuallyActiveCondition(null);
+      
       // Small delay to allow the scale animation to start
       const timer = setTimeout(() => {
         const activeConditionElement = conditionRefs.current.get(analysis.evaluation.condition);
@@ -183,7 +187,7 @@ export function ResourceDashboard() {
           const scrollLeft = activeConditionElement.offsetLeft - (containerRect.width / 2) + (cardRect.width / 2);
           const startScroll = container.scrollLeft;
           const distance = scrollLeft - startScroll;
-          const duration = 2000; // 2 segundos sincronizado con la transición de las tarjetas
+          const duration = 2000; // 2 segundos para el scroll
           const startTime = performance.now();
           
           const animateScroll = (currentTime: number) => {
@@ -199,6 +203,11 @@ export function ResourceDashboard() {
             
             if (progress < 1) {
               requestAnimationFrame(animateScroll);
+            } else {
+              // Una vez terminado el scroll, aplicar el resaltado
+              setTimeout(() => {
+                setVisuallyActiveCondition(analysis.evaluation.condition);
+              }, 100);
             }
           };
           
@@ -274,8 +283,8 @@ export function ResourceDashboard() {
               ))
             ) : (
               conditions.map((conditionMeta, index) => {
-                const isActive = analysis?.evaluation?.condition === conditionMeta.condition;
-                const activeIndex = conditions.findIndex(c => c.condition === analysis?.evaluation?.condition);
+                const isActive = visuallyActiveCondition === conditionMeta.condition;
+                const activeIndex = conditions.findIndex(c => c.condition === visuallyActiveCondition);
                 const isPrevious = activeIndex !== -1 && index === activeIndex - 1;
                 const isNext = activeIndex !== -1 && index === activeIndex + 1;
                 
