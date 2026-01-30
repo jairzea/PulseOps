@@ -21,6 +21,20 @@ phases:
         summary: Levantar proxy webforge y conectarse al servidor TailAdmin remoto para inspeccionar metadatos de componentes.
       - type: note
         summary: Extraer catálogo de componentes del dashboard (cards, chart-widgets, tables, sidebar widgets, header items) y anotar sus ids/props.
+      - type: note
+        summary: Resultado del análisis automático vía proxy activo:
+        details: |
+          - theme: tailadmin-pro
+          - version: 2.2.0
+          - sessionObserved: true (proxy ready / transport started)
+          - inventory (inicial, revisar con UI MCP):
+            - Dashboard panels (cards)
+            - Chart widgets (line, bar, pie)
+            - Tables / Data grids
+            - Sidebar widgets (navigation, banner)
+            - Header items (search box, theme toggle, notification dropdown, user dropdown)
+            - ColorPicker / styling helpers
+            - Playground widgets: metrics summary cards, activity feed, recent resources list
       - type: update_file
         path: lean-tailadmin.yml
         summary: Incorporar el inventario de componentes detectados y recomendaciones para cada zona del dashboard.
