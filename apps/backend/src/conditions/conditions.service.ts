@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { HubbardCondition } from '@pulseops/shared-types';
@@ -29,8 +29,14 @@ export class ConditionsService {
     @InjectModel(ConditionMetadata.name)
     private conditionMetadataModel: Model<ConditionMetadataDocument>,
   ) {
-    // Inicializar metadata por defecto al arrancar
-    this.initializeDefaultMetadata();
+    // La inicialización se hará mediante OnModuleInit
+  }
+
+  /**
+   * Inicializa la metadata al cargar el módulo
+   */
+  async onModuleInit(): Promise<void> {
+    await this.initializeDefaultMetadata();
   }
 
   /**

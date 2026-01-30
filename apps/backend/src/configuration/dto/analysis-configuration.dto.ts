@@ -7,9 +7,43 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
+class FormulaStepDto {
+  @IsNumber()
+  order: number;
+
+  @IsString()
+  description: string;
+
+  @IsBoolean()
+  enabled: boolean;
+}
+
+class FormulaDto {
+  @IsString()
+  name: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  enabled?: boolean;
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => FormulaStepDto)
+  steps?: FormulaStepDto[];
+}
+
 class AfluenciaThresholdsDto {
   @IsNumber()
   minInclination: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FormulaDto)
+  formula?: FormulaDto;
 }
 
 class NormalThresholdsDto {
@@ -18,6 +52,11 @@ class NormalThresholdsDto {
 
   @IsNumber()
   maxInclination: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FormulaDto)
+  formula?: FormulaDto;
 }
 
 class EmergenciaThresholdsDto {
@@ -26,6 +65,11 @@ class EmergenciaThresholdsDto {
 
   @IsNumber()
   maxInclination: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FormulaDto)
+  formula?: FormulaDto;
 }
 
 class PeligroThresholdsDto {
@@ -34,6 +78,11 @@ class PeligroThresholdsDto {
 
   @IsNumber()
   maxInclination: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FormulaDto)
+  formula?: FormulaDto;
 }
 
 class PoderThresholdsDto {
@@ -45,12 +94,23 @@ class PoderThresholdsDto {
 
   @IsNumber()
   stabilityThreshold: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FormulaDto)
+  formula?: FormulaDto;
 }
 
 class InexistenciaThresholdsDto {
   @IsNumber()
   threshold: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FormulaDto)
+  formula?: FormulaDto;
 }
+
 
 class VolatilitySignalConfigDto {
   @IsNumber()
@@ -138,6 +198,11 @@ class ConditionThresholdsDto {
   @ValidateNested()
   @Type(() => InexistenciaThresholdsDto)
   inexistencia: InexistenciaThresholdsDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FormulaDto)
+  formula?: FormulaDto;
 
   @ValidateNested()
   @Type(() => SignalsThresholdsDto)

@@ -364,8 +364,7 @@ function Step1Formulas() {
 }
 
 // Paso 2: Condiciones Principales
-function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
-    void thresholds;
+function Step2Conditions({ updateThreshold, getValue }: StepProps) {
     return (
         <div className="space-y-8">
             <div>
@@ -601,8 +600,7 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
 }
 
 // Paso 3: Configuración de Señales
-function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
-    void thresholds;
+function Step3Signals({ updateThreshold, getValue }: StepProps) {
     return (
         <div className="space-y-8">
             <div>
@@ -908,8 +906,7 @@ function Step4Review({ thresholds, configName }: Step4ReviewProps) {
 }
 
 // Paso 4: Fórmulas de Condiciones
-function Step4Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
-    void thresholds;
+function Step4Formulas({ updateThreshold, getValue }: StepProps) {
     const conditions = [
         { key: 'afluencia', name: 'AFLUENCIA', color: 'purple' },
         { key: 'normal', name: 'NORMAL', color: 'green' },
@@ -1009,9 +1006,6 @@ function Step4Formulas({ thresholds, updateThreshold, getValue }: StepProps) {
         </div>
     );
 }
-
-// Mantener referencia a Step4Formulas para evitar error de "declarado pero no usado"
-void Step4Formulas;
 
 interface SummaryCardProps {
     title: string;

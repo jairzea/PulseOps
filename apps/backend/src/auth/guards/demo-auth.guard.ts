@@ -12,8 +12,9 @@ export class DemoAuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const authMode = this.configService.get<string>('AUTH_MODE', 'demo');
 
+    // Solo activar guard en modo demo
     if (authMode !== 'demo') {
-      return true; // Si no es demo, deja pasar (otro guard manejará)
+      return false; // Rechazar acceso, otro guard debe manejar la autenticación
     }
 
     const request = context.switchToHttp().getRequest();

@@ -56,6 +56,33 @@ class InexistenciaThresholds {
 }
 
 @Schema({ _id: false })
+class FormulaStep {
+  @Prop({ required: true })
+  order: number;
+
+  @Prop({ required: true })
+  description: string;
+
+  @Prop({ required: true, default: true })
+  enabled: boolean;
+}
+
+@Schema({ _id: false })
+class Formula {
+  @Prop({ required: true })
+  name: string;
+
+  @Prop()
+  description?: string;
+
+  @Prop({ default: true })
+  enabled: boolean;
+
+  @Prop({ type: [FormulaStep], default: [] })
+  steps: FormulaStep[];
+}
+
+@Schema({ _id: false })
 class VolatilitySignalConfig {
   @Prop({ required: true, default: 3 })
   minDirectionChanges: number;
@@ -137,6 +164,10 @@ class ConditionThresholds {
 
   @Prop({ type: InexistenciaThresholds, required: true })
   inexistencia: InexistenciaThresholds;
+
+  // Opcional: fórmulas por condición
+  @Prop({ type: Formula, required: false })
+  formula?: Formula;
 
   @Prop({ type: SignalsThresholds, required: true })
   signals: SignalsThresholds;
