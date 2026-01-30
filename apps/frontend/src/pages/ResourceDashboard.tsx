@@ -269,6 +269,52 @@ export function ResourceDashboard() {
 
       {/* Main Content */}
       <main className="max-w-[1800px] mx-auto px-6 py-6">
+            {/* Summary Cards - TailAdmin style small widgets */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-xs text-gray-500">Métricas disponibles</div>
+                    <div className="text-2xl font-bold">{Array.isArray(metrics) ? metrics.length : 0}</div>
+                  </div>
+                  <div className="text-blue-600 bg-blue-50 dark:bg-blue-900/20 rounded-full p-2">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3v18h18" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-xs text-gray-500">Registros cargados</div>
+                    <div className="text-2xl font-bold">{records ? records.length : 0}</div>
+                  </div>
+                  <div className="text-green-600 bg-green-50 dark:bg-green-900/20 rounded-full p-2">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8m4-4H8" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-xs text-gray-500">Inclinación</div>
+                    <div className={`text-2xl font-bold ${analysis?.evaluation?.inclination?.value ?? 0 > 0 ? 'text-green-600' : analysis?.evaluation?.inclination?.value ?? 0 < 0 ? 'text-red-600' : 'text-yellow-600'}`}>
+                      {analysis?.evaluation?.inclination?.value != null ? `${analysis.evaluation.inclination.value.toFixed(1)}%` : '--'}
+                    </div>
+                  </div>
+                  <div className="text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20 rounded-full p-2">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h4l3 8 4-16 3 8h4" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
         {/* Condition Cards - Horizontal Slider */}
         <div className="mb-6 relative -mx-6">
           <div
