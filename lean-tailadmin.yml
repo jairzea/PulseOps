@@ -1,0 +1,125 @@
+# Archivo generado: lean-tailadmin.yml
+# Basado en `lean.yml` con ajustes para integrar TailAdmin y componentes proporcionados
+# por el servidor MCP (webforge). Este plan describe las fases de limpieza y
+# refactorización del frontend usando los componentes oficiales de TailAdmin
+# y las recomendaciones obtenidas al analizar el dashboard de TailAdmin.
+
+rules:
+  - Conservar el branding del sidebar (icono y título de la aplicación) definido en `src/layout/AppSidebar.tsx`; no eliminarlo ni sustituirlo durante la limpieza.
+  - Mantener en el header el botón que colapsa/expande el sidebar, el cuadro de búsqueda, el ThemeToggleButton, el NotificationDropdown y el UserDropdown con su avatar.
+  - Conservar el directorio `src/components/header` y las utilidades necesarias (`src/components/ui/dropdown`) para no romper los dropdowns y menús del header mientras se eliminan otros componentes.
+  - Usar los componentes y composables provistos por TailAdmin (a través de webforge) siempre que sea posible para mantener consistencia visual y accesibilidad.
+  - Mapear los widgets y zonas del dashboard de TailAdmin (panels, cards, charts, lists) y priorizar su conservación o migración directa a los componentes oficiales.
+
+phases:
+  - id: analyze-tailadmin-dashboard
+    description: Analizar el dashboard de TailAdmin usando webforge para identificar componentes, regiones y widgets reutilizables.
+    timestamp: 2025-11-04T13:30:00Z
+    actions:
+      - type: command
+        command: npx @unlimitechcloud/coder-mcp-proxy@0.0.5 --target tailadmin-pro@2.2.0 --host mycloud-mcp-dev.us-east-1.elasticbeanstalk.com --port 80
+        summary: Levantar proxy webforge y conectarse al servidor TailAdmin remoto para inspeccionar metadatos de componentes.
+      - type: note
+        summary: Extraer catálogo de componentes del dashboard (cards, chart-widgets, tables, sidebar widgets, header items) y anotar sus ids/props.
+      - type: update_file
+        path: lean-tailadmin.yml
+        summary: Incorporar el inventario de componentes detectados y recomendaciones para cada zona del dashboard.
+
+  - id: remove-non-home-pages
+    description: Eliminar o consolidar páginas que no formen parte del flujo principal del dashboard.
+    timestamp: 2025-11-04T13:32:30Z
+    actions:
+      - type: delete_paths
+        paths:
+          - src/pages/AuthPages
+          - src/pages/Blank.tsx
+          - src/pages/Calendar.tsx
+          - src/pages/Charts
+          - src/pages/Forms
+          - src/pages/OtherPage
+          - src/pages/Tables
+          - src/pages/UiElements
+          - src/pages/UserProfiles.tsx
+      - type: update_file
+        path: src/App.tsx
+        summary: Quitar rutas e imports de páginas eliminadas y mantener únicamente las rutas necesarias para el Dashboard.
+
+  - id: prune-sidebar-menu
+    description: Ajustar el menú lateral para reflejar solo las entradas necesarias del Dashboard y usar componentes de TailAdmin.
+    timestamp: 2025-11-04T13:35:10Z
+    actions:
+      - type: note
+        path: src/layout/AppSidebar.tsx
+        summary: Asegurarse de mantener el icono y el título de la aplicación en la sección superior del sidebar.
+      - type: update_file
+        path: src/layout/AppSidebar.tsx
+        summary: Simplificar los items de navegación y eliminar secciones obsoletas; reemplazar elementos por `TailAdminSidebarItem` cuando aplique.
+
+  - id: integrate-tailadmin-components
+    description: Reemplazar/ajustar partes del frontend para usar componentes oficiales de TailAdmin detectados por webforge.
+    timestamp: 2025-11-04T13:40:00Z
+    actions:
+      - type: update_file
+        path: src/pages/Dashboard/Home.tsx
+        summary: Reemplazar layout y widgets por las composiciones oficiales de TailAdmin para mantener consistencia.
+      - type: update_file
+        path: src/layout/AppHeader.tsx
+        summary: Usar `TailAdminHeader` para asegurar comportamiento y estilos idénticos, manteniendo botones custom necesarios.
+      - type: update_file
+        path: src/layout/AppSidebar.tsx
+        summary: Utilizar `TailAdminSidebar` y componentes de navegación del catálogo cuando sea posible.
+
+  - id: remove-unused-components
+    description: Retirar componentes generales que quedaron sin uso tras la integración con TailAdmin.
+    timestamp: 2025-11-04T13:54:10Z
+    actions:
+      - type: note
+        path: src/components/header
+        summary: Mantener NotificationDropdown, UserDropdown y las piezas que soportan el cuadro de búsqueda junto con sus utilidades de dropdown, ya que el header depende de ellas.
+      - type: delete_paths
+        paths:
+          - src/components/UserProfile
+          - src/components/auth
+          - src/components/charts
+          - src/components/ecommerce
+          - src/components/form
+          - src/components/tables
+          - src/components/ui/alert
+          - src/components/ui/avatar
+          - src/components/ui/badge
+          - src/components/ui/button
+          - src/components/ui/images
+          - src/components/ui/modal
+          - src/components/ui/table
+          - src/components/ui/videos
+      - type: delete_files
+        paths:
+          - src/components/common/ChartTab.tsx
+          - src/components/common/ComponentCard.tsx
+          - src/components/common/GridShape.tsx
+          - src/components/common/ThemeTogglerTwo.tsx
+
+  - id: build-and-fix-css-warnings
+    description: Ejecutar el build y repetir correcciones hasta eliminar todas las advertencias de CSS.
+    timestamp: 2025-11-04T13:50:30Z
+    actions:
+      - type: command
+        command: npm run build
+        summary: Detectar advertencias sobre selectores ::-webkit-scrollbar-thumb y documentar cualquier warning pendiente.
+      - type: update_file
+        path: src/index.css
+        summary: Ajustar los estilos del scrollbar para evitar variantes dark dentro de pseudoelementos.
+      - type: command
+        command: npm run build
+        summary: Repetir el build hasta que no se reporten advertencias de CSS.
+
+  - id: finalize-tailadmin-integration
+    description: Pruebas finales, correcciones y documentación del cambio a TailAdmin.
+    timestamp: 2025-11-12T22:10:00Z
+    actions:
+      - type: command
+        command: npm run build
+        summary: Verificar que la aplicación compila correctamente usando los componentes de TailAdmin.
+      - type: update_file
+        path: docs/TailAdmin-INTEGRATION.md
+        summary: Documentar cómo se consumen los componentes desde webforge y cómo mantener compatibilidad.
