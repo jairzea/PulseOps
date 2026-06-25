@@ -1,40 +1,34 @@
 Feature: Gestión de Recursos en PulseOps
 
-  Como usuario autenticado de PulseOps
+  Como administrador de PulseOps
   Quiero gestionar recursos
-  Para monitorear los componentes del sistema
+  Para mantener al día al equipo evaluado
 
   Background:
-    Given el usuario está autenticado en PulseOps
+    Given el usuario está autenticado como administrador
     And está en la página de recursos
 
-  Scenario: Ver lista de recursos existentes
-    Then debe ver al menos un recurso en la lista
-    And cada recurso debe mostrar su nombre y tipo
+  Scenario: Ver recursos del seed en la lista
+    Then debe ver el recurso "E2E Poder" en la lista
+    And debe ver el recurso "E2E Peligro" en la lista
 
   Scenario: Crear un nuevo recurso
-    When el usuario hace clic en "New" o "Create Resource"
-    And completa el formulario con:
-      | campo | valor                  |
-      | name  | Test Resource Cypress  |
-      | type  | Server                 |
-    And hace clic en "Save" o "Create"
+    When crea un recurso con datos de factory
     Then debe ver un mensaje de éxito
     And el nuevo recurso debe aparecer en la lista
 
-  Scenario: Buscar un recurso específico
-    When el usuario escribe "Test" en el campo de búsqueda
-    Then debe ver solo los recursos que coinciden con "Test"
-
-  Scenario: Editar un recurso existente
-    When el usuario hace clic en editar del primer recurso
-    And modifica el nombre a "Updated Resource"
-    And guarda los cambios
+  Scenario: Editar un recurso recién creado
+    When crea un recurso con datos de factory
+    And edita ese recurso con un nuevo nombre
     Then debe ver un mensaje de éxito
     And el recurso debe mostrar el nuevo nombre
 
-  Scenario: Eliminar un recurso
-    When el usuario hace clic en eliminar del último recurso
-    And confirma la eliminación
+  Scenario: Eliminar un recurso recién creado
+    When crea un recurso con datos de factory
+    And elimina ese recurso
     Then debe ver un mensaje de éxito
     And el recurso no debe aparecer en la lista
+
+  Scenario: Validación al crear con datos inválidos
+    When intenta crear un recurso sin nombre
+    Then debe ver un error de validación en el formulario de recurso

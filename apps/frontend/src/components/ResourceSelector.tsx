@@ -7,6 +7,7 @@ interface ResourceSelectorProps {
     onSelect: (resourceId: string) => void;
     loading?: boolean;
     disabled?: boolean;
+    testId?: string;
 }
 
 export function ResourceSelector({
@@ -14,6 +15,7 @@ export function ResourceSelector({
     onSelect,
     loading = false,
     disabled = false,
+    testId,
 }: ResourceSelectorProps) {
     // Memoizar fetchFunction para evitar re-renders innecesarios
     const fetchFunction = useCallback(async (page: number, search: string, pageSize: number) => {
@@ -49,6 +51,7 @@ export function ResourceSelector({
                 placeholder="Select a resource"
                 disabled={disabled}
                 pageSize={15}
+                testId={testId}
             />
         </div>
     );

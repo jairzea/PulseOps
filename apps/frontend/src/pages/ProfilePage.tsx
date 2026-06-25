@@ -4,6 +4,7 @@ import { authAPI } from '../services/authService';
 import { apiClient } from '../services/apiClient';
 import { showToast } from '../utils/toast';
 import { UserWithMetadata } from '../types/auth';
+import { tid } from '../utils/testId';
 
 export function ProfilePage() {
     const { user, refreshUser } = useAuth();
@@ -164,6 +165,7 @@ export function ProfilePage() {
                                 {!isEditing && (
                                     <button
                                         onClick={() => setIsEditing(true)}
+                                        data-testid={tid('profile', 'edit')}
                                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
                                     >
                                         Editar
@@ -181,6 +183,7 @@ export function ProfilePage() {
                                             type="text"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
+                                            data-testid={tid('profile', 'name')}
                                             className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             required
                                         />
@@ -193,6 +196,7 @@ export function ProfilePage() {
                                             type="email"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
+                                            data-testid={tid('profile', 'email')}
                                             className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             required
                                         />
@@ -200,6 +204,7 @@ export function ProfilePage() {
                                     <div className="flex gap-3">
                                         <button
                                             type="submit"
+                                            data-testid={tid('profile', 'save')}
                                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                                         >
                                             Guardar Cambios
@@ -221,11 +226,11 @@ export function ProfilePage() {
                                 <div className="space-y-3">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Nombre</label>
-                                        <p className="text-gray-900 dark:text-white">{profile?.name}</p>
+                                        <p className="text-gray-900 dark:text-white" data-testid={tid('profile', 'name-value')}>{profile?.name}</p>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Email</label>
-                                        <p className="text-gray-900 dark:text-white">{profile?.email}</p>
+                                        <p className="text-gray-900 dark:text-white" data-testid={tid('profile', 'email-value')}>{profile?.email}</p>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Rol</label>

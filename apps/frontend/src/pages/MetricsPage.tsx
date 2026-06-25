@@ -16,6 +16,7 @@ import { Metric, metricsApi } from '../services/apiClient';
 import { useToast } from '../hooks/useToast';
 import { PaginationControls } from '../components/PaginationControls';
 import { SearchInput } from '../components/SearchInput';
+import { tid } from '../utils/testId';
 
 export const MetricsPage: React.FC = () => {
     const { user } = useAuth();
@@ -113,6 +114,7 @@ export const MetricsPage: React.FC = () => {
                     action={{
                         label: 'Crear Métrica',
                         onClick: () => setIsModalOpen(true),
+                        testId: tid('metrics', 'create'),
                     }}
                 />
 
@@ -122,6 +124,7 @@ export const MetricsPage: React.FC = () => {
                         value={pagination.search}
                         onChange={pagination.setSearch}
                         placeholder="Buscar por etiqueta, clave o descripción..."
+                        testId={tid('metrics', 'search')}
                     />
                 </div>
 
@@ -149,7 +152,7 @@ export const MetricsPage: React.FC = () => {
                     )}
 
                     {!loading && !error && metrics.length > 0 && (
-                        <table className="w-full fade-in">
+                        <table className="w-full fade-in" data-testid={tid('metrics', 'list')}>
                             <thead className="bg-gray-100 dark:bg-gray-800">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
@@ -171,7 +174,7 @@ export const MetricsPage: React.FC = () => {
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                                 {metrics.map((metric) => (
-                                    <tr key={metric.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200 ease-in-out">
+                                    <tr key={metric.id} data-testid={tid('metrics', 'row', metric.id)} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200 ease-in-out">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm font-medium text-gray-900 dark:text-white">{metric.label}</div>
                                         </td>
@@ -192,6 +195,7 @@ export const MetricsPage: React.FC = () => {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => handleEdit(metric)}
+                                                    data-testid={tid('metrics', 'row', metric.id, 'edit')}
                                                     className="p-2 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all duration-200 ease-in-out hover:scale-105"
                                                     title="Editar métrica"
                                                 >
@@ -209,6 +213,7 @@ export const MetricsPage: React.FC = () => {
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(metric.id, metric.label)}
+                                                    data-testid={tid('metrics', 'row', metric.id, 'delete')}
                                                     className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                                                     title="Eliminar métrica"
                                                 >

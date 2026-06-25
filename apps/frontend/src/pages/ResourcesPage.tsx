@@ -18,6 +18,7 @@ import { Resource, apiClient, resourcesApi } from '../services/apiClient';
 import { useToast } from '../hooks/useToast';
 import { PaginationControls } from '../components/PaginationControls';
 import { SearchInput } from '../components/SearchInput';
+import { tid } from '../utils/testId';
 
 const ROLE_TYPE_LABELS: Record<string, string> = {
     DEV: 'Desarrollador',
@@ -173,6 +174,7 @@ export const ResourcesPage: React.FC = () => {
                     action={{
                         label: 'Crear Recurso',
                         onClick: () => handleOpenModal(),
+                        testId: tid('resources', 'create'),
                     }}
                 />
 
@@ -204,6 +206,7 @@ export const ResourcesPage: React.FC = () => {
                         value={pagination.search}
                         onChange={pagination.setSearch}
                         placeholder="Buscar por nombre, rol o ID..."
+                        testId={tid('resources', 'search')}
                     />
                 </div>
 
@@ -246,7 +249,7 @@ export const ResourcesPage: React.FC = () => {
                     )}
 
                     {!loading && !error && resources.length > 0 && (
-                        <table className="w-full fade-in">
+                        <table className="w-full fade-in" data-testid={tid('resources', 'list')}>
                             <thead className="bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
@@ -268,7 +271,7 @@ export const ResourcesPage: React.FC = () => {
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                                 {resources.map((resource) => (
-                                    <tr key={resource.id} className="hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all duration-200 ease-in-out">
+                                    <tr key={resource.id} data-testid={tid('resources', 'row', resource.id)} className="hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all duration-200 ease-in-out">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
                                                 <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
@@ -315,6 +318,7 @@ export const ResourcesPage: React.FC = () => {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => handleOpenModal(resource)}
+                                                    data-testid={tid('resources', 'row', resource.id, 'edit')}
                                                     className="p-2 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all duration-200 ease-in-out hover:scale-105"
                                                     title="Editar recurso"
                                                 >
@@ -332,6 +336,7 @@ export const ResourcesPage: React.FC = () => {
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(resource)}
+                                                    data-testid={tid('resources', 'row', resource.id, 'delete')}
                                                     className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                                                     title="Eliminar recurso"
                                                 >

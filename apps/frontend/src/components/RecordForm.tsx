@@ -8,6 +8,7 @@ import { /* Resource, */ Metric, Record as MetricRecord } from '../services/apiC
 import { apiClient } from '../services/apiClient';
 import { AutocompleteInfinite } from './AutocompleteInfinite';
 import * as yup from 'yup';
+import { tid } from '../utils/testId';
 
 interface RecordFormProps {
     // resources: Resource[]; // Ya no se necesita - AutocompleteInfinite obtiene desde backend
@@ -159,6 +160,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                         setValue('resourceId', value);
                         setSelectedResourceId(value);
                     }}
+                    testId={tid('record-form', 'resource')}
                     fetchFunction={async (page, search, pageSize) => {
                         const response = await apiClient.getResourcesPaginated({
                             page,
@@ -187,7 +189,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                     </p>
                 )}
                 {errors.resourceId && (
-                    <p className="mt-1 text-sm text-red-500">{errors.resourceId.message}</p>
+                    <p className="mt-1 text-sm text-red-500" data-testid={tid('record-form', 'resource-error')}>{errors.resourceId.message}</p>
                 )}
             </div>
 
@@ -203,6 +205,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                             id="date"
                             {...register('date')}
                             disabled={isSubmitting}
+                            data-testid={tid('record-form', 'date')}
                             onChange={(e) => {
                                 setValue('date', e.target.value);
                                 setSelectedDate(e.target.value);
@@ -327,6 +330,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                                                     disabled={isSubmitting}
                                                     step="any"
                                                     placeholder="0"
+                                                    data-testid={tid('record-form', 'value', metric.key)}
                                                     className="flex-1 px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                                                 />
                                                 {metric.unit && (
@@ -376,6 +380,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                     type="button"
                     onClick={onCancel}
                     disabled={isSubmitting}
+                    data-testid={tid('record-form', 'cancel')}
                     className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Cancelar
@@ -383,6 +388,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
                 <button
                     type="submit"
                     disabled={isSubmitting || !selectedResourceId || loadingMetrics || resourceMetrics.length === 0}
+                    data-testid={tid('record-form', 'save')}
                     className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isSubmitting ? (isEditing ? 'Actualizando...' : 'Guardando...') : (isEditing ? 'Actualizar Registro' : 'Crear Registro')}

@@ -14,6 +14,7 @@ import {
 import { UsersService } from './users.service';
 import { UpdateUserDto, RegisterDto, ChangePasswordDto } from './dto/user.dto';
 import { DemoOrJwtAuthGuard } from '../auth/guards/demo-or-jwt.guard';
+import { ForbiddenException } from '../common/exceptions/app.exception';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import {
@@ -56,7 +57,7 @@ export class UsersController {
   ) {
     // Los usuarios solo pueden ver su propio perfil, los admin pueden ver todos
     if (currentUser.role !== UserRole.ADMIN && currentUser.userId !== id) {
-      throw new Error('Forbidden');
+      throw new ForbiddenException('No puedes acceder a este usuario');
     }
 
     const user = await this.usersService.findById(id);
@@ -102,7 +103,7 @@ export class UsersController {
     // Los admin pueden actualizar cualquier perfil
     if (currentUser.role !== UserRole.ADMIN) {
       if (currentUser.userId !== id) {
-        throw new Error('Forbidden');
+        throw new ForbiddenException('No puedes modificar este usuario');
       }
       // Los usuarios no pueden cambiar su propio rol
       delete updateUserDto.role;
@@ -128,7 +129,7 @@ export class UsersController {
   ) {
     // Solo el propio usuario puede cambiar su contraseña
     if (currentUser.userId !== id) {
-      throw new Error('Forbidden');
+      throw new ForbiddenException('Solo puedes cambiar tu propia contraseña');
     }
 
     await this.usersService.changePassword(id, changePasswordDto);

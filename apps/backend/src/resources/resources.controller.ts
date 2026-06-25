@@ -77,13 +77,6 @@ export class ResourcesController {
     @Query('search') search?: string,
     @CurrentUser() currentUser?: any,
   ) {
-    console.log('[ResourcesController] findAll - currentUser:', {
-      exists: !!currentUser,
-      id: currentUser?.id,
-      role: currentUser?.role,
-      isAdmin: currentUser?.role === UserRole.ADMIN
-    });
-    
     // Si hay parámetros de paginación explícitos, usar endpoint paginado
     if (page !== undefined || pageSize !== undefined || search !== undefined) {
       const paginationQuery: PaginationQueryDto = {

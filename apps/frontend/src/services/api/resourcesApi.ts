@@ -16,10 +16,10 @@ export interface Resource {
 }
 
 export interface ResourceStats {
-  total: number;
-  active: number;
-  inactive: number;
-  byRoleType: Record<string, number>;
+  totalResources: number;
+  activeResources: number;
+  devResources: number;
+  tlResources: number;
 }
 
 export interface CreateResourceDto {

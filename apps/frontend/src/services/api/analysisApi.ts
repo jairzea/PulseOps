@@ -1,5 +1,5 @@
 /**
- * Analysis API - Servicio específico para análisis de métricas
+ * Analysis API - Evaluación de métricas y panorama del equipo.
  */
 import { httpClient } from './httpClient';
 import { buildQueryString } from '../../utils/query';
@@ -52,17 +52,23 @@ export interface EvaluateParams {
   windowSize?: number;
 }
 
-/**
- * Interface para el servicio de análisis
- */
-export interface AnalysisApi {
-  evaluate(params: EvaluateParams): Promise<AnalysisResult>;
+export interface OverviewResource {
+  resourceId: string;
+  name: string;
+  roleType: string;
+  metricKey: string | null;
+  condition: string | null;
+  inclination: number | null;
 }
 
-/**
- * Implementación del servicio de análisis
- */
-class AnalysisApiImpl implements AnalysisApi {
+export interface TeamOverview {
+  totalResources: number;
+  evaluated: number;
+  byCondition: Record<string, number>;
+  resources: OverviewResource[];
+}
+
+class AnalysisApiImpl {
   private readonly basePath = '/analysis';
 
   async evaluate(params: EvaluateParams): Promise<AnalysisResult> {
@@ -73,9 +79,11 @@ class AnalysisApiImpl implements AnalysisApi {
     });
     return httpClient.get<AnalysisResult>(`${this.basePath}/evaluate${query}`);
   }
+
+  async getOverview(windowSize?: number): Promise<TeamOverview> {
+    const qs = windowSize ? `?windowSize=${windowSize}` : '';
+    return httpClient.get<TeamOverview>(`${this.basePath}/overview${qs}`);
+  }
 }
 
-/**
- * Instancia exportada del servicio de análisis
- */
 export const analysisApi = new AnalysisApiImpl();

@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import Lottie from 'lottie-react';
 import deleteAnimation from '../assets/animations/delete-animation.json';
 import warningAnimation from '../assets/animations/warning-animation.json';
+import { tid } from '../utils/testId';
 
 export type ConfirmModalVariant = 'danger' | 'warning' | 'info' | 'success';
 
@@ -168,6 +169,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                             <button
                                 onClick={onClose}
                                 disabled={isLoading}
+                                data-testid={tid('confirm', 'cancel')}
                                 className="flex-1 px-4 py-3 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-700 rounded-lg transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900"
                             >
                                 {cancelText}
@@ -175,6 +177,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                             <button
                                 onClick={handleConfirm}
                                 disabled={isLoading}
+                                data-testid={tid('confirm', 'accept')}
                                 className={`flex-1 px-4 py-3 ${styles.button} text-white rounded-lg transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 flex items-center justify-center gap-2`}
                             >
                                 {isLoading ? (

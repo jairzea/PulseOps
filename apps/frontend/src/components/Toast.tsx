@@ -6,6 +6,7 @@ import Lottie from 'lottie-react';
 import { Toast as ToastType } from '../stores/toastStore';
 import successAnimation from '../assets/animations/success.json';
 import errorAnimation from '../assets/animations/error.json';
+import { tid } from '../utils/testId';
 
 interface ToastProps {
     toast: ToastType;
@@ -134,6 +135,8 @@ export const Toast: React.FC<ToastProps> = ({ toast, onRemove }) => {
         min-w-[320px] max-w-md
       `}
             role="alert"
+            data-testid={tid('toast')}
+            data-toast-type={toast.type}
         >
             {getIcon()}
 

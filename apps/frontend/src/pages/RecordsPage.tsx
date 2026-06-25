@@ -19,6 +19,7 @@ import { useConfirmModal } from '../hooks/useConfirmModal';
 import { useToast } from '../hooks/useToast';
 import { recordsApi, resourcesApi, metricsApi } from '../services/apiClient';
 import type { Record as MetricRecord, Resource, Metric } from '../services/apiClient';
+import { tid } from '../utils/testId';
 
 export const RecordsPage: React.FC = () => {
     const { user } = useAuth();
@@ -144,6 +145,7 @@ export const RecordsPage: React.FC = () => {
                     action={{
                         label: 'Agregar Registro',
                         onClick: () => setModalOpen(true),
+                        testId: tid('records', 'create'),
                     }}
                 />
 
@@ -171,6 +173,7 @@ export const RecordsPage: React.FC = () => {
                                     <AutocompleteInfinite
                                         value={selectedResourceId}
                                         onChange={setSelectedResourceId}
+                                        testId={tid('records', 'filter-resource')}
                                         fetchFunction={async (page, search, pageSize) => {
                                             const response = await resourcesApi.getPaginated({
                                                 page,
@@ -202,6 +205,7 @@ export const RecordsPage: React.FC = () => {
                                     <AutocompleteInfinite
                                         value={selectedMetricKey}
                                         onChange={setSelectedMetricKey}
+                                        testId={tid('records', 'filter-metric')}
                                         fetchFunction={async (page, search, pageSize) => {
                                             const response = await metricsApi.getPaginated({
                                                 page,
@@ -233,6 +237,7 @@ export const RecordsPage: React.FC = () => {
                                     value={pagination.search}
                                     onChange={pagination.setSearch}
                                     placeholder="Buscar por semana..."
+                                    testId={tid('records', 'search')}
                                 />
                             </div>
                         )}
@@ -262,7 +267,7 @@ export const RecordsPage: React.FC = () => {
                                     </button>
                                 </div>
                             ) : (
-                                <table className="w-full fade-in">
+                                <table className="w-full fade-in" data-testid={tid('records', 'list')}>
                                     <thead className="bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
                                         <tr>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-400 uppercase tracking-wider">
@@ -285,7 +290,7 @@ export const RecordsPage: React.FC = () => {
 
                                     <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                                         {records.map((record) => (
-                                            <tr key={record.id} className="hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all duration-200 ease-in-out">
+                                            <tr key={record.id} data-testid={tid('records', 'row', record.id)} className="hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all duration-200 ease-in-out">
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className="px-2 py-1 text-xs font-mono rounded bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
                                                         {formatWeek(record.week)}
@@ -307,6 +312,7 @@ export const RecordsPage: React.FC = () => {
                                                         <button
                                                             onClick={() => handleEdit(record)}
                                                             disabled={deletingId === record.id}
+                                                            data-testid={tid('records', 'row', record.id, 'edit')}
                                                             className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                             title="Editar registro"
                                                         >
@@ -317,6 +323,7 @@ export const RecordsPage: React.FC = () => {
                                                         <button
                                                             onClick={() => handleDelete(record)}
                                                             disabled={deletingId === record.id}
+                                                            data-testid={tid('records', 'row', record.id, 'delete')}
                                                             className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                             title="Eliminar registro"
                                                         >

@@ -119,7 +119,8 @@ export function usePaginatedData<T>({
    */
   useEffect(() => {
     loadData();
-  }, [loadData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadData, ...dependencies]);
 
   return {
     data,
