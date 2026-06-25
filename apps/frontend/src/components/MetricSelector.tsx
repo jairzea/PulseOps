@@ -7,6 +7,7 @@ interface MetricSelectorProps {
     onSelect: (metricKey: string) => void;
     loading?: boolean;
     resourceId?: string | null;
+    testId?: string;
 }
 
 export function MetricSelector({
@@ -14,6 +15,7 @@ export function MetricSelector({
     onSelect,
     loading = false,
     resourceId,
+    testId,
 }: MetricSelectorProps) {
     // Memoizar fetchFunction para evitar re-renders innecesarios
     // Incluye resourceId en dependencias para que se actualice cuando cambia el recurso
@@ -83,6 +85,7 @@ export function MetricSelector({
                 fetchFunction={fetchFunction}
                 placeholder="Select a metric"
                 pageSize={15}
+                testId={testId}
             />
         </div>
     );

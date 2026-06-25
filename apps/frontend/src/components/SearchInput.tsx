@@ -5,6 +5,7 @@ interface SearchInputProps {
     onChange: (value: string) => void;
     placeholder?: string;
     className?: string;
+    testId?: string;
 }
 
 /**
@@ -24,6 +25,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     onChange,
     placeholder = 'Buscar...',
     className = '',
+    testId,
 }) => {
     return (
         <div className={`relative ${className}`}>
@@ -47,6 +49,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
+                data-testid={testId}
                 className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ease-in-out hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-md"
             />
             {value && (

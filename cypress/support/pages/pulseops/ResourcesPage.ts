@@ -1,144 +1,139 @@
+import { BasePulseOpsPage } from './BasePulseOpsPage';
+import { testTags } from '../../utils/testTags';
+import type { ResourceInput } from '../../factories/resourceFactory';
+
 /**
- * ResourcesPage - Page Object for PulseOps resources management
+ * ResourcesPage - Page Object del CRUD de Recursos.
+ *
+ * Selecciona exclusivamente por `data-testid` (contextos `resources` y
+ * `resource-form`); sin selectores por texto ni CSS. Delega en Widgets.
  */
-export class ResourcesPage {
-    // Selectors
-    private selectors = {
-        pageHeading: 'h1:contains("Resources"), h2:contains("Resources")',
-        createButton: 'button:contains("New"), button:contains("Create"), button:contains("Add Resource")',
-        searchInput: 'input[type="search"], input[placeholder*="Search"], input[placeholder*="Buscar"]',
-        resourcesTable: 'table, [role="table"]',
-        resourceRow: 'table tbody tr, [role="row"]',
-        
-        // Form fields
-        nameInput: 'input[name="name"], input[id*="name"]',
-        typeSelect: 'select[name="type"], select[id*="type"]',
-        saveButton: 'button:contains("Save"), button:contains("Create"), button[type="submit"]',
-        cancelButton: 'button:contains("Cancel")',
-        
-        // Actions
-        editButton: 'button:contains("Edit"), [aria-label*="Edit"]',
-        deleteButton: 'button:contains("Delete"), [aria-label*="Delete"]',
-        confirmDelete: 'button:contains("Confirm"), button:contains("Yes"), button:contains("Delete")',
-        
-        // Messages
-        successMessage: '[role="alert"], .success, .toast',
-        errorMessage: '[role="alert"], .error',
-    };
+export class ResourcesPage extends BasePulseOpsPage {
+  constructor() {
+    super('resources');
+  }
 
-    /**
-     * Visit resources page
-     */
-    visit(): void {
-        cy.visit('/resources');
-    }
+  /** Selector dentro del formulario de recurso. */
+  private form(...segments: string[]): string {
+    return testTags.child('resource-form').selector(segments.join('-'));
+  }
 
-    /**
-     * Verify resources page is displayed
-     */
-    verifyPageDisplayed(): void {
-        cy.url().should('include', '/resources');
-        // At least one of these should be visible
-        cy.get('body').then(($body) => {
-            if ($body.find(this.selectors.pageHeading).length > 0) {
-                cy.get(this.selectors.pageHeading).should('be.visible');
-            } else {
-                cy.get(this.selectors.resourcesTable).should('be.visible');
-            }
-        });
-    }
+  visit(): this {
+    cy.visit('/resources');
+    // Espera a que la página cargue (el botón crear es estable y siempre presente).
+    cy.get(this.sel('create'), { timeout: 20000 }).should('be.visible');
+    return this;
+  }
 
-    /**
-     * Verify table or list is displayed
-     */
-    verifyTableOrListDisplayed(): void {
-        cy.get(this.selectors.resourcesTable).should('be.visible');
-    }
+  openCreate(): this {
+    cy.getButton(this.sel('create')).click();
+    // Espera a que el formulario del modal esté listo antes de interactuar.
+    cy.getInput(this.form('name')).should('be.visible');
+    return this;
+  }
 
-    /**
-     * Verify at least one resource exists
-     */
-    verifyResourcesExist(): void {
-        cy.get(this.selectors.resourceRow).should('have.length.at.least', 1);
-    }
+  fillForm(data: Partial<ResourceInput>): this {
+    if (data.name !== undefined) cy.getInput(this.form('name')).clear().type(data.name);
+    if (data.roleType !== undefined) cy.getSelect(this.form('role-type')).select(data.roleType);
+    return this;
+  }
 
-    /**
-     * Click create/new button
-     */
-    clickCreateButton(): void {
-        cy.get(this.selectors.createButton).first().click();
-    }
+  save(): this {
+    cy.getButton(this.form('save')).click();
+    return this;
+  }
 
-    /**
-     * Fill resource form
-     */
-    fillResourceForm(name: string, type: string): void {
-        cy.get(this.selectors.nameInput).clear().type(name);
-        cy.get(this.selectors.typeSelect).select(type);
-    }
+  /** Guarda y captura el toast de éxito en vivo (efímero tras la recarga). */
+  saveAndExpectToast(): this {
+    cy.getButton(this.form('save')).click();
+    cy.get(this.selRaw('toast'), { timeout: 20000 }).should('be.visible');
+    return this;
+  }
 
-    /**
-     * Click save button
-     */
-    clickSaveButton(): void {
-        cy.get(this.selectors.saveButton).first().click();
-    }
+  cancel(): this {
+    cy.getButton(this.form('cancel')).click();
+    return this;
+  }
 
-    /**
-     * Create a new resource
-     */
-    createResource(name: string, type: string): void {
-        this.clickCreateButton();
-        this.fillResourceForm(name, type);
-        this.clickSaveButton();
-    }
+  create(data: ResourceInput): this {
+    return this.openCreate().fillForm(data).saveAndExpectToast();
+  }
 
-    /**
-     * Search for resource
-     */
-    searchResource(searchTerm: string): void {
-        cy.get(this.selectors.searchInput).clear().type(searchTerm);
-    }
+  search(term: string): this {
+    // force: un toast transitorio puede solaparse momentáneamente con la búsqueda.
+    cy.getInput(this.sel('search')).clear({ force: true }).type(term, { force: true });
+    return this;
+  }
 
-    /**
-     * Click edit on first resource
-     */
-    clickEditFirstResource(): void {
-        cy.get(this.selectors.resourceRow).first().find(this.selectors.editButton).click();
-    }
+  /** Selector de filas por prefijo de testid (independiente del id concreto). */
+  private anyRow(): string {
+    return '[data-testid^="cy-resources-row-"]';
+  }
 
-    /**
-     * Click delete on last resource
-     */
-    clickDeleteLastResource(): void {
-        cy.get(this.selectors.resourceRow).last().find(this.selectors.deleteButton).click();
-    }
+  /** Edita la primera fila visible (úsese tras `search` para acotar a una). */
+  editFirstVisible(data: Partial<ResourceInput>): this {
+    cy.get(this.anyRow()).first().find('[data-testid$="-edit"]').click();
+    cy.getInput(this.form('name')).should('be.visible');
+    this.fillForm(data);
+    return this.saveAndExpectToast();
+  }
 
-    /**
-     * Confirm deletion
-     */
-    confirmDeletion(): void {
-        cy.get(this.selectors.confirmDelete).click();
-    }
+  /** Elimina la primera fila visible (úsese tras `search` para acotar a una). */
+  deleteFirstVisible(): this {
+    cy.get(this.anyRow()).first().find('[data-testid$="-delete"]').click();
+    cy.getButton(this.selRaw('confirm', 'accept')).click();
+    return this;
+  }
 
-    /**
-     * Verify success message
-     */
-    verifySuccessMessage(): void {
-        cy.get(this.selectors.successMessage).should('be.visible');
-    }
+  editById(id: string, data: Partial<ResourceInput>): this {
+    cy.getButton(this.sel('row', id, 'edit')).click();
+    this.fillForm(data);
+    return this.save();
+  }
 
-    /**
-     * Verify resource in list
-     */
-    verifyResourceInList(resourceName: string): void {
-        cy.contains(this.selectors.resourceRow, resourceName).should('be.visible');
-    }
+  deleteById(id: string): this {
+    cy.getButton(this.sel('row', id, 'delete')).click();
+    cy.getButton(this.selRaw('confirm', 'accept')).click();
+    return this;
+  }
 
-    /**
-     * Verify resource not in list
-     */
-    verifyResourceNotInList(resourceName: string): void {
-        cy.contains(this.selectors.resourceRow, resourceName).should('not.exist');
-    }
+  // --- Aserciones de alto nivel ---
+
+  shouldShowInList(name: string): this {
+    cy.get(this.sel('list'), { timeout: 15000 }).should('contain', name);
+    return this;
+  }
+
+  /** Busca por nombre y verifica que aparece en el listado (acota a 1 fila). */
+  searchAndShouldShow(name: string): this {
+    return this.search(name).shouldShowInList(name);
+  }
+
+  shouldNotShowInList(name: string): this {
+    // Tras eliminar el único match, la tabla puede no renderizarse (estado vacío).
+    // Aserción robusta: ninguna fila contiene el nombre buscado.
+    cy.contains('[data-testid^="cy-resources-row-"]', name).should('not.exist');
+    return this;
+  }
+
+  shouldShowRow(id: string): this {
+    cy.get(this.sel('row', id)).should('exist');
+    return this;
+  }
+
+  shouldNotShowRow(id: string): this {
+    cy.get(this.sel('row', id)).should('not.exist');
+    return this;
+  }
+
+  shouldShowToast(text?: string): this {
+    const toast = cy.get(this.selRaw('toast')).should('be.visible');
+    if (text) toast.and('contain', text);
+    return this;
+  }
+
+  shouldShowFormError(): this {
+    cy.get(this.form('name-error')).should('be.visible');
+    return this;
+  }
 }

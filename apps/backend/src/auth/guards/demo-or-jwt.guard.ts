@@ -7,7 +7,10 @@ export class DemoOrJwtAuthGuard implements CanActivate {
   constructor(private readonly configService: ConfigService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const authMode = this.configService.get<string>('AUTH_MODE', 'demo');
+    const nodeEnv = this.configService.get<string>('NODE_ENV');
+    const configuredMode = this.configService.get<string>('AUTH_MODE', 'demo');
+    // En producción el modo demo queda deshabilitado: siempre se exige JWT.
+    const authMode = nodeEnv === 'production' ? 'jwt' : configuredMode;
     const request = context.switchToHttp().getRequest();
 
     if (authMode === 'demo') {

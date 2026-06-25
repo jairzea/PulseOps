@@ -1,69 +1,47 @@
 import { Given, When, Then } from '@badeball/cypress-cucumber-preprocessor';
 import { UsersPage } from '../../../support/pages/pulseops/UsersPage';
+import { makeUser, type UserInput } from '../../../support/factories';
 
-const usersPage = new UsersPage();
+const users = new UsersPage();
 
-// Given steps
+let createdEmail = '';
+let createdName = '';
+
+// Background
 Given('está en la página de usuarios', () => {
-    usersPage.visit();
-    usersPage.verifyPageDisplayed();
+    users.visit();
 });
 
-// Then steps - Verification
-Then('debe ver la página de gestión de usuarios', () => {
-    usersPage.verifyPageDisplayed();
+// When
+When('crea un usuario con datos de factory', () => {
+    const data: UserInput = makeUser();
+    createdEmail = data.email;
+    createdName = data.name;
+    users.create(data);
 });
 
-Then('debe ver una tabla de usuarios', () => {
-    usersPage.verifyUsersTableExists();
+When('elimina ese usuario', () => {
+    users.search(createdEmail).deleteByText(createdEmail);
 });
 
-Then('debe ver las columnas {string}, {string}, {string}', (col1: string, col2: string, col3: string) => {
-    usersPage.verifyTableColumns([col1, col2, col3]);
+When('intenta crear un usuario sin email', () => {
+    // name/password válidos pero email vacío → validación nativa bloquea el submit.
+    users.openCreate().fillForm({ name: 'Sin Email', password: 'Test1234!' }).save();
 });
 
-// When steps - Actions
-When('hace clic en Nuevo Usuario', () => {
-    usersPage.clickNewUser();
+// Then
+Then('debe ver el usuario {string} en la lista', (email: string) => {
+    users.shouldShowInList(email);
 });
 
-When('hace clic en Crear Usuario', () => {
-    usersPage.clickCreateUser();
+Then('el nuevo usuario debe aparecer en la lista', () => {
+    users.search(createdEmail).shouldShowInList(createdName);
 });
 
-Then('debe ver el modal de creación de usuario', () => {
-    usersPage.verifyModalDisplayed();
+Then('el usuario no debe aparecer en la lista', () => {
+    users.search(createdEmail).shouldNotShowInList(createdEmail);
 });
 
-Then('debe ver el campo {string}', (fieldName: string) => {
-    usersPage.verifyFieldExists(fieldName);
-});
-
-Then('debe ver el selector de {string}', (fieldName: string) => {
-    usersPage.verifyFieldExists(fieldName);
-});
-
-When('completa el formulario de usuario:', (dataTable: any) => {
-    const data: Record<string, string> = {};
-    dataTable.hashes().forEach((row: any) => {
-        data[row.campo] = row.valor;
-    });
-    usersPage.fillUserForm(data);
-});
-
-Then('el usuario debe aparecer en la lista', () => {
-    // Wait for the user to be added
-    cy.wait(1000);
-});
-
-Then('debe ver al menos {int} usuario en la tabla', (count: number) => {
-    usersPage.verifyAtLeastOneUser();
-});
-
-Then('debe ver el usuario administrador en la lista', () => {
-    usersPage.verifyAdminUserExists();
-});
-
-Then('no debe ver el modal de creación de usuario', () => {
-    usersPage.verifyModalNotDisplayed();
+Then('el formulario de usuario sigue abierto', () => {
+    users.shouldKeepFormOpen();
 });

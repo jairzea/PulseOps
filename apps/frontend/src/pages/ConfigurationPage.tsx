@@ -12,6 +12,7 @@ import { PermissionFeedback } from '../components/PermissionFeedback';
 import { useAuth } from '../contexts/AuthContext';
 import { useConditionsMetadata } from '../hooks/useConditionsMetadata';
 import { ColorPicker } from '../components/ColorPicker';
+import { tid } from '../utils/testId';
 
 // Step Components
 interface StepProps {
@@ -390,6 +391,7 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
                             type="number"
                             value={getValue(['afluencia', 'minInclination'])}
                             onChange={(e) => updateThreshold(['afluencia', 'minInclination'], Number(e.target.value))}
+                            data-testid={tid('configuration', 'threshold', 'afluencia-min')}
                             className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                             step="0.1"
                         />
@@ -1039,7 +1041,7 @@ function SummaryCard({ title, color, items }: SummaryCardProps) {
     };
 
     return (
-        <div className={`rounded-lg p-4 border ${colorClasses[color]}`}>
+        <div className={`rounded-lg p-4 border ${colorClasses[color]}`} data-testid={tid('configuration', 'summary', title)}>
             <h3 className={`text-sm font-semibold mb-3 ${textColorClasses[color]}`}>
                 {title}
             </h3>
@@ -1236,6 +1238,7 @@ export function ConfigurationPage() {
                                     {!isEditing ? (
                                         <button
                                             onClick={handleEdit}
+                                            data-testid={tid('configuration', 'edit')}
                                             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                                         >
                                             Editar Configuración
@@ -1339,6 +1342,7 @@ export function ConfigurationPage() {
                             {currentStep < 4 ? (
                                 <button
                                     onClick={nextStep}
+                                    data-testid={tid('configuration', 'next')}
                                     className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
                                 >
                                     Siguiente →
@@ -1346,6 +1350,7 @@ export function ConfigurationPage() {
                             ) : (
                                 <button
                                     onClick={handleSave}
+                                    data-testid={tid('configuration', 'save')}
                                     className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
                                 >
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

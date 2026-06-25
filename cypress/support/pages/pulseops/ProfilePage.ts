@@ -1,161 +1,60 @@
+import { BasePulseOpsPage } from './BasePulseOpsPage';
+
 /**
- * ProfilePage - Page Object for PulseOps user profile page
+ * ProfilePage - Page Object del perfil de usuario.
+ *
+ * Selecciona exclusivamente por `data-testid` (contexto `profile`); sin
+ * selectores por texto ni CSS. La edición es en línea: botón Editar → campos →
+ * Guardar; en modo lectura el nombre/email se exponen como `*-value`.
  */
-export class ProfilePage {
-    // Selectors
-    private selectors = {
-        pageTitle: 'h1, h2',
-        userName: '[class*="name"], .user-name',
-        userEmail: '[class*="email"], .user-email',
-        userRole: '[class*="role"], .user-role',
-        userStatus: ':contains("Estado")',
-        lastAccess: ':contains("Último acceso")',
-        memberSince: ':contains("Miembro desde")',
-        
-        // Edit section
-        editButton: 'button:contains("Editar")',
-        nameInput: 'input[name="name"], input[placeholder*="Nombre"]',
-        emailInput: 'input[name="email"], input[type="email"]',
-        saveButton: 'button:contains("Guardar")',
-        cancelButton: 'button:contains("Cancelar")',
-        
-        // Security section
-        securitySection: ':contains("Seguridad")',
-        changePasswordButton: 'button:contains("Cambiar Contraseña")',
-    };
+export class ProfilePage extends BasePulseOpsPage {
+  constructor() {
+    super('profile');
+  }
 
-    /**
-     * Visit profile page
-     */
-    visit(): void {
-        cy.visit('/profile');
-    }
+  visit(): this {
+    cy.visit('/profile');
+    // El perfil hace fetch del usuario antes de renderizar; espera el botón Editar.
+    cy.get(this.sel('edit'), { timeout: 20000 }).should('be.visible');
+    return this;
+  }
 
-    /**
-     * Verify profile page is displayed
-     */
-    verifyPageDisplayed(): void {
-        cy.url().should('include', '/profile');
-        cy.contains('Mi Perfil').should('be.visible');
-    }
+  enterEdit(): this {
+    cy.getButton(this.sel('edit')).click();
+    return this;
+  }
 
-    /**
-     * Verify user name is displayed
-     */
-    verifyUserNameDisplayed(): void {
-        cy.contains('Administrador').should('be.visible');
-    }
+  updateName(name: string): this {
+    cy.getInput(this.sel('name')).clear().type(name);
+    return this;
+  }
 
-    /**
-     * Verify user email is displayed
-     */
-    verifyUserEmailDisplayed(): void {
-        cy.contains('admin@pulseops.com').should('be.visible');
-    }
+  save(): this {
+    cy.getButton(this.sel('save')).click();
+    return this;
+  }
 
-    /**
-     * Verify user role is displayed
-     */
-    verifyUserRoleDisplayed(): void {
-        cy.contains(/Admin|Administrador/i).should('be.visible');
-    }
+  /** Edita el nombre y guarda en un solo paso. */
+  editName(name: string): this {
+    return this.enterEdit().updateName(name).save();
+  }
 
-    /**
-     * Verify account status
-     */
-    verifyAccountStatus(): void {
-        cy.contains('Estado').should('be.visible');
-        cy.contains('Activo').should('be.visible');
-    }
+  // --- Aserciones ---
 
-    /**
-     * Verify last access date
-     */
-    verifyLastAccess(): void {
-        cy.contains('Último acceso').should('be.visible');
-    }
+  /** El nombre en modo lectura coincide con el valor dado. */
+  shouldShowName(name: string): this {
+    cy.get(this.sel('name-value')).should('contain', name);
+    return this;
+  }
 
-    /**
-     * Verify registration date
-     */
-    verifyRegistrationDate(): void {
-        cy.contains('Miembro desde').should('be.visible');
-    }
+  shouldShowEmail(email: string): this {
+    cy.get(this.sel('email-value')).should('contain', email);
+    return this;
+  }
 
-    /**
-     * Click edit button
-     */
-    clickEditButton(): void {
-        // Find the edit button in the personal information section
-        cy.contains('Información Personal').parent().parent()
-          .find('button').contains('Editar').click();
-    }
-
-    /**
-     * Verify edit form is displayed
-     */
-    verifyEditFormDisplayed(): void {
-        cy.get('input[type="email"]').should('be.visible');
-    }
-
-    /**
-     * Verify edit form is not displayed
-     */
-    verifyEditFormNotDisplayed(): void {
-        // Check that inputs are in read-only mode or not editable
-        cy.contains('Información Personal').should('be.visible');
-    }
-
-    /**
-     * Verify name field is editable
-     */
-    verifyNameFieldEditable(): void {
-        // Just verify there's at least one input visible (in edit mode)
-        cy.get('input').should('have.length.at.least', 1);
-    }
-
-    /**
-     * Verify email field is editable
-     */
-    verifyEmailFieldEditable(): void {
-        // Verify email input is visible
-        cy.get('input[type="email"]').should('be.visible');
-    }
-
-    /**
-     * Click cancel button
-     */
-    clickCancel(): void {
-        cy.contains('button', 'Cancelar').click();
-    }
-
-    /**
-     * Verify security section
-     */
-    verifySecuritySection(): void {
-        cy.contains('Seguridad').should('be.visible');
-    }
-
-    /**
-     * Verify change password button
-     */
-    verifyChangePasswordButton(): void {
-        cy.contains('button', 'Cambiar Contraseña').should('be.visible');
-    }
-
-    /**
-     * Verify security message
-     */
-    verifySecurityMessage(): void {
-        cy.contains(/mantener|segura|contraseña/i).should('be.visible');
-    }
-
-    /**
-     * Verify profile in read mode
-     */
-    verifyReadMode(): void {
-        // Verify that the main information is visible but not in edit mode
-        cy.contains('Información Personal').should('be.visible');
-        cy.contains('Administrador').should('be.visible');
-    }
+  shouldShowToast(text?: string): this {
+    const toast = cy.get(this.selRaw('toast')).should('be.visible');
+    if (text) toast.and('contain', text);
+    return this;
+  }
 }

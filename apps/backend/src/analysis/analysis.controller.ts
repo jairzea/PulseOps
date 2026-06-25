@@ -20,4 +20,10 @@ export class AnalysisController {
       parsedWindowSize,
     );
   }
+
+  @Get('overview')
+  overview(@Query('windowSize') windowSize?: string) {
+    const parsedWindowSize = windowSize ? parseInt(windowSize, 10) : undefined;
+    return this.analysisService.overview(parsedWindowSize);
+  }
 }

@@ -14,7 +14,9 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "seed:demo": "ts-node -r tsconfig-paths/register src/scripts/seed-demo-data.ts",
-    "seed:admin": "ts-node -r tsconfig-paths/register src/scripts/seed-admin.ts"
+    "seed:admin": "ts-node -r tsconfig-paths/register src/scripts/seed-admin.ts",
+    "seed:e2e": "ts-node -r tsconfig-paths/register src/scripts/seed-e2e-data.ts",
+    "seed:presentation": "ts-node -r tsconfig-paths/register src/scripts/seed-presentation-data.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",

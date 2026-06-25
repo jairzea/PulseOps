@@ -7,6 +7,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { metricFormSchema, MetricFormData } from '../schemas/metricFormSchema';
 import { Resource, Metric } from '../services/apiClient';
 import { LoadingButton } from './LoadingButton';
+import { tid } from '../utils/testId';
 
 interface MetricFormProps {
     onSubmit: (data: MetricFormData) => void;
@@ -115,11 +116,12 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                     id="key"
                     type="text"
                     placeholder="ej: commits_per_week"
+                    data-testid={tid('metric-form', 'key')}
                     className={errors.key ? 'form-input-error' : 'form-input'}
                     disabled={!!initialMetric || loading}
                 />
                 {errors.key && (
-                    <p className="form-error">{errors.key.message}</p>
+                    <p className="form-error" data-testid={tid('metric-form', 'key-error')}>{errors.key.message}</p>
                 )}
                 <p className="form-help">
                     Solo letras minúsculas, números y guiones bajos
@@ -136,11 +138,12 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                     id="label"
                     type="text"
                     placeholder="ej: Commits por Semana"
+                    data-testid={tid('metric-form', 'label')}
                     className={errors.label ? 'form-input-error' : 'form-input'}
                     disabled={loading}
                 />
                 {errors.label && (
-                    <p className="form-error">{errors.label.message}</p>
+                    <p className="form-error" data-testid={tid('metric-form', 'label-error')}>{errors.label.message}</p>
                 )}
             </div>
 
@@ -154,6 +157,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                     id="description"
                     rows={3}
                     placeholder="Describe qué mide esta métrica..."
+                    data-testid={tid('metric-form', 'description')}
                     className={errors.description ? 'form-textarea-error' : 'form-textarea'}
                     disabled={loading}
                 />
@@ -174,6 +178,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                         id="unit"
                         type="text"
                         placeholder="ej: commits, horas"
+                        data-testid={tid('metric-form', 'unit')}
                         className={errors.unit ? 'form-input-error' : 'form-input'}
                         disabled={loading}
                     />
@@ -190,6 +195,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                     <select
                         {...register('periodType')}
                         id="periodType"
+                        data-testid={tid('metric-form', 'period-type')}
                         className={errors.periodType ? 'form-select-error' : 'form-select'}
                         disabled={loading}
                     >
@@ -222,6 +228,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                         onFocus={() => setShowDropdown(true)}
                         placeholder="Buscar recursos..."
                         disabled={loading}
+                        data-testid={tid('metric-form', 'resource-search')}
                         className="form-input"
                     />
 
@@ -234,6 +241,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                                     type="button"
                                     onClick={() => addResource(resource)}
                                     disabled={loading}
+                                    data-testid={tid('metric-form', 'resource-option', resource.id)}
                                     className="form-dropdown-item"
                                 >
                                     <div className="flex items-center justify-between">
@@ -252,7 +260,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                 {selectedResources.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
                         {selectedResources.map((resource) => (
-                            <div key={resource.id} className="form-chip">
+                            <div key={resource.id} className="form-chip" data-testid={tid('metric-form', 'resource-chip')}>
                                 <span>{resource.name}</span>
                                 <button
                                     type="button"
@@ -274,7 +282,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                 )}
 
                 {errors.resourceIds && (
-                    <p className="form-error">{errors.resourceIds.message}</p>
+                    <p className="form-error" data-testid={tid('metric-form', 'resource-ids-error')}>{errors.resourceIds.message}</p>
                 )}
                 <p className="form-help">
                     Busca y selecciona los recursos a los que aplica esta métrica
@@ -296,6 +304,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                         type="submit"
                         loading={false}
                         variant="primary"
+                        data-testid={tid('metric-form', 'save')}
                     >
                         {initialMetric ? 'Actualizar' : 'Crear'} Métrica
                     </LoadingButton>

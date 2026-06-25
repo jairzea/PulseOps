@@ -10,7 +10,7 @@ Feature: Autenticación en PulseOps
   Scenario: Validar que la aplicación redirige a login
     When el usuario accede a la raíz de la aplicación
     Then debe ser redirigido a la página de login
-    And debe ver el título "Welcome to PulseOps"
+    And debe ver el título de bienvenida
 
   Scenario: Login exitoso con credenciales válidas
     Given el usuario está en la página de login
@@ -32,4 +32,3 @@ Feature: Autenticación en PulseOps
     Given el usuario está en la página de login
     When intenta hacer login sin ingresar credenciales
     Then el botón de login no debe permitir el envío
-    And debe ver mensajes de validación

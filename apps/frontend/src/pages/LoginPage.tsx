@@ -8,6 +8,7 @@ import backgroundLogin from '../assets/img/background-login.png';
 import eyeAnimation from '../assets/eye-opening.json';
 import { PulseLoader } from '../components/PulseLoader';
 import { useAuth } from '../contexts/AuthContext';
+import { tid } from '../utils/testId';
 
 export function LoginPage() {
     const navigate = useNavigate();
@@ -18,6 +19,7 @@ export function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
     const [isLoggingIn, setIsLoggingIn] = useState(false);
+    const [loginError, setLoginError] = useState<string | null>(null);
     const [isAnimating, setIsAnimating] = useState(false);
     const [showLogin, setShowLogin] = useState(false);
     const lottieRef = useRef<any>(null);
@@ -60,6 +62,7 @@ export function LoginPage() {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoggingIn(true);
+        setLoginError(null);
 
         try {
             await login({ email, password });
@@ -131,6 +134,7 @@ export function LoginPage() {
         } catch (error) {
             // El error ya se muestra en el toast desde AuthContext
             console.error('Login error:', error);
+            setLoginError(error instanceof Error ? error.message : 'Credenciales inválidas');
         } finally {
             setIsLoggingIn(false);
         }
@@ -224,7 +228,7 @@ export function LoginPage() {
 
                             {/* Título */}
                             <div className="mb-6 text-center">
-                                <h1 className="text-2xl font-bold text-gray-800 mb-1">Welcome to PulseOps</h1>
+                                <h1 data-testid={tid('login', 'title')} className="text-2xl font-bold text-gray-800 mb-1">Welcome to PulseOps</h1>
                                 <p className="text-gray-600 text-sm">Sign in by entering your credentials</p>
                             </div>
 
@@ -242,6 +246,7 @@ export function LoginPage() {
                                         </div>
                                         <input
                                             type="email"
+                                            data-testid={tid('login', 'email')}
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             className="flex-1 bg-transparent text-gray-800 placeholder-gray-400 focus:outline-none text-sm"
@@ -264,6 +269,7 @@ export function LoginPage() {
                                         </div>
                                         <input
                                             type={showPassword ? 'text' : 'password'}
+                                            data-testid={tid('login', 'password')}
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             className="flex-1 bg-transparent text-gray-800 placeholder-gray-400 focus:outline-none text-sm"
@@ -302,10 +308,18 @@ export function LoginPage() {
                                     </a>
                                 </div>
 
+                                {/* Mensaje de error de login */}
+                                {loginError && (
+                                    <p data-testid={tid('login', 'error')} role="alert" className="text-xs text-red-600 text-center">
+                                        {loginError}
+                                    </p>
+                                )}
+
                                 {/* Botones */}
                                 <div className="flex items-center gap-4 pt-1">
                                     <button
                                         type="submit"
+                                        data-testid={tid('login', 'submit')}
                                         disabled={isLoggingIn}
                                         className={`flex-1 py-2.5 px-6 rounded-full font-semibold text-sm text-white transition-all duration-300 ${isLoggingIn
                                             ? 'bg-blue-400 cursor-not-allowed'

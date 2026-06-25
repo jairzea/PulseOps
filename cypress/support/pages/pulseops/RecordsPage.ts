@@ -1,106 +1,95 @@
+import { BasePulseOpsPage } from './BasePulseOpsPage';
+import { testTags } from '../../utils/testTags';
+
 /**
- * RecordsPage - Page Object for PulseOps records management
+ * RecordsPage - Page Object del CRUD de Registros.
+ *
+ * Selecciona exclusivamente por `data-testid` (contextos `records` y
+ * `record-form`); sin selectores por texto ni CSS. Delega en Widgets.
+ *
+ * Notas de dominio:
+ * - El listado solo aparece tras elegir recurso + métrica en los filtros
+ *   (autocompletes `records-filter-resource` / `records-filter-metric`).
+ * - El formulario asocia recurso (autocomplete) y muestra un input por cada
+ *   métrica del recurso; `value-<metricKey>`. Se rellena el primero disponible.
  */
-export class RecordsPage {
-    private selectors = {
-        pageHeading: 'h1, h2',
-        addButton: 'button:contains("Agregar"), button:contains("Crear"), button:contains("Nuevo")',
-        searchInput: 'input[type="search"], input[placeholder*="buscar" i]',
-        
-        // Table
-        recordsTable: 'table, [role="table"]',
-        tableRows: 'tbody tr, [role="row"]',
-        tableHeaders: 'thead th, [role="columnheader"]',
-        
-        // Filters
-        resourceFilter: 'select[name="resource"], #resourceFilter',
-        metricFilter: 'select[name="metric"], #metricFilter',
-        
-        // Form
-        resourceSelect: 'select[name="resource"], #resource',
-        metricSelect: 'select[name="metric"], #metric',
-        valueInput: 'input[name="value"], #value',
-        saveButton: 'button[type="submit"], button:contains("Guardar")',
-        
-        // Actions
-        detailsButton: 'button:contains("Detalle"), button:contains("Ver"), [aria-label*="ver" i]',
-        
-        // Messages
-        successMessage: '[role="alert"], .alert-success, .success',
-    };
+export class RecordsPage extends BasePulseOpsPage {
+  constructor() {
+    super('records');
+  }
 
-    visit(): void {
-        cy.visit('/records');
-    }
+  private form(...segments: string[]): string {
+    return testTags.child('record-form').selector(segments.join('-'));
+  }
 
-    verifyPageDisplayed(): void {
-        cy.url().should('include', '/records');
-        cy.get(this.selectors.pageHeading).should('be.visible');
-    }
+  visit(): this {
+    cy.visit('/records');
+    cy.get(this.sel('create'), { timeout: 20000 }).should('be.visible');
+    return this;
+  }
 
-    verifyRecordsTableExists(): void {
-        cy.get(this.selectors.recordsTable).should('be.visible');
-    }
+  /** Abre un autocomplete, escribe un término y elige la primera opción. */
+  private pickOption(baseTestId: string, term?: string): void {
+    cy.get(`[data-testid="${baseTestId}"]`, { timeout: 20000 }).click({ force: true });
+    if (term) cy.get(`[data-testid="${baseTestId}"]`).type(term, { force: true });
+    cy.get(`[data-testid^="${baseTestId}-option-"]`, { timeout: 20000 }).first().click({ force: true });
+  }
 
-    verifyTableColumns(columns: string[]): void {
-        columns.forEach(column => {
-            cy.get(this.selectors.tableHeaders).should('contain', column);
-        });
-    }
+  /** Filtra por un recurso del seed (con métricas) y su primera métrica. */
+  filterFirstResourceAndMetric(): this {
+    this.pickOption('cy-records-filter-resource', 'E2E Poder');
+    // El selector de métrica se habilita al elegir recurso; espera a que sea usable.
+    cy.get('[data-testid="cy-records-filter-metric"]', { timeout: 20000 }).should('not.be.disabled');
+    this.pickOption('cy-records-filter-metric');
+    return this;
+  }
 
-    clickAddButton(): void {
-        cy.get(this.selectors.addButton).first().click();
-    }
+  openCreate(): this {
+    cy.getButton(this.sel('create')).click();
+    cy.get(this.form('resource'), { timeout: 15000 }).should('be.visible');
+    return this;
+  }
 
-    fillRecordForm(data: Record<string, string>): void {
-        if (data.resource) {
-            cy.get(this.selectors.resourceSelect).select(data.resource);
-        }
-        if (data.metric) {
-            cy.get(this.selectors.metricSelect).select(data.metric);
-        }
-        if (data.value) {
-            cy.get(this.selectors.valueInput).clear().type(data.value);
-        }
-    }
+  /** Crea un registro para un recurso del seed (que tiene métricas asociadas). */
+  create(value: number, date = '2026-02-09'): this {
+    this.openCreate();
+    this.pickOption('cy-record-form-resource', 'E2E Poder');
+    cy.getInput(this.form('date')).clear({ force: true }).type(date, { force: true });
+    // Los inputs de valor aparecen tras cargar las métricas del recurso elegido.
+    cy.get('[data-testid^="cy-record-form-value-"]', { timeout: 30000 })
+      .first()
+      .clear({ force: true })
+      .type(String(value), { force: true });
+    cy.getButton(this.form('save')).click();
+    return this;
+  }
 
-    clickSave(): void {
-        cy.get(this.selectors.saveButton).click();
-    }
+  private anyRow(): string {
+    return '[data-testid^="cy-records-row-"]';
+  }
 
-    verifySuccessMessage(): void {
-        cy.get(this.selectors.successMessage, { timeout: 10000 }).should('be.visible');
-    }
+  deleteFirstVisible(): this {
+    cy.get(this.anyRow()).first().find('[data-testid$="-delete"]').click();
+    cy.getButton(this.selRaw('confirm', 'accept')).click();
+    return this;
+  }
 
-    verifyRecordInList(): void {
-        cy.get(this.selectors.tableRows).should('have.length.at.least', 1);
-    }
+  // --- Aserciones ---
 
-    filterByResource(resourceName: string): void {
-        cy.get(this.selectors.resourceFilter).select(resourceName);
-    }
+  shouldShowList(): this {
+    cy.get(this.sel('list'), { timeout: 20000 }).should('be.visible');
+    return this;
+  }
 
-    filterByMetric(metricName: string): void {
-        cy.get(this.selectors.metricFilter).select(metricName);
-    }
+  shouldShowToast(text?: string): this {
+    const toast = cy.get(this.selRaw('toast')).should('be.visible');
+    if (text) toast.and('contain', text);
+    return this;
+  }
 
-    verifyFilteredByResource(resourceName: string): void {
-        cy.get(this.selectors.tableRows).each(($row) => {
-            cy.wrap($row).should('contain', resourceName);
-        });
-    }
-
-    verifyFilteredByMetric(metricName: string): void {
-        cy.get(this.selectors.tableRows).each(($row) => {
-            cy.wrap($row).should('contain', metricName);
-        });
-    }
-
-    clickDetailsFirstRecord(): void {
-        cy.get(this.selectors.tableRows).first().find(this.selectors.detailsButton).click();
-    }
-
-    verifyRecordDetails(): void {
-        cy.contains('Timestamp').should('be.visible');
-    }
+  /** El formulario de creación queda visible (validación bloqueó el submit). */
+  shouldKeepFormOpen(): this {
+    cy.get(this.form('resource')).should('be.visible');
+    return this;
+  }
 }

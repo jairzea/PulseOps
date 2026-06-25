@@ -4,6 +4,9 @@ import { RulesService } from '../rules/rules.service';
 import { PlaybooksService } from '../playbooks/playbooks.service';
 import { analysisEngine } from '@pulseops/analysis-engine';
 import { ConfigurationService } from '../configuration/configuration.service';
+import { UsersService } from '../users/users.service';
+import { MetricsService } from '../metrics/metrics.service';
+import { UserRole } from '../users/schemas/user.schema';
 import {
   MetricSeries,
   MetricConditionEvaluation,
@@ -21,6 +24,20 @@ export interface EvaluationResponse {
   } | null;
 }
 
+export interface OverviewResponse {
+  totalResources: number;
+  evaluated: number;
+  byCondition: Record<string, number>;
+  resources: Array<{
+    resourceId: string;
+    name: string;
+    roleType: string;
+    metricKey: string | null;
+    condition: string | null;
+    inclination: number | null;
+  }>;
+}
+
 @Injectable()
 export class AnalysisService {
   constructor(
@@ -28,6 +45,8 @@ export class AnalysisService {
     private readonly rulesService: RulesService,
     private readonly playbooksService: PlaybooksService,
     private readonly configurationService: ConfigurationService,
+    private readonly usersService: UsersService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   async evaluate(
@@ -91,6 +110,62 @@ export class AnalysisService {
             version: playbook.version,
           }
         : null,
+    };
+  }
+
+  /**
+   * Panorama del equipo: evalúa la primera métrica de cada recurso (usuario role
+   * 'user') y agrega el conteo por condición operativa. Pensado para una vista
+   * de overview; calcula todo en el backend para evitar N llamadas desde el front.
+   */
+  async overview(windowSize?: number): Promise<OverviewResponse> {
+    const users = await this.usersService.findAll(false);
+    const resources = users.filter((u) => u.role === UserRole.USER);
+
+    const byCondition: Record<string, number> = {};
+    const rows: OverviewResponse['resources'] = [];
+    let evaluated = 0;
+
+    for (const u of resources) {
+      const resourceId = u._id.toString();
+      const name = u.name;
+      const roleType = u.resourceProfile?.resourceType ?? 'OTHER';
+
+      // Métricas asociadas al recurso; tomamos la primera con histórico evaluable.
+      let metricKey: string | null = null;
+      let condition: string | null = null;
+      let inclination: number | null = null;
+
+      try {
+        const metrics = await this.metricsService.findByResource(resourceId);
+        for (const m of metrics) {
+          try {
+            const res = await this.evaluate(resourceId, m.key, windowSize);
+            metricKey = m.key;
+            condition = res.evaluation.condition;
+            inclination = res.evaluation.inclination?.value ?? null;
+            break; // primera métrica evaluable
+          } catch {
+            // sin records para esa métrica; probar la siguiente
+          }
+        }
+      } catch {
+        // recurso sin métricas asociadas
+      }
+
+      if (condition) {
+        evaluated++;
+        byCondition[condition] = (byCondition[condition] ?? 0) + 1;
+      }
+
+      rows.push({ resourceId, name, roleType, metricKey, condition, inclination });
+    }
+
+    return {
+      totalResources: resources.length,
+      evaluated,
+      byCondition,
+      resources: rows,
     };
   }
 }

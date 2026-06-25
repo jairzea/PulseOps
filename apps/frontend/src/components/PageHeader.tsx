@@ -10,6 +10,7 @@ export interface PageHeaderProps {
         label: string;
         icon?: React.ReactNode;
         onClick: () => void;
+        testId?: string;
     };
 }
 
@@ -23,6 +24,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ title, description, acti
             {action && (
                 <button
                     onClick={action.onClick}
+                    data-testid={action.testId}
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors flex items-center gap-2"
                 >
                     {action.icon || (
