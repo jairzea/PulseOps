@@ -60,3 +60,7 @@ cypress.env.json
 cypress/reports/
 cucumber-report.html
 cucumber-messages.ndjson
+
+# Notas de reuniones (locales, no fuente)
+reunion*.md
+*Notas de Gemini.md
