@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { resourceFormSchema, ResourceFormData } from '../schemas/resourceFormSchema';
 import { Resource, Metric, apiClient } from '../services/apiClient';
+import { tid } from '../utils/testId';
 
 interface ResourceFormProps {
     resource?: Resource | null;
@@ -127,11 +128,12 @@ export const ResourceForm: React.FC<ResourceFormProps> = ({
                     id="name"
                     type="text"
                     {...register('name')}
+                    data-testid={tid('resource-form', 'name')}
                     className={errors.name ? 'form-input-error' : 'form-input'}
                     placeholder="Ej: Juan Pérez"
                     disabled={isSubmitting}
                 />
-                {errors.name && <p className="form-error">{errors.name.message}</p>}
+                {errors.name && <p className="form-error" data-testid={tid('resource-form', 'name-error')}>{errors.name.message}</p>}
             </div>
 
             {/* Tipo de Rol */}
@@ -142,6 +144,7 @@ export const ResourceForm: React.FC<ResourceFormProps> = ({
                 <select
                     id="roleType"
                     {...register('roleType')}
+                    data-testid={tid('resource-form', 'role-type')}
                     className={errors.roleType ? 'form-select-error' : 'form-select'}
                     disabled={isSubmitting}
                 >
@@ -160,6 +163,7 @@ export const ResourceForm: React.FC<ResourceFormProps> = ({
                     id="isActive"
                     type="checkbox"
                     {...register('isActive')}
+                    data-testid={tid('resource-form', 'active')}
                     className="form-checkbox"
                     disabled={isSubmitting}
                 />
@@ -251,6 +255,7 @@ export const ResourceForm: React.FC<ResourceFormProps> = ({
                         <button
                             type="button"
                             onClick={onCancel}
+                            data-testid={tid('resource-form', 'cancel')}
                             className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
                         >
                             Cancelar
@@ -258,6 +263,7 @@ export const ResourceForm: React.FC<ResourceFormProps> = ({
                     )}
                     <button
                         type="submit"
+                        data-testid={tid('resource-form', 'save')}
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
                     >
                         {resource ? 'Actualizar Recurso' : 'Crear Recurso'}

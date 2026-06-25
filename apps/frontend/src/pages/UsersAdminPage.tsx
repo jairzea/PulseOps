@@ -3,13 +3,13 @@ import { authAPI } from '../services/authService';
 import { showToast } from '../utils/toast';
 import { UserWithMetadata, RegisterData } from '../types/auth';
 import { useResources } from '../hooks/useResources';
-import { ResourceSelector } from '../components/ResourceSelector';
 import { usePagination } from '../hooks/usePagination';
 import { SearchInput } from '../components/SearchInput';
 import { PaginationControls } from '../components/PaginationControls';
 import { TableSkeleton } from '../components/TableSkeleton';
 import { PageHeader } from '../components/PageHeader';
 import type { PaginationMeta } from '../types/pagination';
+import { tid } from '../utils/testId';
 
 export function UsersAdminPage() {
     const [users, setUsers] = useState<UserWithMetadata[]>([]);
@@ -110,6 +110,7 @@ export function UsersAdminPage() {
                     action={{
                         label: 'Nuevo Usuario',
                         onClick: () => setShowCreateModal(true),
+                        testId: tid('users', 'create'),
                     }}
                 />
 
@@ -120,6 +121,7 @@ export function UsersAdminPage() {
                         onChange={pagination.setSearch}
                         placeholder="Buscar por nombre, email o rol..."
                         className="max-w-md"
+                        testId={tid('users', 'search')}
                     />
                 </div>
 
@@ -128,7 +130,7 @@ export function UsersAdminPage() {
                     {isLoading && <TableSkeleton columns={5} rows={6} showActions={true} />}
 
                     {!isLoading && (
-                        <table className="w-full fade-in">
+                        <table className="w-full fade-in" data-testid={tid('users', 'list')}>
                             <thead className="bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
@@ -150,7 +152,7 @@ export function UsersAdminPage() {
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-800 transition-colors duration-300">
                                 {users.map((user) => (
-                                    <tr key={user.id} className="hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-all duration-200 ease-in-out">
+                                    <tr key={user.id} data-testid={tid('users', 'row', user.id)} className="hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-all duration-200 ease-in-out">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center font-semibold text-white text-sm">
@@ -191,6 +193,7 @@ export function UsersAdminPage() {
                                             <div className="flex items-center gap-2">
                                                 <button
                                                     onClick={() => handleToggleUserStatus(user.id, user.isActive)}
+                                                    data-testid={tid('users', 'row', user.id, 'toggle')}
                                                     className="p-2 text-yellow-600 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
                                                     title={user.isActive ? 'Desactivar' : 'Activar'}
                                                 >
@@ -200,6 +203,7 @@ export function UsersAdminPage() {
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteUser(user.id)}
+                                                    data-testid={tid('users', 'row', user.id, 'delete')}
                                                     className="p-2 text-red-600 dark:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
                                                     title="Eliminar"
                                                 >
@@ -249,6 +253,7 @@ export function UsersAdminPage() {
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    data-testid={tid('user-form', 'name')}
                                     className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required
                                 />
@@ -261,6 +266,7 @@ export function UsersAdminPage() {
                                     type="email"
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    data-testid={tid('user-form', 'email')}
                                     className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required
                                 />
@@ -273,6 +279,7 @@ export function UsersAdminPage() {
                                     type="password"
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    data-testid={tid('user-form', 'password')}
                                     className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required
                                     minLength={6}
@@ -285,6 +292,7 @@ export function UsersAdminPage() {
                                 <select
                                     value={formData.role}
                                     onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'user' })}
+                                    data-testid={tid('user-form', 'role')}
                                     className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value="user">Usuario</option>
@@ -294,6 +302,7 @@ export function UsersAdminPage() {
                             <div className="flex gap-3 pt-4">
                                 <button
                                     type="submit"
+                                    data-testid={tid('user-form', 'save')}
                                     className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                                 >
                                     Crear Usuario
@@ -305,6 +314,7 @@ export function UsersAdminPage() {
                                         setFormData({ email: '', password: '', name: '', role: 'user' });
                                         setSelectedResourceId(null);
                                     }}
+                                    data-testid={tid('user-form', 'cancel')}
                                     className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
                                 >
                                     Cancelar

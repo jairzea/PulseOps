@@ -22,6 +22,7 @@ interface AutocompleteInfiniteProps {
     className?: string;
     error?: boolean;
     pageSize?: number;
+    testId?: string;
 }
 
 export const AutocompleteInfinite: React.FC<AutocompleteInfiniteProps> = ({
@@ -33,6 +34,7 @@ export const AutocompleteInfinite: React.FC<AutocompleteInfiniteProps> = ({
     className = '',
     error = false,
     pageSize = 20,
+    testId,
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -175,6 +177,7 @@ export const AutocompleteInfinite: React.FC<AutocompleteInfiniteProps> = ({
                     onKeyDown={handleKeyDown}
                     placeholder={placeholder}
                     disabled={disabled}
+                    data-testid={testId}
                     className={`w-full px-4 py-2 bg-white dark:bg-gray-800 border rounded-lg text-gray-900 dark:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 ${error ? 'border-red-500' : 'border-gray-200 dark:border-gray-700'
                         } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-text'}`}
                 />
@@ -206,6 +209,7 @@ export const AutocompleteInfinite: React.FC<AutocompleteInfiniteProps> = ({
                                 <div
                                     key={option.value}
                                     onClick={() => handleOptionClick(option.value)}
+                                    data-testid={testId ? `${testId}-option-${option.value}` : undefined}
                                     className={`px-4 py-2 cursor-pointer transition-colors ${index === highlightedIndex
                                         ? 'bg-blue-50 dark:bg-blue-900/20'
                                         : 'hover:bg-gray-100 dark:hover:bg-gray-700'

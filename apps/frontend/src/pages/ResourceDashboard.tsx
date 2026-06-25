@@ -12,6 +12,7 @@ import { ConditionCard } from '../components/ConditionCard';
 import { RecordModal } from '../components/RecordModal';
 import { useRecordsStore } from '../stores/recordsStore';
 import { useAuth } from '../contexts/AuthContext';
+import { tid } from '../utils/testId';
 
 export function ResourceDashboard() {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
@@ -243,6 +244,7 @@ export function ResourceDashboard() {
                 <ResourceSelector
                   selectedId={selectedResourceId}
                   onSelect={setSelectedResourceId}
+                  testId={tid('dashboard', 'resource-select')}
                 />
               )}
               <MetricSelector
@@ -250,6 +252,7 @@ export function ResourceDashboard() {
                 onSelect={setSelectedMetricKey}
                 loading={loadingMetrics}
                 resourceId={selectedResourceId}
+                testId={tid('dashboard', 'metric-select')}
               />
             </div>
 
@@ -304,6 +307,8 @@ export function ResourceDashboard() {
                         conditionRefs.current.delete(conditionMeta.condition);
                       }
                     }}
+                    data-testid={isActive ? tid('dashboard', 'condition') : undefined}
+                    data-condition={isActive ? conditionMeta.condition : undefined}
                     className={`flex-shrink-0 w-64 relative transition-all duration-[2000ms] ease-in-out ${isActive ? 'z-20' : 'z-0 hover:scale-105'
                       }`}
                     style={{
@@ -331,7 +336,7 @@ export function ResourceDashboard() {
         {/* Chart + Analysis Panel */}
         <div className="grid grid-cols-12 gap-6 mb-6">
           {/* Chart - 8 columns */}
-          <div className="col-span-8">
+          <div className="col-span-8" data-testid={tid('dashboard', 'chart')}>
             <HistoricalChart
               records={records}
               metricName={selectedMetric?.label || 'Metric'}
@@ -358,8 +363,18 @@ export function ResourceDashboard() {
                   <div className="animate-pulse h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
                   <div className="animate-pulse h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
                 </div>
-              ) : analysis?.evaluation?.inclination?.value != null ? (
+              ) : analysis?.evaluation?.condition ? (
                 <div className="space-y-6 transition-all duration-700 ease-in-out">
+                  {/* Condición operativa resultante (estable para pruebas E2E, sin animación).
+                      Se muestra siempre que hay evaluación, incluso si la inclinación es nula
+                      (p. ej. INEXISTENCIA con valores en cero). */}
+                  <div
+                    data-testid={tid('dashboard', 'analysis-condition')}
+                    data-condition={analysis.evaluation.condition}
+                    className="text-sm font-semibold text-gray-700 dark:text-gray-300"
+                  >
+                    {analysis.evaluation.condition}
+                  </div>
                   {/* Inclinación */}
                   <div className="transition-all duration-700 ease-in-out">
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Inclinación</div>
