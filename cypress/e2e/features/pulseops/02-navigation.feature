@@ -8,30 +8,30 @@ Feature: Navegación en PulseOps
     Given el usuario está autenticado en PulseOps
 
   Scenario: Navegar al Dashboard
-    When el usuario visita la URL "/dashboard"
-    Then debe ver la página del dashboard
-    And la URL debe contener "/dashboard"
+    When el usuario navega a "dashboard"
+    Then debe ver el módulo "dashboard"
 
   Scenario: Navegar a Recursos
-    When el usuario visita la URL "/resources"
-    Then debe ver la página de recursos
-    And la URL debe contener "/resources"
-    And debe ver una tabla o lista de recursos
+    When el usuario navega a "resources"
+    Then debe ver el módulo "resources"
 
   Scenario: Navegar a Métricas
-    When el usuario visita la URL "/metrics"
-    Then debe ver la página de métricas
-    And la URL debe contener "/metrics"
-    And debe ver una tabla o lista de métricas
+    When el usuario navega a "metrics"
+    Then debe ver el módulo "metrics"
 
   Scenario: Navegar a Registros
-    When el usuario visita la URL "/records"
-    Then debe ver la página de registros
-    And la URL debe contener "/records"
-    And debe ver una tabla o lista de registros
+    When el usuario navega a "records"
+    Then debe ver el módulo "records"
+
+  Scenario: Navegar a Configuración
+    When el usuario navega a "configuration"
+    Then debe ver el módulo "configuration"
 
   Scenario: Cerrar sesión
-    When el usuario hace clic en el menú de usuario
-    And selecciona la opción de cerrar sesión
+    When el usuario cierra sesión
     Then debe ser redirigido a la página de login
-    And la sesión debe estar cerrada
+
+  Scenario: Las rutas protegidas redirigen a login sin sesión
+    Given el usuario no tiene sesión activa
+    When el usuario accede a una ruta protegida
+    Then debe ser redirigido a la página de login

@@ -1,105 +1,86 @@
+import { BasePulseOpsPage } from './BasePulseOpsPage';
+
 /**
- * LoginPage - Page Object for PulseOps login page
+ * LoginPage - Page Object de la vista de login de PulseOps.
+ *
+ * Construido sobre `BasePulseOpsPage` + Widgets. Selecciona exclusivamente por
+ * `data-testid` (`cy-login-title`, `cy-login-email`, `cy-login-password`,
+ * `cy-login-submit`, `cy-login-error`); sin selectores por texto ni CSS.
  */
-export class LoginPage {
-    // Selectors
-    private selectors = {
-        emailInput: 'input[type="email"]',
-        passwordInput: 'input[type="password"]',
-        rememberCheckbox: 'input[type="checkbox"]',
-        loginButton: 'button[type="submit"]',
-        errorMessage: '[role="alert"], .error, .text-red-500',
-    };
+export class LoginPage extends BasePulseOpsPage {
+  constructor() {
+    super('login');
+  }
 
-    /**
-     * Visit login page
-     */
-    visit(): void {
-        cy.visit('/login');
-    }
+  /** Navega a la vista de login. */
+  visit(): this {
+    cy.visit('/login');
+    return this;
+  }
 
-    /**
-     * Visit root (should redirect to login if not authenticated)
-     */
-    visitRoot(): void {
-        cy.visit('/');
-    }
+  /** Navega a la raíz de la app (ruta protegida → redirige a login si no hay sesión). */
+  visitRoot(): this {
+    cy.visit('/');
+    return this;
+  }
 
-    /**
-     * Fill email field
-     */
-    fillEmail(email: string): void {
-        cy.get(this.selectors.emailInput).clear().type(email);
-    }
+  fillEmail(email: string): this {
+    cy.getInput(this.sel('email')).type(email);
+    return this;
+  }
 
-    /**
-     * Fill password field
-     */
-    fillPassword(password: string): void {
-        cy.get(this.selectors.passwordInput).clear().type(password);
-    }
+  fillPassword(password: string): this {
+    cy.getInput(this.sel('password')).type(password);
+    return this;
+  }
 
-    /**
-     * Check remember me checkbox
-     */
-    checkRememberMe(): void {
-        cy.get(this.selectors.rememberCheckbox).check();
-    }
+  clickLogin(): this {
+    cy.getButton(this.sel('submit')).click();
+    return this;
+  }
 
-    /**
-     * Click login button
-     */
-    clickLogin(): void {
-        cy.get(this.selectors.loginButton).click();
-    }
+  /** Rellena el formulario y lo envía con login real por UI. */
+  submit(email: string, password: string): this {
+    return this.fillEmail(email).fillPassword(password).clickLogin();
+  }
 
-    /**
-     * Perform complete login
-     */
-    login(email: string, password: string, remember = false): void {
-        this.fillEmail(email);
-        this.fillPassword(password);
-        if (remember) {
-            this.checkRememberMe();
-        }
-        this.clickLogin();
-    }
+  /** Login válido: envía credenciales y espera el dashboard. */
+  login(email: string, password: string): this {
+    this.submit(email, password);
+    cy.url().should('include', '/dashboard');
+    return this;
+  }
 
-    /**
-     * Login as admin with default credentials
-     */
-    loginAsAdmin(): void {
-        this.login('admin@pulseops.com', 'Admin1234!');
-    }
+  /** Login inválido: envía credenciales y espera permanecer en login con error. */
+  loginInvalid(email: string, password: string): this {
+    this.submit(email, password);
+    return this.shouldShowError().shouldStayOnLogin();
+  }
 
-    /**
-     * Verify login page is displayed
-     */
-    verifyLoginPageDisplayed(): void {
-        cy.contains('Welcome to PulseOps').should('be.visible');
-        cy.get(this.selectors.emailInput).should('be.visible');
-        cy.get(this.selectors.passwordInput).should('be.visible');
-        cy.get(this.selectors.loginButton).should('be.visible');
-    }
+  /** Verifica que la vista de login está presente (título visible). */
+  shouldShowTitle(): this {
+    cy.get(this.sel('title')).should('be.visible');
+    return this;
+  }
 
-    /**
-     * Verify error message
-     */
-    verifyErrorMessage(): void {
-        cy.get(this.selectors.errorMessage).should('be.visible');
-    }
+  /** Verifica que el mensaje de error es visible. */
+  shouldShowError(): this {
+    cy.get(this.sel('error')).should('be.visible');
+    return this;
+  }
 
-    /**
-     * Verify current page is login
-     */
-    verifyCurrentPageIsLogin(): void {
-        cy.url().should('include', '/login');
-    }
+  /** Verifica que el campo email es inválido por validación nativa (required). */
+  shouldHaveInvalidEmail(): this {
+    cy.getInput(this.sel('email')).then(($el) => {
+      const input = $el[0] as HTMLInputElement;
+      expect(input.checkValidity(), 'email field validity').to.eq(false);
+    });
+    return this;
+  }
 
-    /**
-     * Verify redirected to dashboard
-     */
-    verifyRedirectedToDashboard(): void {
-        cy.url().should('include', '/dashboard');
-    }
+  /** Verifica que la URL sigue en la vista de login. */
+  shouldStayOnLogin(): this {
+    cy.url().should('include', '/login');
+    return this;
+  }
 }

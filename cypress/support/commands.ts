@@ -4,63 +4,71 @@
  */
 
 import { ButtonWidget, InputWidget, CheckboxWidget, LinkWidget, SelectWidget } from './widgets';
+import { LoginPage } from './pages/pulseops/LoginPage';
 
 // Declaración de tipos para TypeScript
 declare global {
   namespace Cypress {
     interface Chainable {
       /**
-       * Obtiene un elemento button y retorna un ButtonWidget
-       * @example cy.getButton('submit-btn').click()
+       * Obtiene el elemento por su selector data-testid (chainable de Cypress).
+       * Permite usar los comandos nativos (type/click/select/should...).
+       * @example cy.getButton('[data-testid="cy-login-submit"]').click()
        */
-      getButton(testId: string): ButtonWidget;
+      getButton(testId: string): Chainable<JQuery<HTMLElement>>;
+      getInput(testId: string): Chainable<JQuery<HTMLElement>>;
+      getCheckbox(testId: string): Chainable<JQuery<HTMLElement>>;
+      getLink(testId: string): Chainable<JQuery<HTMLElement>>;
+      getSelect(testId: string): Chainable<JQuery<HTMLElement>>;
 
       /**
-       * Obtiene un elemento input y retorna un InputWidget
-       * @example cy.getInput('email-input').type('test@example.com')
+       * Inicia sesión como administrador mediante login real por UI.
+       * Cacheado con cy.session para reutilizar la sesión entre escenarios.
+       * @example cy.loginAsAdmin()
        */
-      getInput(testId: string): InputWidget;
-
-      /**
-       * Obtiene un elemento checkbox y retorna un CheckboxWidget
-       * @example cy.getCheckbox('terms-checkbox').check()
-       */
-      getCheckbox(testId: string): CheckboxWidget;
-
-      /**
-       * Obtiene un elemento link y retorna un LinkWidget
-       * @example cy.getLink('home-link').click()
-       */
-      getLink(testId: string): LinkWidget;
-
-      /**
-       * Obtiene un elemento select y retorna un SelectWidget
-       * @example cy.getSelect('country-select').selectByValue('US')
-       */
-      getSelect(testId: string): SelectWidget;
+      loginAsAdmin(): Chainable<void>;
     }
   }
 }
 
-// Registrar comandos personalizados
-Cypress.Commands.add('getButton', (testId: string) => {
-  return new ButtonWidget(testId);
-});
+// Los widgets siguen disponibles para uso directo (new InputWidget(sel)).
+// Los comandos devuelven el elemento como chainable para encadenar comandos nativos.
+void ButtonWidget;
+void InputWidget;
+void CheckboxWidget;
+void LinkWidget;
+void SelectWidget;
 
-Cypress.Commands.add('getInput', (testId: string) => {
-  return new InputWidget(testId);
-});
+Cypress.Commands.add('getButton', (testId: string) => cy.get(testId));
+Cypress.Commands.add('getInput', (testId: string) => cy.get(testId));
+Cypress.Commands.add('getCheckbox', (testId: string) => cy.get(testId));
+Cypress.Commands.add('getLink', (testId: string) => cy.get(testId));
+Cypress.Commands.add('getSelect', (testId: string) => cy.get(testId));
 
-Cypress.Commands.add('getCheckbox', (testId: string) => {
-  return new CheckboxWidget(testId);
-});
-
-Cypress.Commands.add('getLink', (testId: string) => {
-  return new LinkWidget(testId);
-});
-
-Cypress.Commands.add('getSelect', (testId: string) => {
-  return new SelectWidget(testId);
+Cypress.Commands.add('loginAsAdmin', () => {
+  cy.session(
+    'admin',
+    () => {
+      // Login real por UI (sin inyectar tokens). El token se persiste en cuanto la
+      // API responde; esperamos por él con reintento manual amplio (entornos lentos).
+      const login = new LoginPage();
+      login.visit().submit('admin@pulseops.com', Cypress.env('ADMIN_PASSWORD'));
+      const waitForToken = (attempt = 0): void => {
+        cy.window()
+          .its('localStorage')
+          .invoke('getItem', 'auth_token')
+          .then((token) => {
+            if (token) return;
+            if (attempt >= 30) throw new Error('Login no persistió auth_token tras 30 intentos');
+            cy.wait(1000);
+            waitForToken(attempt + 1);
+          });
+      };
+      waitForToken();
+    },
+    // Reutiliza la sesión entre specs: solo el primer login real es necesario.
+    { cacheAcrossSpecs: true },
+  );
 });
 
 export {};

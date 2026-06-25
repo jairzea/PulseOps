@@ -1,161 +1,92 @@
+import { BasePulseOpsPage } from './BasePulseOpsPage';
+import { testTags } from '../../utils/testTags';
+import type { UserInput } from '../../factories/userFactory';
+
 /**
- * UsersPage - Page Object for PulseOps users management page
+ * UsersPage - Page Object del CRUD de Usuarios.
+ *
+ * Selecciona exclusivamente por `data-testid` (contextos `users` y `user-form`);
+ * sin selectores por texto ni CSS. Delega en Widgets.
+ *
+ * Notas de dominio: el borrado usa `window.confirm` nativo (Cypress lo acepta
+ * automáticamente); no hay modal de edición (solo crear / activar / eliminar).
  */
-export class UsersPage {
-    // Selectors
-    private selectors = {
-        pageTitle: 'h1, h2',
-        newUserButton: 'button:contains("Nuevo Usuario")',
-        usersTable: 'table, [role="table"]',
-        tableHeaders: 'th',
-        tableRows: 'tbody tr, [role="row"]',
-        
-        // Modal selectors
-        modal: '[role="dialog"], .modal, [class*="modal"]',
-        nameInput: 'input[name="name"], input[placeholder*="Nombre"]',
-        emailInput: 'input[name="email"], input[type="email"]',
-        passwordInput: 'input[name="password"], input[type="password"]',
-        roleSelect: 'select[name="role"], select[name="rol"]',
-        createButton: 'button:contains("Crear Usuario")',
-        cancelButton: 'button:contains("Cancelar")',
-        
-        successMessage: '[class*="toast"], [class*="alert-success"], [role="alert"]',
-    };
+export class UsersPage extends BasePulseOpsPage {
+  constructor() {
+    super('users');
+  }
 
-    /**
-     * Visit users page
-     */
-    visit(): void {
-        cy.visit('/users');
-    }
+  private form(...segments: string[]): string {
+    return testTags.child('user-form').selector(segments.join('-'));
+  }
 
-    /**
-     * Verify users page is displayed
-     */
-    verifyPageDisplayed(): void {
-        cy.url().should('include', '/users');
-        cy.contains('Gestión de Usuarios').should('be.visible');
-    }
+  visit(): this {
+    cy.visit('/users');
+    cy.get(this.sel('create'), { timeout: 20000 }).should('be.visible');
+    return this;
+  }
 
-    /**
-     * Verify users table exists
-     */
-    verifyUsersTableExists(): void {
-        cy.get('table, [role="table"]').should('be.visible');
-    }
+  openCreate(): this {
+    cy.getButton(this.sel('create')).click();
+    cy.getInput(this.form('name')).should('be.visible');
+    return this;
+  }
 
-    /**
-     * Verify table columns
-     */
-    verifyTableColumns(columns: string[]): void {
-        columns.forEach(column => {
-            cy.contains('th', column).should('be.visible');
-        });
-    }
+  fillForm(data: Partial<UserInput>): this {
+    if (data.name !== undefined) cy.getInput(this.form('name')).type(data.name);
+    if (data.email !== undefined) cy.getInput(this.form('email')).type(data.email);
+    if (data.password !== undefined) cy.getInput(this.form('password')).type(data.password);
+    if (data.role !== undefined) cy.getSelect(this.form('role')).select(data.role);
+    return this;
+  }
 
-    /**
-     * Click new user button
-     */
-    clickNewUser(): void {
-        cy.contains('button', 'Nuevo Usuario').click();
-    }
+  save(): this {
+    cy.getButton(this.form('save')).click();
+    return this;
+  }
 
-    /**
-     * Verify modal is displayed
-     */
-    verifyModalDisplayed(): void {
-        cy.contains('Nuevo Usuario').should('be.visible');
-        // Wait for modal animation
-        cy.wait(300);
-    }
+  create(data: UserInput): this {
+    return this.openCreate().fillForm(data).save();
+  }
 
-    /**
-     * Verify modal is not displayed
-     */
-    verifyModalNotDisplayed(): void {
-        // Modal should not be visible or should not exist
-        cy.get('body').then($body => {
-            // Check if modal exists in the body
-            const modalExists = $body.find('[role="dialog"]').length > 0;
-            if (modalExists) {
-                // If it exists, it should not be visible
-                cy.get('[role="dialog"]').should('not.be.visible');
-            }
-        });
-    }
+  search(term: string): this {
+    cy.getInput(this.sel('search')).clear({ force: true }).type(term, { force: true });
+    return this;
+  }
 
-    /**
-     * Verify form field exists
-     */
-    verifyFieldExists(fieldName: string): void {
-        cy.contains(fieldName).should('be.visible');
-    }
+  private anyRow(): string {
+    return '[data-testid^="cy-users-row-"]';
+  }
 
-    /**
-     * Fill user form
-     */
-    fillUserForm(data: Record<string, string>): void {
-        // Wait a bit for modal animation
-        cy.wait(500);
-        
-        if (data.Nombre) {
-            // Use force to bypass overlays
-            cy.get('input[type="text"]').last().clear({force: true}).type(data.Nombre, {force: true});
-        }
-        if (data.Email) {
-            cy.get('input[type="email"]').last().clear({force: true}).type(data.Email, {force: true});
-        }
-        if (data.Contraseña) {
-            cy.get('input[type="password"]').last().clear({force: true}).type(data.Contraseña, {force: true});
-        }
-        if (data.Rol) {
-            // Find the role selector and select the option
-            cy.get('select').last().select(data.Rol, {force: true});
-        }
-    }
+  /** Elimina la fila que contiene el texto dado (seguro: nunca toca otras filas). */
+  deleteByText(text: string): this {
+    // Confirma que la búsqueda acotó el listado antes de borrar.
+    cy.get(this.sel('list'), { timeout: 15000 }).should('contain', text);
+    cy.contains(this.anyRow(), text).find('[data-testid$="-delete"]').click();
+    return this;
+  }
 
-    /**
-     * Click create user button
-     */
-    clickCreateUser(): void {
-        cy.contains('button', 'Crear Usuario').click();
-    }
+  // --- Aserciones ---
 
-    /**
-     * Click cancel button
-     */
-    clickCancel(): void {
-        cy.contains('button', 'Cancelar').click();
-    }
+  shouldShowInList(text: string): this {
+    cy.get(this.sel('list'), { timeout: 15000 }).should('contain', text);
+    return this;
+  }
 
-    /**
-     * Verify success message
-     */
-    verifySuccessMessage(): void {
-        // Success message can appear in different ways
-        cy.wait(500);
-        // Check if modal closed or if there's a success message
-        cy.get('body').should('exist');
-    }
+  shouldNotShowInList(text: string): this {
+    cy.contains('[data-testid^="cy-users-row-"]', text).should('not.exist');
+    return this;
+  }
 
-    /**
-     * Verify user in list
-     */
-    verifyUserInList(email: string): void {
-        cy.contains(email).should('be.visible');
-    }
+  shouldShowToast(text?: string): this {
+    const toast = cy.get(this.selRaw('toast')).should('be.visible');
+    if (text) toast.and('contain', text);
+    return this;
+  }
 
-    /**
-     * Verify at least one user exists
-     */
-    verifyAtLeastOneUser(): void {
-        cy.get('tbody tr, [role="row"]').should('have.length.at.least', 1);
-    }
-
-    /**
-     * Verify admin user in list
-     */
-    verifyAdminUserExists(): void {
-        cy.contains('admin@pulseops.com').should('be.visible');
-    }
+  /** El formulario de creación sigue visible (validación nativa bloqueó submit). */
+  shouldKeepFormOpen(): this {
+    cy.get(this.form('email')).should('be.visible');
+    return this;
+  }
 }

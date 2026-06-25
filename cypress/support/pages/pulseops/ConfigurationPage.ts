@@ -1,107 +1,67 @@
+import { BasePulseOpsPage } from './BasePulseOpsPage';
+
 /**
- * ConfigurationPage - Page Object for PulseOps configuration page
+ * ConfigurationPage - Page Object de la configuración de umbrales.
+ *
+ * Selecciona exclusivamente por `data-testid` (contexto `configuration`); sin
+ * selectores por texto ni CSS. La edición es un wizard de 4 pasos: el umbral de
+ * AFLUENCIA vive en el paso 2; tras editarlo se avanza hasta el paso 4 y se guarda.
  */
-export class ConfigurationPage {
-    // Selectors
-    private selectors = {
-        pageTitle: 'h1, h2',
-        configCard: '[class*="card"], [class*="bg-white"]',
-        editButton: 'button:contains("Editar"), button:has-text("Editar")',
-        conditionSection: '[class*="condition"], .condition',
-        versionInfo: ':contains("Versión")',
-        updateDate: ':contains("Actualizada")',
-        activeStatus: ':contains("Activa")',
-        // Condiciones específicas
-        afluenciaSection: ':contains("AFLUENCIA")',
-        normalSection: ':contains("NORMAL")',
-        emergenciaSection: ':contains("EMERGENCIA")',
-        peligroSection: ':contains("PELIGRO")',
-        poderSection: ':contains("PODER")',
-    };
+export class ConfigurationPage extends BasePulseOpsPage {
+  constructor() {
+    super('configuration');
+  }
 
-    /**
-     * Visit configuration page
-     */
-    visit(): void {
-        cy.visit('/configuration');
-    }
+  visit(): this {
+    cy.visit('/configuration');
+    cy.get(this.sel('edit'), { timeout: 20000 }).should('be.visible');
+    return this;
+  }
 
-    /**
-     * Verify configuration page is displayed
-     */
-    verifyPageDisplayed(): void {
-        cy.url().should('include', '/configuration');
-        cy.contains('Configuración').should('be.visible');
-    }
+  enterEdit(): this {
+    cy.getButton(this.sel('edit')).click();
+    return this;
+  }
 
-    /**
-     * Verify threshold configuration is visible
-     */
-    verifyThresholdsVisible(): void {
-        cy.contains('Configuración de Umbrales').should('be.visible');
-    }
+  next(): this {
+    cy.getButton(this.sel('next')).click();
+    return this;
+  }
 
-    /**
-     * Verify default configuration is shown
-     */
-    verifyDefaultConfiguration(): void {
-        cy.contains('Configuración Predeterminada').should('be.visible');
-    }
+  /** Edita el umbral mínimo de AFLUENCIA (paso 2 del wizard) y guarda. */
+  editAfluenciaThresholdAndSave(value: number): this {
+    this.enterEdit();
+    this.next(); // paso 1 → 2
+    // Selecciona todo el contenido y lo reemplaza (robusto para input numérico).
+    cy.getInput(this.sel('threshold', 'afluencia-min'))
+      .should('be.visible')
+      .focus()
+      .type('{selectall}', { force: true })
+      .type(String(value), { force: true })
+      .blur();
+    cy.getInput(this.sel('threshold', 'afluencia-min')).should('have.value', String(value));
+    this.next(); // 2 → 3
+    this.next(); // 3 → 4
+    cy.getButton(this.sel('save')).click();
+    return this;
+  }
 
-    /**
-     * Verify condition thresholds
-     */
-    verifyConditionThresholds(conditionName: string): void {
-        cy.contains(conditionName.toUpperCase()).should('be.visible');
-    }
+  // --- Aserciones ---
 
-    /**
-     * Verify version information
-     */
-    verifyVersionInfo(): void {
-        cy.contains('Versión').should('be.visible');
-    }
+  /** El resumen de AFLUENCIA (modo vista) muestra el valor dado. */
+  shouldShowAfluenciaThreshold(value: number): this {
+    cy.get(this.sel('summary', 'afluencia'), { timeout: 15000 }).should('contain', `${value}%`);
+    return this;
+  }
 
-    /**
-     * Verify update date
-     */
-    verifyUpdateDate(): void {
-        cy.contains('Actualizada').should('be.visible');
-    }
+  shouldShowSummary(condition: string): this {
+    cy.get(this.sel('summary', condition), { timeout: 15000 }).should('be.visible');
+    return this;
+  }
 
-    /**
-     * Verify active status
-     */
-    verifyActiveStatus(): void {
-        cy.contains('Activa').should('be.visible');
-    }
-
-    /**
-     * Click edit configuration button
-     */
-    clickEditConfiguration(): void {
-        cy.contains('button', 'Editar Configuración').click();
-    }
-
-    /**
-     * Verify edit form is displayed
-     */
-    verifyEditFormDisplayed(): void {
-        // After clicking edit, some form should appear
-        cy.get('form, [role="dialog"], .modal').should('be.visible');
-    }
-
-    /**
-     * Verify edit button exists
-     */
-    verifyEditButtonExists(): void {
-        cy.contains('button', 'Editar Configuración').should('exist');
-    }
-
-    /**
-     * Verify edit button is visible
-     */
-    verifyEditButtonVisible(): void {
-        cy.contains('button', 'Editar Configuración').should('be.visible');
-    }
+  shouldShowToast(text?: string): this {
+    const toast = cy.get(this.selRaw('toast')).should('be.visible');
+    if (text) toast.and('contain', text);
+    return this;
+  }
 }

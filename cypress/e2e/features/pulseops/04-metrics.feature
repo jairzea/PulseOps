@@ -1,42 +1,33 @@
 Feature: Gestión de Métricas en PulseOps
 
-  Como usuario autenticado de PulseOps
+  Como administrador de PulseOps
   Quiero gestionar las métricas del sistema
-  Para poder monitorear diferentes indicadores
+  Para definir los indicadores que se evalúan
 
   Background:
     Given el usuario está autenticado como administrador
     And está en la página de métricas
 
-  Scenario: Ver lista de métricas existentes
-    Then debe ver la tabla de métricas
-    And debe poder ver las columnas "Nombre", "Unidad", "Tipo"
+  Scenario: Ver métricas del seed en la lista
+    Then debe ver la métrica "Story Points" en la lista
+    And debe ver la métrica "Performance Score" en la lista
 
   Scenario: Crear una nueva métrica
-    When hace clic en el botón "Crear Métrica"
-    And completa el formulario con los datos:
-      | campo      | valor              |
-      | name       | CPU Usage          |
-      | unit       | percentage         |
-      | type       | gauge              |
-      | description| CPU utilization    |
-    And hace clic en "Guardar"
+    When crea una métrica con datos de factory
     Then debe ver un mensaje de éxito
-    And la métrica "CPU Usage" debe aparecer en la lista
+    And la nueva métrica debe aparecer en la lista
 
-  Scenario: Buscar una métrica específica
-    When escribe "Temperature" en el campo de búsqueda
-    Then debe filtrar y mostrar solo métricas que contengan "Temperature"
-
-  Scenario: Editar una métrica existente
-    When hace clic en el botón de editar de la primera métrica
-    And modifica el campo "description" a "Updated description"
-    And hace clic en "Guardar"
+  Scenario: Editar una métrica recién creada
+    When crea una métrica con datos de factory
+    And edita esa métrica con una nueva unidad
     Then debe ver un mensaje de éxito
-    And los cambios deben reflejarse en la lista
 
-  Scenario: Eliminar una métrica
-    When hace clic en el botón de eliminar de la última métrica
-    And confirma la eliminación
+  Scenario: Eliminar una métrica recién creada
+    When crea una métrica con datos de factory
+    And elimina esa métrica
     Then debe ver un mensaje de éxito
-    And la métrica debe desaparecer de la lista
+    And la métrica no debe aparecer en la lista
+
+  Scenario: Validación al crear con datos inválidos
+    When intenta crear una métrica sin clave
+    Then debe ver un error de validación en el formulario de métrica
