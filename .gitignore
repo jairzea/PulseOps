@@ -52,3 +52,11 @@ test-run.js
 test-server.js
 run-backend.sh
 start.sh
+
+# Cypress local credentials (no commitear)
+cypress.env.json
+
+# Cypress / Cucumber reports (artefactos, no fuente)
+cypress/reports/
+cucumber-report.html
+cucumber-messages.ndjson
