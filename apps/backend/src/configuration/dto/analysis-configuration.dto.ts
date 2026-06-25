@@ -4,12 +4,52 @@ import {
   IsBoolean,
   IsNumber,
   ValidateNested,
+  IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+
+/**
+ * Paso de una fórmula de condición (espejo de FormulaStep en shared-types).
+ */
+class FormulaStepDto {
+  @IsNumber()
+  order: number;
+
+  @IsString()
+  description: string;
+
+  @IsBoolean()
+  enabled: boolean;
+}
+
+/**
+ * Fórmula de acción asociada a una condición (espejo de ConditionFormula).
+ * Es informativa/configurable; el motor no la usa para calcular la condición.
+ */
+class ConditionFormulaDto {
+  @IsString()
+  name: string;
+
+  @IsString()
+  description: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => FormulaStepDto)
+  steps: FormulaStepDto[];
+
+  @IsBoolean()
+  enabled: boolean;
+}
 
 class AfluenciaThresholdsDto {
   @IsNumber()
   minInclination: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ConditionFormulaDto)
+  formula?: ConditionFormulaDto;
 }
 
 class NormalThresholdsDto {
@@ -18,6 +58,11 @@ class NormalThresholdsDto {
 
   @IsNumber()
   maxInclination: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ConditionFormulaDto)
+  formula?: ConditionFormulaDto;
 }
 
 class EmergenciaThresholdsDto {
@@ -26,6 +71,11 @@ class EmergenciaThresholdsDto {
 
   @IsNumber()
   maxInclination: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ConditionFormulaDto)
+  formula?: ConditionFormulaDto;
 }
 
 class PeligroThresholdsDto {
@@ -34,6 +84,11 @@ class PeligroThresholdsDto {
 
   @IsNumber()
   maxInclination: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ConditionFormulaDto)
+  formula?: ConditionFormulaDto;
 }
 
 class PoderThresholdsDto {
@@ -45,11 +100,21 @@ class PoderThresholdsDto {
 
   @IsNumber()
   stabilityThreshold: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ConditionFormulaDto)
+  formula?: ConditionFormulaDto;
 }
 
 class InexistenciaThresholdsDto {
   @IsNumber()
   threshold: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ConditionFormulaDto)
+  formula?: ConditionFormulaDto;
 }
 
 class VolatilitySignalConfigDto {
