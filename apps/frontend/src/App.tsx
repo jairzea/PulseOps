@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ResourceDashboard } from './pages/ResourceDashboard';
+import { OverviewPage } from './pages/OverviewPage';
 import { ResourcesPage } from './pages/ResourcesPage';
 import { MetricsPage } from './pages/MetricsPage';
 import { RecordsPage } from './pages/RecordsPage';
@@ -39,6 +40,16 @@ function App() {
                                 <PrivateRoute>
                                     <Layout>
                                         <ResourceDashboard />
+                                    </Layout>
+                                </PrivateRoute>
+                            }
+                        />
+                        <Route
+                            path="/overview"
+                            element={
+                                <PrivateRoute>
+                                    <Layout>
+                                        <OverviewPage />
                                     </Layout>
                                 </PrivateRoute>
                             }

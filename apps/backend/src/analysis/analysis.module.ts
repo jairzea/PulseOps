@@ -5,9 +5,18 @@ import { RecordsModule } from '../records/records.module';
 import { RulesModule } from '../rules/rules.module';
 import { PlaybooksModule } from '../playbooks/playbooks.module';
 import { ConfigurationModule } from '../configuration/configuration.module';
+import { UsersModule } from '../users/users.module';
+import { MetricsModule } from '../metrics/metrics.module';
 
 @Module({
-  imports: [RecordsModule, RulesModule, PlaybooksModule, ConfigurationModule],
+  imports: [
+    RecordsModule,
+    RulesModule,
+    PlaybooksModule,
+    ConfigurationModule,
+    UsersModule,
+    MetricsModule,
+  ],
   controllers: [AnalysisController],
   providers: [AnalysisService],
   exports: [AnalysisService],
