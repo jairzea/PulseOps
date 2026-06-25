@@ -10,7 +10,10 @@ export class DemoAuthGuard implements CanActivate {
   constructor(private configService: ConfigService) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const authMode = this.configService.get<string>('AUTH_MODE', 'demo');
+    const nodeEnv = this.configService.get<string>('NODE_ENV');
+    const configuredMode = this.configService.get<string>('AUTH_MODE', 'demo');
+    // En producción el modo demo queda deshabilitado.
+    const authMode = nodeEnv === 'production' ? 'jwt' : configuredMode;
 
     if (authMode !== 'demo') {
       return true; // Si no es demo, deja pasar (otro guard manejará)
