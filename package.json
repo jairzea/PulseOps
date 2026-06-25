@@ -47,8 +47,12 @@
   },
   "devDependencies": {
     "@badeball/cypress-cucumber-preprocessor": "^21.0.3",
+    "@bahmutov/cypress-esbuild-preprocessor": "2.2.8",
+    "@esbuild/darwin-arm64": "^0.27.2",
+    "@faker-js/faker": "10.5.0",
     "cypress": "^15.9.0",
     "cypress-mochawesome-reporter": "^4.0.2",
+    "fast-check": "4.8.0",
     "mochawesome": "^7.1.4",
     "mochawesome-merge": "^5.1.0",
     "mochawesome-report-generator": "^6.3.2",
