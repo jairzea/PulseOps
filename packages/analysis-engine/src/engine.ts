@@ -531,17 +531,21 @@ function isPowerCondition(
   // Analizar últimos N períodos
   const recentPoints = points.slice(-POWER_MIN_PERIODS);
   
-  // Verificar que todos los períodos muestran Normal (crecimiento leve o estable)
+  // Verificar que todos los períodos recientes muestran crecimiento NORMAL real
   for (let i = 1; i < recentPoints.length; i++) {
     const prev = recentPoints[i - 1].value;
     const curr = recentPoints[i].value;
     const inclination = calculateInclination(prev, curr);
-    
+
     if (!inclination.isValid) return false;
     if (inclination.value === null) return false;
-    
-    // Debe estar en rango de Normal o Afluencia (positivo)
-    if (inclination.value < thresholds.emergencia.minInclination) {
+
+    // Cada período debe ser crecimiento NORMAL real: +5% < I < +50%
+    // (spec formal: "PODER — Histórico: todos +5% < I < +50%"). El estancamiento
+    // (−5% ≤ I ≤ +5%) NO es PODER, es EMERGENCIA; una línea plana no debe marcar Poder.
+    const normalMin = thresholds.normal?.minInclination ?? 5;
+    const normalMax = thresholds.normal?.maxInclination ?? 50;
+    if (inclination.value <= normalMin || inclination.value >= normalMax) {
       return false;
     }
   }
