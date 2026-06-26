@@ -12,6 +12,8 @@ export interface Metric {
   description?: string;
   unit?: string;
   periodType?: string;
+  category?: 'PRODUCTION' | 'STUDY' | 'TRACKING';
+  categoryByResource?: Record<string, 'PRODUCTION' | 'STUDY' | 'TRACKING'>;
   resourceIds?: string[];
   createdBy: string;
   createdAt: string;
@@ -24,6 +26,8 @@ export interface CreateMetricDto {
   description?: string;
   unit?: string;
   periodType?: string;
+  category?: 'PRODUCTION' | 'STUDY' | 'TRACKING';
+  categoryByResource?: Record<string, 'PRODUCTION' | 'STUDY' | 'TRACKING'>;
   resourceIds?: string[];
 }
 
@@ -32,6 +36,8 @@ export interface UpdateMetricDto {
   description?: string;
   unit?: string;
   periodType?: string;
+  category?: 'PRODUCTION' | 'STUDY' | 'TRACKING';
+  categoryByResource?: Record<string, 'PRODUCTION' | 'STUDY' | 'TRACKING'>;
   resourceIds?: string[];
 }
 

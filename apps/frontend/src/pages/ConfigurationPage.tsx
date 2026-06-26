@@ -12,6 +12,7 @@ import { PermissionFeedback } from '../components/PermissionFeedback';
 import { useAuth } from '../contexts/AuthContext';
 import { useConditionsMetadata } from '../hooks/useConditionsMetadata';
 import { ColorPicker } from '../components/ColorPicker';
+import { InfoTooltip } from '../components/InfoTooltip';
 import { tid } from '../utils/testId';
 
 // Step Components
@@ -370,7 +371,20 @@ function Step2Conditions({ thresholds, updateThreshold, getValue }: StepProps) {
     return (
         <div className="space-y-8">
             <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Condiciones Principales</h2>
+                <div className="flex items-center gap-2 mb-2">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Condiciones Principales</h2>
+                    <InfoTooltip
+                        position="bottom"
+                        content={
+                            <div className="space-y-2">
+                                <p className="font-semibold text-white">¿Qué configuras aquí?</p>
+                                <p>Los rangos de inclinación (% de cambio entre periodos) que definen cada condición de una métrica individual.</p>
+                                <p>Las condiciones son contiguas: el máximo de una suele ser el mínimo de la siguiente. Ej: NORMAL va de +5% a +50%, y AFLUENCIA empieza en +50%. Evita huecos o solapamientos entre rangos.</p>
+                                <p className="text-gray-300">Estos umbrales afectan tanto la condición de cada métrica como, indirectamente, el consolidado.</p>
+                            </div>
+                        }
+                    />
+                </div>
                 <p className="text-gray-600 dark:text-gray-400 mb-8">
                     Define los umbrales de inclinación para cada condición operativa
                 </p>
@@ -608,7 +622,20 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
     return (
         <div className="space-y-8">
             <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Configuración de Señales</h2>
+                <div className="flex items-center gap-2 mb-2">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Configuración de Señales</h2>
+                    <InfoTooltip
+                        position="bottom"
+                        content={
+                            <div className="space-y-2">
+                                <p className="font-semibold text-white">¿Qué son las señales?</p>
+                                <p>Alertas complementarias que detectan patrones en la serie (volatilidad, deterioro lento, huecos de datos, recuperación, ruido). NO cambian la condición; la enriquecen.</p>
+                                <p>Si una señal aparece de más o de menos en tus datos, ajusta aquí su sensibilidad (cuántos periodos o cuánta variación se requieren para dispararla).</p>
+                                <p className="text-gray-300">Regla anti-contradicción: si hay ruido, no se reporta volatilidad a la vez.</p>
+                            </div>
+                        }
+                    />
+                </div>
                 <p className="text-gray-600 dark:text-gray-400 mb-8">
                     Ajusta los parámetros de detección de señales de alerta
                 </p>
@@ -797,7 +824,159 @@ function Step3Signals({ thresholds, updateThreshold, getValue }: StepProps) {
     );
 }
 
-// Paso 4: Revisión Final
+// Paso 4: Consolidado de producción (tabla de puntajes + umbrales de nivel)
+function StepConsolidated({ updateThreshold, getValue }: StepProps) {
+    const conditions: Array<{ key: string; label: string; color: string; help: string }> = [
+        { key: 'PODER', label: 'PODER', color: 'text-cyan-600 dark:text-cyan-400', help: 'Puntaje máximo. Define el techo contra el que se normaliza el nivel: si todas las métricas estuvieran en PODER, el nivel sería 100%. Default 10.' },
+        { key: 'AFLUENCIA', label: 'AFLUENCIA', color: 'text-purple-600 dark:text-purple-400', help: 'Puntaje cuando una métrica crece de forma pronunciada. Debe ser menor que PODER. Default 7.' },
+        { key: 'NORMAL', label: 'NORMAL', color: 'text-green-600 dark:text-green-400', help: 'Puntaje de crecimiento saludable. Default 5 (la mitad del techo).' },
+        { key: 'EMERGENCIA', label: 'EMERGENCIA', color: 'text-yellow-600 dark:text-yellow-400', help: 'Puntaje de estancamiento o descenso leve. Default 3.' },
+        { key: 'PELIGRO', label: 'PELIGRO', color: 'text-red-600 dark:text-red-400', help: 'Puntaje de caída pronunciada. Default 1.' },
+        { key: 'INEXISTENCIA', label: 'INEXISTENCIA', color: 'text-gray-500 dark:text-gray-400', help: 'Producción nula o colapso. Default 0: no aporta al nivel.' },
+    ];
+
+    const levels: Array<{ key: string; label: string; color: string; help: string }> = [
+        { key: 'poder', label: 'PODER', color: 'focus:border-cyan-500 focus:ring-cyan-500', help: 'Nivel mínimo (0–1) para que el consolidado sea PODER. Default 0.9 = 90% del puntaje máximo.' },
+        { key: 'afluencia', label: 'AFLUENCIA', color: 'focus:border-purple-500 focus:ring-purple-500', help: 'Nivel mínimo para AFLUENCIA. Debe ser menor que el de PODER. Default 0.65.' },
+        { key: 'normal', label: 'NORMAL', color: 'focus:border-green-500 focus:ring-green-500', help: 'Nivel mínimo para NORMAL. Una sola métrica en NORMAL da ratio 0.5, que con el default 0.45 cae aquí. Default 0.45.' },
+        { key: 'emergencia', label: 'EMERGENCIA', color: 'focus:border-yellow-500 focus:ring-yellow-500', help: 'Nivel mínimo para EMERGENCIA. Por debajo de este corte (salvo PELIGRO) la persona está en problemas. Default 0.25.' },
+        { key: 'peligro', label: 'PELIGRO', color: 'focus:border-red-500 focus:ring-red-500', help: 'Nivel mínimo para PELIGRO. Por debajo de este valor → INEXISTENCIA. Default 0.05.' },
+    ];
+
+    return (
+        <div className="space-y-8">
+            <div>
+                <div className="flex items-center gap-2 mb-2">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Consolidado de Producción</h2>
+                    <InfoTooltip
+                        position="bottom"
+                        content={
+                            <div className="space-y-2">
+                                <p className="font-semibold text-white">¿Qué es la condición consolidada?</p>
+                                <p>Es la condición operativa de producción de la persona, combinando TODAS sus métricas de producción (las de estudio y seguimiento no cuentan).</p>
+                                <p className="font-semibold text-white">¿Cómo se calcula?</p>
+                                <p>1. Cada métrica de producción obtiene su condición sobre el periodo.<br />2. Cada condición vale un puntaje (tabla de abajo).<br />3. Se suman los puntajes y se dividen por el techo = (nº de métricas × puntaje máximo de PODER) → un nivel de 0 a 100%.<br />4. Ese nivel se traduce a condición según los umbrales de nivel.</p>
+                                <p className="text-gray-300">Ejemplo con PODER=10: una persona con 2 métricas, una en PODER (10) y otra en EMERGENCIA (3) → techo 2×10=20 → 13/20 = 65% → AFLUENCIA. Con 1 sola métrica en PODER → 10/10 = 100% → PODER.</p>
+                            </div>
+                        }
+                    />
+                </div>
+                <p className="text-gray-600 dark:text-gray-400">
+                    La condición consolidada combina las métricas de producción en un solo
+                    veredicto por persona, según el nivel de producción alcanzado.
+                </p>
+            </div>
+
+            {/* Tabla de puntajes por condición */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Puntaje por condición</h3>
+                    <InfoTooltip
+                        content={
+                            <div className="space-y-2">
+                                <p>Cuánto vale cada métrica de producción según la condición en que esté.</p>
+                                <p>Mantén el orden lógico: PODER &gt; AFLUENCIA &gt; NORMAL &gt; EMERGENCIA &gt; PELIGRO &gt; INEXISTENCIA. Si los inviertes, el consolidado dará resultados incoherentes.</p>
+                                <p className="text-gray-300">El valor de PODER es el techo: todos los demás se comparan contra él para calcular el nivel.</p>
+                            </div>
+                        }
+                    />
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    El máximo (PODER) define el techo del nivel.
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {conditions.map(({ key, label, color, help }) => (
+                        <div key={key}>
+                            <label className={`flex items-center gap-1.5 text-sm font-medium mb-2 ${color}`}>
+                                {label}
+                                <InfoTooltip content={help} />
+                            </label>
+                            <input
+                                type="number"
+                                value={getValue(['scoreTable', key])}
+                                onChange={(e) => updateThreshold(['scoreTable', key], Number(e.target.value))}
+                                data-testid={tid('configuration', 'score', key.toLowerCase())}
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                step="1"
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Umbrales de nivel del consolidado */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Ventana por defecto</h3>
+                    <InfoTooltip
+                        content={
+                            <div className="space-y-2">
+                                <p>Número de semanas que se analizan por defecto para la condición de producción, cuando el usuario no elige una ventana en el dashboard.</p>
+                                <p>El selector del dashboard siempre manda en vivo; este valor es la política base (objetivo del PO: 8 semanas).</p>
+                                <p className="text-gray-300">Afecta tanto el análisis por métrica como el consolidado.</p>
+                            </div>
+                        }
+                    />
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Periodo base de cálculo de la condición de producción (en semanas).
+                </p>
+                <div className="max-w-xs">
+                    <input
+                        type="number"
+                        value={getValue(['defaultWindowSize'])}
+                        onChange={(e) => updateThreshold(['defaultWindowSize'], Number(e.target.value))}
+                        data-testid={tid('configuration', 'default-window')}
+                        className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        step="1"
+                        min="2"
+                    />
+                </div>
+            </div>
+
+            {/* Umbrales de nivel del consolidado */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Umbrales de nivel (0–1)</h3>
+                    <InfoTooltip
+                        content={
+                            <div className="space-y-2">
+                                <p>El nivel de producción es un número de 0 a 1 (0% a 100%). Estos cortes deciden a qué condición corresponde cada nivel.</p>
+                                <p>Deben ir en orden descendente: PODER &gt; AFLUENCIA &gt; NORMAL &gt; EMERGENCIA &gt; PELIGRO. Por debajo del corte de PELIGRO, el consolidado es INEXISTENCIA.</p>
+                                <p className="text-gray-300">Subir un umbral hace esa condición más difícil de alcanzar; bajarlo, más fácil.</p>
+                            </div>
+                        }
+                    />
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Ratio mínimo de nivel para alcanzar cada condición consolidada.
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {levels.map(({ key, label, color, help }) => (
+                        <div key={key}>
+                            <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {label}
+                                <InfoTooltip content={help} />
+                            </label>
+                            <input
+                                type="number"
+                                value={getValue(['consolidatedLevels', key])}
+                                onChange={(e) => updateThreshold(['consolidatedLevels', key], Number(e.target.value))}
+                                data-testid={tid('configuration', 'level', key)}
+                                className={`w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-1 ${color}`}
+                                step="0.05"
+                                min="0"
+                                max="1"
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// Paso 5: Revisión Final
 interface Step4ReviewProps {
     thresholds: ConditionThresholds;
     configName: string;
@@ -901,6 +1080,37 @@ function Step4Review({ thresholds, configName }: Step4ReviewProps) {
                         <h4 className="text-sm font-medium text-green-600 dark:text-green-400 mb-2">Pico de Recuperación</h4>
                         <p className="text-xs text-gray-600 dark:text-gray-400">
                             Declives previos: {thresholds.signals.recoverySpike.minPriorDeclines} • Inclinación: {thresholds.signals.recoverySpike.minRecoveryInclination}%
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Consolidado de Producción */}
+            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Consolidado de Producción</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                        <h4 className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2">Ventana por defecto</h4>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                            {(thresholds as any).defaultWindowSize ?? 8} semanas
+                        </p>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                        <h4 className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2">Puntajes por condición</h4>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                            {(() => {
+                                const s = (thresholds as any).scoreTable ?? {};
+                                return `PODER ${s.PODER ?? 10} · AFL ${s.AFLUENCIA ?? 7} · NOR ${s.NORMAL ?? 5} · EME ${s.EMERGENCIA ?? 3} · PEL ${s.PELIGRO ?? 1} · INE ${s.INEXISTENCIA ?? 0}`;
+                            })()}
+                        </p>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                        <h4 className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2">Umbrales de nivel</h4>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                            {(() => {
+                                const l = (thresholds as any).consolidatedLevels ?? {};
+                                return `POD ${l.poder ?? 0.9} · AFL ${l.afluencia ?? 0.65} · NOR ${l.normal ?? 0.45} · EME ${l.emergencia ?? 0.25} · PEL ${l.peligro ?? 0.05}`;
+                            })()}
                         </p>
                     </div>
                 </div>
@@ -1114,7 +1324,24 @@ export function ConfigurationPage() {
 
     const handleEdit = () => {
         if (activeConfig) {
-            setEditedThresholds(activeConfig.thresholds);
+            // Inicializar scoreTable/consolidatedLevels si la config previa no los tenía
+            // (configs creadas antes de Fase 2), para que el editor los muestre.
+            const t: any = { ...activeConfig.thresholds };
+            if (!t.scoreTable) {
+                t.scoreTable = {
+                    PODER: 10, AFLUENCIA: 7, NORMAL: 5, EMERGENCIA: 3,
+                    PELIGRO: 1, INEXISTENCIA: 0, SIN_DATOS: 0, CAMBIO_DE_PODER: 0,
+                };
+            }
+            if (!t.consolidatedLevels) {
+                t.consolidatedLevels = {
+                    poder: 0.9, afluencia: 0.65, normal: 0.45, emergencia: 0.25, peligro: 0.05,
+                };
+            }
+            if (typeof t.defaultWindowSize !== 'number') {
+                t.defaultWindowSize = 8;
+            }
+            setEditedThresholds(t);
             setCurrentStep(1);
         }
     };
@@ -1143,7 +1370,7 @@ export function ConfigurationPage() {
     };
 
     const nextStep = () => {
-        if (currentStep < 4) setCurrentStep(currentStep + 1);
+        if (currentStep < 5) setCurrentStep(currentStep + 1);
     };
 
     const prevStep = () => {
@@ -1262,7 +1489,7 @@ export function ConfigurationPage() {
                         {/* Progress Indicator */}
                         <div className="mb-8">
                             <div className="flex items-center justify-center">
-                                {[1, 2, 3, 4].map((step) => (
+                                {[1, 2, 3, 4, 5].map((step) => (
                                     <div key={step} className="flex items-center">
                                         <div
                                             className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${step === currentStep
@@ -1280,7 +1507,7 @@ export function ConfigurationPage() {
                                                 <span className="font-semibold">{step}</span>
                                             )}
                                         </div>
-                                        {step < 4 && (
+                                        {step < 5 && (
                                             <div
                                                 className={`w-32 h-0.5 mx-2 transition-all ${step < currentStep ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-700'
                                                     }`}
@@ -1294,7 +1521,8 @@ export function ConfigurationPage() {
                                     {currentStep === 1 && 'Paso 1: Fórmulas de Condiciones'}
                                     {currentStep === 2 && 'Paso 2: Condiciones Principales'}
                                     {currentStep === 3 && 'Paso 3: Configuración de Señales'}
-                                    {currentStep === 4 && 'Paso 4: Revisión Final'}
+                                    {currentStep === 4 && 'Paso 4: Consolidado de Producción'}
+                                    {currentStep === 5 && 'Paso 5: Revisión Final'}
                                 </p>
                             </div>
                         </div>
@@ -1318,7 +1546,14 @@ export function ConfigurationPage() {
                                     getValue={getValue}
                                 />
                             )}
-                            {currentStep === 4 && thresholds && activeConfig && (
+                            {currentStep === 4 && thresholds && (
+                                <StepConsolidated
+                                    thresholds={thresholds}
+                                    updateThreshold={updateThreshold}
+                                    getValue={getValue}
+                                />
+                            )}
+                            {currentStep === 5 && thresholds && activeConfig && (
                                 <Step4Review
                                     thresholds={thresholds}
                                     configName={activeConfig.name}
@@ -1339,7 +1574,7 @@ export function ConfigurationPage() {
                                 ← Anterior
                             </button>
 
-                            {currentStep < 4 ? (
+                            {currentStep < 5 ? (
                                 <button
                                     onClick={nextStep}
                                     data-testid={tid('configuration', 'next')}

@@ -30,7 +30,13 @@ Nota: `getDiagnostics` confirma 0 errores en los archivos tocados. `npm run type
 - ✅ Selfcheck ampliado y pasando: caso clave **serrucho+repunte** → temprana AFLUENCIA ≠ tendencia EMERGENCIA (la divergencia es el valor de negocio). `getDiagnostics` limpio, build de packages + frontend typecheck en verde.
 - Pendiente: validación runtime en navegador (cambiar ventana con backend+frontend arriba). Nota de entorno: el disco llegó a 100% (causa del "Failed to fetch" y timeouts de comandos); se liberó ~1.1Gi con `npm cache clean`.
 
-**Fase 2 — Condición consolidada (feature #4).** Modelar qué métricas cuentan por recurso, agregador en el motor (promedio de inclinaciones, validar fórmula de Laura), indicador global en UI. Feature de mayor valor y mayor diseño.
+**Fase 2 — Condición consolidada (feature #4) (COMPLETADA 2026-06-26, pendiente validación runtime).** Spec `fase-2-condicion-consolidada`.
+- ✅ Motor: `analyzeConsolidated` puro por **NIVEL** (no por inclinación de totales). Cada métrica de producción → su condición sobre la ventana → puntaje (`scoreTable`); nivel = puntaje promedio normalizado 0..1; el ratio se mapea a condición vía `consolidatedLevels` (umbrales configurables). Regla dura: producción nula → INEXISTENCIA. Selfcheck pasa, incluido el caso "una métrica en PODER → consolidado PODER".
+- ✅ **Corrección de método (queja del arquitecto):** el método inicial (inclinación de la serie de totales) daba EMERGENCIA a una métrica creciendo en PODER (puntaje plano 5,5,5 → inclinación 0). Cambiado a nivel: ahora refleja "qué tan bien produce", coherente con una sola métrica.
+- ✅ **Tres categorías** (`MetricCategory`): PRODUCTION (cuenta), STUDY (estudio, no cuenta), TRACKING (solo seguimiento). Categoría base en `Metric.category` + **override por recurso** `categoryByResource` (ej. "producción salvo para Helena"). Resolución: override ?? base ?? PRODUCTION.
+- ✅ `scoreTable` + `consolidatedLevels` configurables en la config activa (defaults en `createDefaultConfiguration`, sin 4ª copia).
+- ✅ Backend `GET /analysis/consolidated`; frontend: banda "Condición de producción de la persona" (muestra nivel %) + selector de 3 categorías en `MetricForm`.
+- Verde: build packages, typecheck backend+frontend, getDiagnostics limpio. Pendiente: validación runtime con seed (la hace el arquitecto).
 
 **Fase 3 — Notificación por correo (feature #6).** Botón de un clic que envía al usuario su condición + pasos del playbook (ya existen en `PlaybooksModule`). SMTP primero, Workspace después.
 
