@@ -1,4 +1,5 @@
 import { analysisApi, ConsolidatedEvaluation } from '../services/api/analysisApi';
+import { notificationsApi } from '../services/api/notificationsApi';
 import { configurationApi } from '../services/configurationApi';
 import { useState, useEffect, useRef, useMemo } from 'react';
 // import { useResources } from '../hooks/useResources'; // Ya no se necesita - AutocompleteInfinite maneja los datos
@@ -16,6 +17,7 @@ import { useRecordsStore } from '../stores/recordsStore';
 import { useAuth } from '../contexts/AuthContext';
 import { tid } from '../utils/testId';
 import { InfoTooltip } from '../components/InfoTooltip';
+import { useToast } from '../hooks/useToast';
 
 export function ResourceDashboard() {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
@@ -23,6 +25,8 @@ export function ResourceDashboard() {
   const [windowSize, setWindowSize] = useState<number>(8);
   const userPickedWindow = useRef(false);
   const [consolidated, setConsolidated] = useState<ConsolidatedEvaluation | null>(null);
+  const [notifying, setNotifying] = useState(false);
+  const { success: toastSuccess, error: toastError } = useToast();
   const [visuallyActiveCondition, setVisuallyActiveCondition] = useState<string | null>(null);
   const [chartLineColor, setChartLineColor] = useState<string | undefined>(undefined);
   const conditionsContainerRef = useRef<HTMLDivElement>(null);
@@ -276,6 +280,25 @@ export function ResourceDashboard() {
     [records, windowSize],
   );
 
+  // Notificar al usuario su condición consolidada por correo (un clic, tras revisión).
+  const handleNotify = async () => {
+    if (!selectedResourceId || !consolidated) return;
+    try {
+      setNotifying(true);
+      const res = await notificationsApi.notifyCondition({
+        resourceId: selectedResourceId,
+        condition: consolidated.condition,
+        explanation: consolidated.reason.explanation,
+        kind: 'consolidated',
+      });
+      toastSuccess(`Notificación enviada a ${res.to}`);
+    } catch (err) {
+      toastError(err instanceof Error ? err.message : 'No se pudo enviar la notificación');
+    } finally {
+      setNotifying(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
       {/* Dashboard Controls */}
@@ -365,6 +388,18 @@ export function ResourceDashboard() {
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                   {consolidated.metrics.reduce((s, m) => s + m.score, 0)} / {consolidated.metrics.length * consolidated.maxScore} pts
                 </div>
+                <button
+                  onClick={handleNotify}
+                  disabled={notifying}
+                  data-testid={tid('dashboard', 'notify')}
+                  className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors"
+                  title="Enviar al usuario su condición y los pasos a seguir"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  {notifying ? 'Enviando...' : 'Notificar al usuario'}
+                </button>
               </div>
             </div>
 

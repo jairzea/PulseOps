@@ -105,3 +105,18 @@ export class ForbiddenException extends AppException {
     super(message, HttpStatus.FORBIDDEN, 'FORBIDDEN');
   }
 }
+
+/**
+ * Excepción para un servicio externo no disponible o no configurado
+ * (ej. SMTP sin credenciales, o fallo de envío de correo).
+ */
+export class ServiceUnavailableException extends AppException {
+  constructor(message = 'Servicio no disponible', details?: unknown) {
+    super(
+      message,
+      HttpStatus.SERVICE_UNAVAILABLE,
+      'SERVICE_UNAVAILABLE',
+      details,
+    );
+  }
+}

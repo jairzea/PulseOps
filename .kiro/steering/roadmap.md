@@ -38,7 +38,12 @@ Nota: `getDiagnostics` confirma 0 errores en los archivos tocados. `npm run type
 - ✅ Backend `GET /analysis/consolidated`; frontend: banda "Condición de producción de la persona" (muestra nivel %) + selector de 3 categorías en `MetricForm`.
 - Verde: build packages, typecheck backend+frontend, getDiagnostics limpio. Pendiente: validación runtime con seed (la hace el arquitecto).
 
-**Fase 3 — Notificación por correo (feature #6).** Botón de un clic que envía al usuario su condición + pasos del playbook (ya existen en `PlaybooksModule`). SMTP primero, Workspace después.
+**Fase 3 — Notificación por correo (feature #6) (COMPLETADA 2026-06-26, pendiente validación runtime).** Spec `fase-3-notificacion-correo`.
+- ✅ Módulo `notifications`: `MailService` (nodemailer, aislado para migrar a Workspace después) + `NotificationsService` que reúsa `PlaybooksService` y datos del usuario + `POST /notifications/condition` con guard y DTO validado.
+- ✅ Composición del correo como función pura (`compose-condition-email.ts`) con escape HTML; selfcheck de 10 asserts pasa (incluye XSS-escape).
+- ✅ Config SMTP por entorno (`.env.example`); sin `SMTP_HOST` el envío lanza `ServiceUnavailableException` pero la app arranca igual. Credenciales nunca se logean.
+- ✅ Frontend: botón "Notificar al usuario" de un clic en el badge consolidado (deshabilitado mientras envía, toast de feedback).
+- Verde: typecheck backend + frontend, getDiagnostics limpio. Pendiente: validación runtime con SMTP de captura (Ethereal/Mailtrap) — la hace el arquitecto. Migración a Google Workspace: futura (security.md), aislada en `MailService`.
 
 **Fase 4 (futuro, condicionado).** IA para veredicto en lenguaje natural (#5, posiblemente YAGNI), y sistema de 3 canastillas + tracking Workspace (#7, otra iniciativa).
 
