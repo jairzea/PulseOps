@@ -23,7 +23,12 @@ Nota: `getDiagnostics` confirma 0 errores en los archivos tocados. `npm run type
 - Bugs reales corregidos durante los checkpoints: (1) bridge de Widgets roto en `commands.ts` (devolvía objetos en vez de elementos); (2) input numérico de Configuration mal-guardado (`{selectall}` + type); (3) **contaminación de datos**: el test de métricas asociaba métricas a recursos del seed y ensuciaba el Dashboard → aislado a `E2E Inexistencia`; (4) aserciones del Dashboard alineadas a la condición real del motor (regla últimos-2-puntos, no la tendencia del seed); el `data-testid` de condición se expone síncrono (sin depender de la animación de scroll) y también para INEXISTENCIA (inclinación nula); (5) borrado de usuarios acotado por texto para no tocar al admin.
 - Prerequisitos para correr la suite: `npm install -D @faker-js/faker fast-check @bahmutov/cypress-esbuild-preprocessor` (pinneados), MongoDB vía `config/docker-compose.dev.yml`, `npm run seed:e2e`, backend+frontend arriba, `cypress.env.json` con `ADMIN_PASSWORD`. En esta máquina Cypress debe correr con `arch -arm64` (node activo es x64). **Recomendación:** correr la suite completa en una sola invocación (`cypress run`) para que `cy.session` reutilice el login; spec-por-spec es más frágil. Pendiente: re-validar Metrics/Records en un entorno con recursos dedicados.
 
-**Fase 1 — Ventana configurable (features #1, #2, #3).** Selector de semanas en el dashboard + condición de tendencia por regresión sobre el periodo + soporte ≥ 8 semanas. Ver decisiones en `analysis-domain.md`.
+**Fase 1 — Ventana configurable (features #1, #2, #3) (COMPLETADA 2026-06-26).** Spec `fase-1-ventana-configurable`.
+- ✅ Selector de ventana en el dashboard (4/6/8/12 semanas, default 8) que recorta gráfica + análisis + cambio de forma coherente (`windowedRecords`). `tid('dashboard','window-select')`.
+- ✅ **Condición de tendencia** en el motor: regresión lineal portada de `chartUtils` a `engine.ts` (pura, sin deps); la pendiente se normaliza a inclinación porcentual usando los **extremos de la recta ajustada** y se pasa por la MISMA `resolveCondition` + `ConditionThresholds` (sin umbrales nuevos). Campo `trend?` aditivo en `MetricConditionEvaluation` (no rompe consumidores).
+- ✅ Badge "Tendencia del periodo" en el panel de Análisis (`tid('dashboard','trend-condition')`), diferenciado de la condición temprana.
+- ✅ Selfcheck ampliado y pasando: caso clave **serrucho+repunte** → temprana AFLUENCIA ≠ tendencia EMERGENCIA (la divergencia es el valor de negocio). `getDiagnostics` limpio, build de packages + frontend typecheck en verde.
+- Pendiente: validación runtime en navegador (cambiar ventana con backend+frontend arriba). Nota de entorno: el disco llegó a 100% (causa del "Failed to fetch" y timeouts de comandos); se liberó ~1.1Gi con `npm cache clean`.
 
 **Fase 2 — Condición consolidada (feature #4).** Modelar qué métricas cuentan por recurso, agregador en el motor (promedio de inclinaciones, validar fórmula de Laura), indicador global en UI. Feature de mayor valor y mayor diseño.
 
@@ -42,7 +47,7 @@ Nota: `getDiagnostics` confirma 0 errores en los archivos tocados. `npm run type
 - **Duplicaciones:** dos `RulesService` (`rules/` config por métrica vs `configuration/` business rules) y dos `current-user.decorator` (`auth/` con `CurrentUserData` vs `common/` con `User`). Nombres colisionantes que generan errores de import.
 - **Umbrales por defecto triplicados** (ver `analysis-domain.md`).
 - **Escalabilidad:** `findByResource` y `updateMetricsRelation` iteran todas las métricas en cada cambio (O(n)). Aceptable en demo, revisar antes de escala real. Marcar con `ponytail:` si se deja.
-- **Condición de tendencia:** el motor hoy solo compara los últimos 2 puntos aunque `windowSize` recorte más. Pendiente Fase 1.
+- **Condición de tendencia:** ✅ RESUELTO en Fase 1. El motor ahora expone `trend` (condición por regresión lineal sobre la ventana completa) además de la condición temprana de últimos-2-puntos.
 
 ## Notas de la sesión con el PO (2026-06-22)
 
