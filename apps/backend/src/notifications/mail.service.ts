@@ -62,7 +62,7 @@ export class MailService {
     const from = this.config.get<string>('SMTP_FROM') ?? 'PulseOps <no-reply@pulseops.local>';
 
     try {
-      await transport.sendMail({
+      const info = await transport.sendMail({
         from,
         to: message.to,
         subject: message.subject,
@@ -70,6 +70,11 @@ export class MailService {
         html: message.html,
       });
       this.logger.log(`Correo enviado a ${message.to} (${message.subject})`);
+      // En SMTP de captura (Ethereal) hay una URL para previsualizar el correo.
+      const preview = nodemailer.getTestMessageUrl(info);
+      if (preview) {
+        this.logger.log(`Previsualización del correo: ${preview}`);
+      }
     } catch (err) {
       // Mensaje del error de transporte sin exponer credenciales (no incluye auth).
       const reason = err instanceof Error ? err.message : String(err);
