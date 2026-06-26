@@ -36,6 +36,18 @@ export interface AnalysisResult {
     }>;
     evaluatedAt: string;
     confidence: number;
+    trend?: {
+      condition: string;
+      reason: { code: string; explanation: string; threshold?: number };
+      inclination: {
+        value: number | null;
+        previousValue: number;
+        currentValue: number;
+        delta: number;
+        isValid: boolean;
+      };
+      slope: number;
+    };
   };
   appliedRuleConfig: any | null;
   playbook: {

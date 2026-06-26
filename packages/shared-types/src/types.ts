@@ -131,10 +131,26 @@ export interface MetricConditionEvaluation {
   
   // Señales de análisis de patrones (meta-análisis)
   signals: AnalysisSignal[];
-  
+
+  // Condición de tendencia sobre el periodo completo (regresión lineal sobre la
+  // ventana). Opcional y aditivo: la condición temprana de arriba no cambia.
+  trend?: TrendEvaluation;
+
   // Metadata
   evaluatedAt: string;
   confidence: number;        // 0-1: confianza en la evaluación (basada en cantidad de datos)
+}
+
+/**
+ * Condición de tendencia: condición operativa evaluada sobre TODO el periodo de la
+ * ventana mediante regresión lineal, a diferencia de la condición "temprana" que mira
+ * solo el cambio entre los últimos 2 puntos. Usa la misma jerarquía y umbrales.
+ */
+export interface TrendEvaluation {
+  condition: HubbardCondition;     // condición sobre el periodo completo
+  reason: ConditionReason;
+  inclination: InclinationResult;  // inclinación derivada de los extremos de la recta ajustada
+  slope: number;                   // pendiente cruda de la regresión (depuración/UI)
 }
 
 // ============================================================================

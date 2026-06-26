@@ -25,6 +25,7 @@ import type {
   OperationalCondition,
   TrendAnalysisResult,
   TrendDirection,
+  TrendEvaluation,
   ConditionThresholds,
 } from '@pulseops/shared-types';
 
@@ -509,6 +510,85 @@ function calculateInclination(
 // ============================================================================
 
 /**
+ * Regresión lineal por mínimos cuadrados sobre la serie, usando el índice (0..n-1)
+ * como eje X. Misma fórmula que `frontend/utils/chartUtils.calculateLinearRegression`,
+ * portada al motor para DECIDIR condición, no solo para dibujar.
+ *
+ * ponytail: regresión lineal simple O(n) sobre la ventana; suficiente para ≤ ~52
+ * semanas. Si en el futuro se requiere ponderar puntos recientes, el upgrade es una
+ * regresión ponderada en este mismo helper.
+ */
+function linearRegression(
+  points: Array<{ value: number }>,
+): { slope: number; intercept: number } {
+  const n = points.length;
+  if (n < 2) return { slope: 0, intercept: n === 1 ? points[0].value : 0 };
+
+  let sumX = 0;
+  let sumY = 0;
+  let sumXY = 0;
+  let sumX2 = 0;
+  for (let i = 0; i < n; i++) {
+    const y = points[i].value;
+    sumX += i;
+    sumY += y;
+    sumXY += i * y;
+    sumX2 += i * i;
+  }
+
+  const denominator = n * sumX2 - sumX * sumX;
+  if (denominator === 0) return { slope: 0, intercept: sumY / n };
+
+  const slope = (n * sumXY - sumX * sumY) / denominator;
+  const intercept = (sumY - slope * sumX) / n;
+  return { slope, intercept };
+}
+
+/**
+ * Calcula la condición de TENDENCIA sobre el periodo completo de la ventana.
+ *
+ * En vez de comparar los últimos 2 puntos crudos (condición temprana), ajusta una
+ * recta a TODOS los puntos y deriva una inclinación porcentual desde los extremos de
+ * la recta ajustada (inicio vs fin del periodo). Esa inclinación se pasa por la MISMA
+ * jerarquía (`resolveCondition`) y los MISMOS umbrales que la condición temprana, así
+ * que no introduce umbrales de negocio nuevos.
+ */
+function evaluateTrend(
+  windowPoints: Array<{ timestamp: string; value: number }>,
+  thresholds: ConditionThresholds,
+): TrendEvaluation {
+  if (windowPoints.length < 2) {
+    return {
+      condition: 'SIN_DATOS',
+      reason: {
+        code: 'INSUFFICIENT_DATA',
+        explanation: 'Se requieren al menos 2 períodos para la tendencia del periodo.',
+      },
+      inclination: {
+        value: null,
+        previousValue: windowPoints[0]?.value ?? 0,
+        currentValue: windowPoints[0]?.value ?? 0,
+        delta: 0,
+        isValid: false,
+      },
+      slope: 0,
+    };
+  }
+
+  const { slope, intercept } = linearRegression(windowPoints);
+  const startFit = intercept; // fit(0)
+  const endFit = slope * (windowPoints.length - 1) + intercept; // fit(n-1)
+
+  // Inclinación equivalente entre extremos de la recta ajustada. Reutiliza los casos
+  // especiales de cero/inicio/caída de calculateInclination.
+  const inclination = calculateInclination(startFit, endFit);
+  const { condition, reason } = resolveCondition(inclination, windowPoints, thresholds);
+
+  return { condition, reason, inclination, slope };
+}
+
+
+/**
  * Verifica si una serie está en condición de Poder
  * 
  * Requisitos:
@@ -872,6 +952,9 @@ class TrendAnalysisEngine implements AnalysisEngine {
     // Detectar patrones adicionales (meta-análisis)
     const signals = detectPatterns(series.points, thresholds.signals);
 
+    // Condición de tendencia sobre la ventana completa (regresión lineal)
+    const trend = evaluateTrend(relevantPoints, thresholds);
+
     // Calcular confianza basada en cantidad de datos
     // Más datos históricos = mayor confianza
     const confidence = Math.min(series.points.length / 10, 1);
@@ -885,6 +968,7 @@ class TrendAnalysisEngine implements AnalysisEngine {
       condition,
       reason,
       signals,
+      trend,
       evaluatedAt,
       confidence,
     };
