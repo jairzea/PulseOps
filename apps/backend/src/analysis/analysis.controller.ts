@@ -26,4 +26,13 @@ export class AnalysisController {
     const parsedWindowSize = windowSize ? parseInt(windowSize, 10) : undefined;
     return this.analysisService.overview(parsedWindowSize);
   }
+
+  @Get('consolidated')
+  consolidated(
+    @Query('resourceId') resourceId: string,
+    @Query('windowSize') windowSize?: string,
+  ) {
+    const parsedWindowSize = windowSize ? parseInt(windowSize, 10) : undefined;
+    return this.analysisService.consolidated(resourceId, parsedWindowSize);
+  }
 }
