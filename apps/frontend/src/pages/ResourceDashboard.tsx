@@ -17,6 +17,7 @@ import { tid } from '../utils/testId';
 export function ResourceDashboard() {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const [selectedMetricKey, setSelectedMetricKey] = useState<string | null>(null);
+  const [windowSize, setWindowSize] = useState<number>(8);
   const [visuallyActiveCondition, setVisuallyActiveCondition] = useState<string | null>(null);
   const [chartLineColor, setChartLineColor] = useState<string | undefined>(undefined);
   const conditionsContainerRef = useRef<HTMLDivElement>(null);
@@ -163,13 +164,14 @@ export function ResourceDashboard() {
   // Trigger analysis when resource or metric changes
   useEffect(() => {
     if (selectedResourceId && selectedMetricKey) {
-      console.log('[Dashboard] Triggering analysis:', { selectedResourceId, selectedMetricKey });
+      console.log('[Dashboard] Triggering analysis:', { selectedResourceId, selectedMetricKey, windowSize });
       evaluate({
         resourceId: selectedResourceId,
         metricKey: selectedMetricKey,
+        windowSize,
       });
     }
-  }, [selectedResourceId, selectedMetricKey, evaluate]);
+  }, [selectedResourceId, selectedMetricKey, windowSize, evaluate]);
 
   // Auto-scroll to active condition with smooth animation
   useEffect(() => {
@@ -232,6 +234,12 @@ export function ResourceDashboard() {
     return metric;
   }, [metrics, selectedMetricKey]);
 
+  // Recorte coherente a la ventana: gráfica, análisis y cambio usan el mismo periodo.
+  const windowedRecords = useMemo(
+    () => (Array.isArray(records) ? records.slice(-windowSize) : records),
+    [records, windowSize],
+  );
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
       {/* Dashboard Controls */}
@@ -254,6 +262,17 @@ export function ResourceDashboard() {
                 resourceId={selectedResourceId}
                 testId={tid('dashboard', 'metric-select')}
               />
+              <select
+                value={windowSize}
+                onChange={(e) => setWindowSize(Number(e.target.value))}
+                data-testid={tid('dashboard', 'window-select')}
+                className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                title="Semanas a analizar"
+              >
+                {[4, 6, 8, 12].map((w) => (
+                  <option key={w} value={w}>{w} semanas</option>
+                ))}
+              </select>
             </div>
 
             {/* Add Record Button */}
@@ -338,7 +357,7 @@ export function ResourceDashboard() {
           {/* Chart - 8 columns */}
           <div className="col-span-8" data-testid={tid('dashboard', 'chart')}>
             <HistoricalChart
-              records={records}
+              records={windowedRecords}
               metricName={selectedMetric?.label || 'Metric'}
               loading={loadingRecords}
               lineColor={chartLineColor}
@@ -375,6 +394,21 @@ export function ResourceDashboard() {
                   >
                     {analysis.evaluation.condition}
                   </div>
+                  {/* Condición de tendencia (regresión sobre el periodo completo). Puede
+                      diferir de la temprana: la temprana mira el último cambio, la tendencia
+                      mira hacia dónde va todo el periodo. */}
+                  {analysis.evaluation.trend && (
+                    <div
+                      data-testid={tid('dashboard', 'trend-condition')}
+                      data-condition={analysis.evaluation.trend.condition}
+                      className="text-xs text-gray-500 dark:text-gray-400"
+                    >
+                      Tendencia del periodo:{' '}
+                      <span className="font-semibold text-gray-700 dark:text-gray-300">
+                        {analysis.evaluation.trend.condition}
+                      </span>
+                    </div>
+                  )}
                   {/* Inclinación */}
                   <div className="transition-all duration-700 ease-in-out">
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Inclinación</div>
@@ -393,10 +427,10 @@ export function ResourceDashboard() {
                     <div className="text-xl font-semibold text-gray-900 dark:text-white transition-all duration-700 ease-in-out">
                       {records && records.length >= 2 ? (
                         <>
-                          {records[records.length - 2].value} → {records[records.length - 1].value}
+                          {windowedRecords[windowedRecords.length - 2].value} → {windowedRecords[windowedRecords.length - 1].value}
                           <span className="text-blue-600 dark:text-blue-400 ml-2 transition-colors duration-700 ease-in-out">
-                            ({records[records.length - 1].value > records[records.length - 2].value ? '+' : ''}
-                            {(records[records.length - 1].value - records[records.length - 2].value).toFixed(0)})
+                            ({windowedRecords[windowedRecords.length - 1].value > windowedRecords[windowedRecords.length - 2].value ? '+' : ''}
+                            {(windowedRecords[windowedRecords.length - 1].value - windowedRecords[windowedRecords.length - 2].value).toFixed(0)})
                           </span>
                         </>
                       ) : '--'}
