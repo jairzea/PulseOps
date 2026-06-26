@@ -1,42 +1,44 @@
 # Plan de implementación — Fase 2
 
-> **Decisiones resueltas (2026-06-26):** marca producción/estudio = flag global `Metric.category`
-> (default PRODUCTION); fórmula del agregador validada con las notas de Laura. Listo para
-> implementar. Ver design.md.
+> **Decisiones (2026-06-26):**
+> - Tres categorías de métrica: PRODUCTION / STUDY / TRACKING. Base en `Metric.category` +
+>   override por recurso `categoryByResource`. Solo PRODUCTION cuenta para el consolidado.
+> - Consolidado por **NIVEL** (no por inclinación de totales): puntaje promedio normalizado
+>   contra el techo (nº métricas × PODER) → ratio → condición vía `consolidatedLevels`.
+> - `scoreTable`, `consolidatedLevels` y `defaultWindowSize` configurables en la config activa.
 
-- [ ] 1. Tipos compartidos: scoreTable y consolidado
-  - `ConditionScoreTable`, `ConsolidatedWeek`, `ConsolidatedEvaluation` y `scoreTable?` en `ConditionThresholds` (aditivo) en `packages/shared-types/src/types.ts`. Build de shared-types.
+- [x] 1. Tipos compartidos
+  - `ConditionScoreTable`, `ConsolidatedLevelThresholds`, `MetricCategory`, `ConsolidatedMetricInput`, `ConsolidatedContribution`, `ConsolidatedEvaluation`; `scoreTable?`, `consolidatedLevels?`, `defaultWindowSize?` en `ConditionThresholds`. Build de shared-types.
   - _Requisitos: 2.1, 3.1, 6.2_
 
-- [ ] 2. Motor: `analyzeConsolidated` (puro) + niveles 1-3
-  - Implementar alineación por semana, condición por métrica por semana (par consecutivo), total semanal, y re-análisis de la serie de totales reutilizando `analyzeWithConditions`.
-  - Aplicar regla dura (total actual 0 → INEXISTENCIA) y exclusión de semanas ausentes.
+- [x] 2. Motor: `analyzeConsolidated` (puro) por nivel
+  - Cada métrica → condición sobre la ventana → puntaje; nivel = Σ/(n×máx); ratio → condición vía umbrales de nivel. Regla dura (producción 0 → INEXISTENCIA). `windowSize` como tope (no mínimo): fix del guard que daba SIN_DATOS con pocos puntos.
   - _Requisitos: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 3. Motor: selfcheck del ejemplo de Laura
-  - Asserts: 9→13 → AFLUENCIA; 9→9 → EMERGENCIA; total semana actual 0 → INEXISTENCIA; una métrica de estudio no altera el total. Ejecutar con node, debe pasar.
+- [x] 3. Motor: selfcheck
+  - Asserts: una métrica en PODER → consolidado PODER; producción 0 → INEXISTENCIA; nivel mixto; umbrales de nivel configurables cambian el resultado; 2 puntos con ventana 8 ≠ SIN_DATOS. Pasa (exit 0).
   - _Requisitos: 3.6_
 
-- [ ] 4. Config: default scoreTable (consolidar defaults)
-  - Añadir `scoreTable` por defecto en la fuente de defaults sin crear una 4ª copia; tender a unificar las existentes.
+- [x] 4. Config: defaults consolidados
+  - `scoreTable` + `consolidatedLevels` + `defaultWindowSize` en `createDefaultConfiguration`, schema y DTO. Aditivo, sin 4ª copia.
   - _Requisitos: 2.1, 2.2, 2.3_
 
-- [ ] 5. Modelo: flag `category` en Metric
-  - Añadir `category: 'PRODUCTION'|'STUDY'` (default PRODUCTION) al schema y DTOs de Metric. Migración implícita: documentos existentes sin campo → producción.
+- [x] 5. Modelo: categoría en Metric
+  - `category: 'PRODUCTION'|'STUDY'|'TRACKING'` (default PRODUCTION) + `categoryByResource` (override) en schema y DTOs.
   - _Requisitos: 1.1, 1.2, 1.3_
 
-- [ ] 6. Backend: servicio + endpoint consolidado
-  - `AnalysisService.consolidated()` y `GET /analysis/consolidated` con guard. Filtrar a métricas de producción, armar series, llamar al motor.
+- [x] 6. Backend: servicio + endpoint consolidado
+  - `AnalysisService.consolidated()` + `GET /analysis/consolidated` con guard. Filtra producción (override ?? base ?? PRODUCTION), arma series, ventana efectiva = request ?? defaultWindowSize.
   - _Requisitos: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 7. Frontend: API + badge consolidado
-  - `analysisApi.getConsolidated()` + tipos; badge "Condición de producción" en el dashboard con `data-testid`. Desglose semanal opcional.
+- [x] 7. Frontend: API + badge consolidado con desglose
+  - `analysisApi.getConsolidated()` + tipos; banda "Condición de producción de la persona" con nivel %, `pts/techo`, desglose por métrica y tooltip de la fórmula. Refresco al crear registro (`lastCreatedRecord`). Ventana inicial = `defaultWindowSize` de la config.
   - _Requisitos: 5.1, 5.2, 5.3_
 
-- [ ] 8. Frontend: toggle producción/estudio
-  - En la pantalla de asignación de métricas al recurso, control para marcar cada métrica. (Depende de tarea 5.)
-  - _Requisitos: 1.4_
+- [x] 8. Frontend: categoría + configuración del consolidado
+  - Selector de 3 categorías en `MetricForm`. Paso "Consolidado de Producción" en `ConfigurationPage` (puntajes + umbrales de nivel + ventana por defecto), resumen en Revisión Final, y `InfoTooltip` reutilizable (ayuda general por grupo y por campo).
+  - _Requisitos: 1.4, 2.1_
 
-- [ ] 9. Verificación de cierre
-  - `getDiagnostics`, build packages + backend, typecheck frontend. Validación runtime con un recurso del seed. Actualizar roadmap marcando Fase 2.
+- [x] 9. Verificación de cierre
+  - `getDiagnostics` limpio; build shared-types + motor; typecheck backend y frontend en verde; selfcheck del motor pasa. Validación runtime: hecha por el arquitecto (caso Helena, refresco, configuración).
   - _Requisitos: 6.1, 6.2_

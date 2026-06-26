@@ -21,21 +21,37 @@ desde Mongo y llama al motor.
 
 ## Decisión de dominio RESUELTA (arquitecto, 2026-06-26)
 
-**¿Dónde vive la marca producción/estudio?** → **Opción B: flag global en la métrica.**
+**Categorías de métrica → TRES valores (`MetricCategory`):**
+- `PRODUCTION`: cuenta en el consolidado.
+- `STUDY`: estudio; no cuenta en el consolidado (sí en métricas de equipo futuras).
+- `TRACKING`: solo seguimiento; no cuenta ni como producción ni estudio.
 
-El arquitecto confirmó que producción y estudio son **métricas diferentes** (la misma métrica no
-es producción para uno y estudio para otro). Las métricas de estudio suelen aplicar a todos los
-roles. Por tanto la categoría es un **atributo global de la métrica**, no de la asociación
-métrica↔recurso.
+**Dónde vive la categoría → categoría base + override por recurso:**
+- Base global en `Metric.category` (default `PRODUCTION`).
+- Override opcional por recurso en `Metric.categoryByResource: { [resourceId]: MetricCategory }`,
+  para casos como "Integraciones es producción salvo para Helena".
+- Resolución: `efectiva = categoryByResource[resourceId] ?? category ?? 'PRODUCTION'`.
 
-Implementación: añadir `category: 'PRODUCTION' | 'STUDY'` a `Metric` (default `PRODUCTION`).
+`ponytail:` override como mapa embebido en la métrica, sin colección nueva; solo se llena
+cuando un recurso difiere del default. Upgrade futuro a colección `metric-resource` indexada si
+el volumen lo pide.
 
-`ponytail:` flag global en `Metric.category`, sin colección intermedia. El arquitecto señaló que
-"se puede dejar abierta" la posibilidad de que una métrica varíe por rol en el futuro; si llega a
-necesitarse, el upgrade es una colección `metric-resource` con `category` por asociación. No se
-construye ahora (YAGNI). Solo cuentan las de producción para el consolidado por persona; el
-cálculo que mezcla estudio ("staff en Normal/Afluencia") es la métrica organizacional futura,
-fuera de alcance.
+## Método del consolidado: NIVEL, no inclinación de totales (revisado 2026-06-26)
+
+El método inicial (inclinación de la serie de totales) producía resultados ilógicos: una métrica
+en NORMAL/PODER sostenido tiene puntaje plano (5,5,5) → inclinación 0 → EMERGENCIA, aunque la
+persona produzca bien. **Corregido a método por NIVEL:**
+
+1. Cada métrica de producción → su condición actual sobre la ventana (`analyzeWithConditions`)
+   → puntaje (`scoreTable`).
+2. Nivel = Σ puntajes / (nº métricas × puntaje máximo). Ratio 0..1.
+3. El ratio se mapea a condición vía **umbrales de nivel configurables** (`consolidatedLevels`),
+   calibrados para que una sola métrica dé su propia condición.
+4. Regla dura: producción nula (puntaje total 0) → INEXISTENCIA.
+
+Esto sí es coherente: una persona con una única métrica en PODER → consolidado PODER. La tabla
+`consolidatedLevels` (ratios poder/afluencia/normal/emergencia/peligro) es el parámetro
+configurable que reemplaza a la idea previa de "umbrales de inclinación del consolidado".
 
 ## A. Tipos compartidos (`shared-types`)
 
@@ -62,6 +78,13 @@ export interface ConsolidatedEvaluation {
 ```
 
 `ConditionThresholds` gana `scoreTable?: ConditionScoreTable` (opcional/aditivo).
+
+**Umbrales propios del consolidado (decisión PO 2026-06-26):** el nivel 3 (re-análisis de la
+serie de totales) puede usar su PROPIA tabla de umbrales (`consolidatedThresholds`), distinta de
+la de métricas individuales. Motivo: Laura considera un +44% de producción como AFLUENCIA, aunque
+a nivel métrica +44% sea NORMAL. Si no se provee, el consolidado cae a los umbrales de métrica.
+El motor acepta `config.consolidatedThresholds`; el backend lo tomará de la configuración activa
+(campo aparte de `thresholds`).
 
 ## B. Motor — función pura nueva
 
