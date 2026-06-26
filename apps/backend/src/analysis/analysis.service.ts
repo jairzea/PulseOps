@@ -10,6 +10,10 @@ import { UserRole } from '../users/schemas/user.schema';
 import {
   MetricSeries,
   MetricConditionEvaluation,
+  ConsolidatedEvaluation,
+  ConditionThresholds,
+  ConditionScoreTable,
+  ConsolidatedLevelThresholds,
 } from '@pulseops/shared-types';
 
 export interface EvaluationResponse {
@@ -167,5 +171,78 @@ export class AnalysisService {
       byCondition,
       resources: rows,
     };
+  }
+
+  /**
+   * Condición consolidada de producción de un recurso (Fase 2).
+   *
+   * Toma las métricas de PRODUCCIÓN asociadas al recurso, arma sus series por semana
+   * y delega al motor (`analyzeConsolidated`), que aplica el método de dos niveles:
+   * condición por métrica/semana → puntaje → suma semanal → re-análisis de totales.
+   */
+  async consolidated(
+    resourceId: string,
+    windowSize?: number,
+  ): Promise<ConsolidatedEvaluation> {
+    // 1. Métricas del recurso. Categoría efectiva = override por recurso ?? categoría
+    //    base de la métrica ?? PRODUCTION. Solo PRODUCTION cuenta para el consolidado
+    //    (STUDY y TRACKING se excluyen).
+    const metrics = await this.metricsService.findByResource(resourceId);
+    const productionMetrics = metrics.filter((m) => {
+      const override = (m as any).categoryByResource?.[resourceId];
+      const effective = override ?? (m as any).category ?? 'PRODUCTION';
+      return effective === 'PRODUCTION';
+    });
+
+    if (productionMetrics.length === 0) {
+      throw new NotFoundException(
+        `No production metrics found for resourceId=${resourceId}`,
+      );
+    }
+
+    // 2. Armar series por semana desde records.
+    const metricInputs = [];
+    for (const m of productionMetrics) {
+      const records = await this.recordsService.findMany({
+        resourceId,
+        metricKey: m.key,
+      });
+      if (records.length === 0) continue;
+      metricInputs.push({
+        metricKey: m.key,
+        points: records.map((r) => ({ week: r.week, value: r.value })),
+      });
+    }
+
+    if (metricInputs.length === 0) {
+      throw new NotFoundException(
+        `No records found for production metrics of resourceId=${resourceId}`,
+      );
+    }
+
+    // 3. Configuración activa: umbrales de métrica, tabla de puntajes, umbrales de
+    //    NIVEL del consolidado y ventana por defecto (si están definidos).
+    const activeConfig =
+      await this.configurationService.getActiveConfiguration();
+    const thresholds = activeConfig.thresholds as unknown as ConditionThresholds;
+    const scoreTable = (activeConfig.thresholds as any)
+      ?.scoreTable as ConditionScoreTable | undefined;
+    const levels = (activeConfig.thresholds as any)
+      ?.consolidatedLevels as ConsolidatedLevelThresholds | undefined;
+    const defaultWindowSize = (activeConfig.thresholds as any)
+      ?.defaultWindowSize as number | undefined;
+
+    // La ventana del request manda; si no llega, usa el default configurado.
+    const effectiveWindow = windowSize ?? defaultWindowSize;
+
+    // 4. Delegar al motor puro.
+    const result = analysisEngine.analyzeConsolidated(metricInputs, {
+      size: effectiveWindow,
+      thresholds,
+      scoreTable,
+      levels,
+    });
+
+    return { ...result, resourceId };
   }
 }

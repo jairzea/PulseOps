@@ -272,6 +272,79 @@ export interface ConditionThresholds {
       minWindowSize: number;            // Default: 4
     };
   };
+
+  // Tabla de puntajes por condición (Fase 2 — condición consolidada). Cada condición
+  // de una métrica de producción aporta este puntaje. Configurable;
+  // default Laura: PODER=10, AFLUENCIA=7, NORMAL=5, EMERGENCIA=3, PELIGRO=1, INEXISTENCIA=0.
+  scoreTable?: ConditionScoreTable;
+
+  // Umbrales de NIVEL del consolidado (ratio 0..1 → condición). Configurable.
+  consolidatedLevels?: ConsolidatedLevelThresholds;
+
+  // Ventana por defecto (nº de semanas) para el análisis y el consolidado, cuando el
+  // usuario no selecciona una explícitamente. Política configurable (objetivo: 8).
+  defaultWindowSize?: number;
+}
+
+/**
+ * Tabla de puntajes por condición operativa. Traduce condición → puntaje. El máximo
+ * (PODER) define el techo para normalizar el nivel consolidado.
+ */
+export type ConditionScoreTable = Record<HubbardCondition, number>;
+
+/**
+ * Umbrales de NIVEL del consolidado (Fase 2). El consolidado se decide por el nivel de
+ * producción (puntaje promedio normalizado 0..1), NO por la inclinación de los totales.
+ * Cada valor es el ratio mínimo (0..1) para alcanzar esa condición. Configurable.
+ * Default pensado para que UNA métrica dé exactamente su propia condición.
+ */
+export interface ConsolidatedLevelThresholds {
+  poder: number;       // default 0.9
+  afluencia: number;   // default 0.65
+  normal: number;      // default 0.45
+  emergencia: number;  // default 0.25
+  peligro: number;     // default 0.05  (por debajo → INEXISTENCIA)
+}
+
+/**
+ * Categoría de una métrica para el consolidado de producción (Fase 2):
+ * - PRODUCTION: cuenta en el consolidado.
+ * - STUDY: estudio; no cuenta en el consolidado (sí en métricas de equipo futuras).
+ * - TRACKING: solo seguimiento; no cuenta ni como producción ni como estudio.
+ */
+export type MetricCategory = 'PRODUCTION' | 'STUDY' | 'TRACKING';
+
+/**
+ * Entrada del motor para el análisis consolidado: una métrica de producción con sus
+ * valores etiquetados por semana. El backend arma esto desde los records.
+ */
+export interface ConsolidatedMetricInput {
+  metricKey: string;
+  points: Array<{ week: string; value: number }>;
+}
+
+/**
+ * Contribución de una métrica de producción al consolidado.
+ */
+export interface ConsolidatedContribution {
+  metricKey: string;
+  condition: HubbardCondition;   // condición actual de la métrica sobre la ventana
+  score: number;                 // puntaje según scoreTable
+}
+
+/**
+ * Resultado del análisis consolidado de producción de un recurso (Fase 2).
+ * La condición sale de mapear el NIVEL (puntaje promedio normalizado) vía umbrales.
+ */
+export interface ConsolidatedEvaluation {
+  resourceId: string;
+  condition: HubbardCondition;   // condición consolidada de producción
+  reason: ConditionReason;
+  levelRatio: number;            // 0..1: puntaje total / (nº métricas × puntaje máximo)
+  maxScore: number;              // puntaje máximo por métrica (techo, = scoreTable.PODER)
+  metrics: ConsolidatedContribution[];
+  windowUsed: number;
+  evaluatedAt: string;
 }
 
 /**

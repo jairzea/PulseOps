@@ -176,6 +176,27 @@ export class ConfigurationService {
             minWindowSize: 4,
           },
         },
+        scoreTable: {
+          PODER: 10,
+          AFLUENCIA: 7,
+          NORMAL: 5,
+          EMERGENCIA: 3,
+          PELIGRO: 1,
+          INEXISTENCIA: 0,
+          SIN_DATOS: 0,
+          CAMBIO_DE_PODER: 0,
+        },
+        // Umbrales de NIVEL del consolidado: ratio de puntaje (0..1) → condición.
+        // Calibrados para que una sola métrica mapee a su propia condición.
+        consolidatedLevels: {
+          poder: 0.9,
+          afluencia: 0.65,
+          normal: 0.45,
+          emergencia: 0.25,
+          peligro: 0.05,
+        },
+        // Ventana por defecto (semanas) para análisis y consolidado.
+        defaultWindowSize: 8,
       },
     };
 

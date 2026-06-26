@@ -1,3 +1,5 @@
+import { analysisApi, ConsolidatedEvaluation } from '../services/api/analysisApi';
+import { configurationApi } from '../services/configurationApi';
 import { useState, useEffect, useRef, useMemo } from 'react';
 // import { useResources } from '../hooks/useResources'; // Ya no se necesita - AutocompleteInfinite maneja los datos
 import { useMetrics } from '../hooks/useMetrics';
@@ -13,11 +15,14 @@ import { RecordModal } from '../components/RecordModal';
 import { useRecordsStore } from '../stores/recordsStore';
 import { useAuth } from '../contexts/AuthContext';
 import { tid } from '../utils/testId';
+import { InfoTooltip } from '../components/InfoTooltip';
 
 export function ResourceDashboard() {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const [selectedMetricKey, setSelectedMetricKey] = useState<string | null>(null);
   const [windowSize, setWindowSize] = useState<number>(8);
+  const userPickedWindow = useRef(false);
+  const [consolidated, setConsolidated] = useState<ConsolidatedEvaluation | null>(null);
   const [visuallyActiveCondition, setVisuallyActiveCondition] = useState<string | null>(null);
   const [chartLineColor, setChartLineColor] = useState<string | undefined>(undefined);
   const conditionsContainerRef = useRef<HTMLDivElement>(null);
@@ -81,7 +86,7 @@ export function ResourceDashboard() {
         metricKey: selectedMetricKey,
       });
     }
-  }, [selectedResourceId, selectedMetricKey, fetchRecords]);
+  }, [selectedResourceId, selectedMetricKey, lastCreatedRecord, fetchRecords]);
 
   // Auto-select resource for non-admin users
   useEffect(() => {
@@ -161,7 +166,7 @@ export function ResourceDashboard() {
     prevModalOpen.current = isModalOpen;
   }, [isModalOpen, lastCreatedRecord]);
 
-  // Trigger analysis when resource or metric changes
+  // Trigger analysis when resource or metric changes (o al crear un registro nuevo)
   useEffect(() => {
     if (selectedResourceId && selectedMetricKey) {
       console.log('[Dashboard] Triggering analysis:', { selectedResourceId, selectedMetricKey, windowSize });
@@ -171,7 +176,38 @@ export function ResourceDashboard() {
         windowSize,
       });
     }
-  }, [selectedResourceId, selectedMetricKey, windowSize, evaluate]);
+  }, [selectedResourceId, selectedMetricKey, windowSize, lastCreatedRecord, evaluate]);
+
+  // Cargar la ventana por defecto configurada (política del consolidado). Solo aplica
+  // si el usuario aún no eligió una ventana manualmente.
+  useEffect(() => {
+    let cancelled = false;
+    configurationApi
+      .getActiveConfiguration()
+      .then((cfg) => {
+        const def = (cfg?.thresholds as any)?.defaultWindowSize;
+        if (!cancelled && !userPickedWindow.current && typeof def === 'number' && def > 0) {
+          setWindowSize(def);
+        }
+      })
+      .catch(() => { /* sin config: se queda el default local 8 */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Cargar condición consolidada de producción del recurso (Fase 2). Se recarga al
+  // cambiar recurso/ventana y al crear un registro nuevo (lastCreatedRecord).
+  useEffect(() => {
+    let cancelled = false;
+    if (!selectedResourceId) {
+      setConsolidated(null);
+      return;
+    }
+    analysisApi
+      .getConsolidated(selectedResourceId, windowSize)
+      .then((res) => { if (!cancelled) setConsolidated(res); })
+      .catch(() => { if (!cancelled) setConsolidated(null); }); // recurso sin métricas de producción
+    return () => { cancelled = true; };
+  }, [selectedResourceId, windowSize, lastCreatedRecord]);
 
   // Auto-scroll to active condition with smooth animation
   useEffect(() => {
@@ -264,12 +300,12 @@ export function ResourceDashboard() {
               />
               <select
                 value={windowSize}
-                onChange={(e) => setWindowSize(Number(e.target.value))}
+                onChange={(e) => { userPickedWindow.current = true; setWindowSize(Number(e.target.value)); }}
                 data-testid={tid('dashboard', 'window-select')}
                 className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                 title="Semanas a analizar"
               >
-                {[4, 6, 8, 12].map((w) => (
+                {[...new Set([4, 6, 8, 12, windowSize])].sort((a, b) => a - b).map((w) => (
                   <option key={w} value={w}>{w} semanas</option>
                 ))}
               </select>
@@ -291,6 +327,63 @@ export function ResourceDashboard() {
 
       {/* Main Content */}
       <main className="max-w-[1800px] mx-auto px-6 py-6">
+        {/* Condición consolidada de producción (Fase 2) */}
+        {consolidated && selectedResourceId && (
+          <div
+            className="mb-6 rounded-xl border-2 border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/40 px-6 py-4"
+            data-testid={tid('dashboard', 'consolidated')}
+            data-condition={consolidated.condition}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+                  Condición de producción de la persona
+                  <InfoTooltip
+                    position="bottom"
+                    content={
+                      <div className="space-y-2">
+                        <p className="font-semibold text-white">Cómo se calcula este número</p>
+                        <p>Cada métrica de producción aporta un puntaje según su condición. El nivel es:</p>
+                        <p className="font-mono text-gray-200">nivel = Σ puntajes ÷ (nº métricas × puntaje máx)</p>
+                        <p>El "puntaje máximo" es el de PODER (configurable). Con {consolidated.metrics.length} métrica(s), el techo es {consolidated.metrics.length} × {consolidated.maxScore} = {consolidated.metrics.length * consolidated.maxScore}.</p>
+                        <p className="text-gray-300">El nivel resultante se traduce a condición según los umbrales configurables.</p>
+                      </div>
+                    }
+                  />
+                </div>
+                <div className="text-3xl font-extrabold text-gray-900 dark:text-white mt-1">
+                  {consolidated.condition}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  {consolidated.reason.explanation}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  {(consolidated.levelRatio * 100).toFixed(0)}%
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  {consolidated.metrics.reduce((s, m) => s + m.score, 0)} / {consolidated.metrics.length * consolidated.maxScore} pts
+                </div>
+              </div>
+            </div>
+
+            {/* Desglose por métrica: hace evidente de dónde sale el total y el techo */}
+            {consolidated.metrics.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-blue-200/60 dark:border-blue-900/60 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-400">
+                {consolidated.metrics.map((m) => (
+                  <span key={m.metricKey} className="inline-flex items-center gap-1">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">{m.metricKey}</span>
+                    <span className="text-gray-400">·</span>
+                    <span>{m.condition}</span>
+                    <span className="font-mono text-blue-600 dark:text-blue-400">({m.score}/{consolidated.maxScore})</span>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Condition Cards - Horizontal Slider */}
         <div className="mb-6 relative -mx-6">
           <div

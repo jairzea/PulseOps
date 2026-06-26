@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsIn, IsObject } from 'class-validator';
 
 export class CreateMetricDto {
   @IsString()
@@ -18,6 +18,14 @@ export class CreateMetricDto {
   @IsOptional()
   @IsString()
   periodType?: string;
+
+  @IsOptional()
+  @IsIn(['PRODUCTION', 'STUDY', 'TRACKING'])
+  category?: string;
+
+  @IsOptional()
+  @IsObject()
+  categoryByResource?: Record<string, string>;
 
   @IsOptional()
   @IsArray()
@@ -41,6 +49,14 @@ export class UpdateMetricDto {
   @IsOptional()
   @IsString()
   periodType?: string;
+
+  @IsOptional()
+  @IsIn(['PRODUCTION', 'STUDY', 'TRACKING'])
+  category?: string;
+
+  @IsOptional()
+  @IsObject()
+  categoryByResource?: Record<string, string>;
 
   @IsOptional()
   @IsArray()

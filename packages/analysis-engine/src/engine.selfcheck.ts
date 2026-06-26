@@ -9,7 +9,7 @@
  */
 import assert from 'node:assert';
 import { analysisEngine } from './engine';
-import type { MetricSeries } from '@pulseops/shared-types';
+import type { MetricSeries, ConsolidatedMetricInput } from '@pulseops/shared-types';
 
 const week = (i: number) =>
   new Date(2026, 0, 1 + i * 7).toISOString();
@@ -49,6 +49,14 @@ const checkNot = (name: string, actual: string | undefined, notExpected: string)
 
 console.log('Self-check motor — condición PODER:');
 
+// Bug Helena: 2 puntos con windowSize 8 NO debe dar SIN_DATOS (windowSize es tope, no
+// mínimo). 10→20 = +100% sostenido → debe evaluar (AFLUENCIA/PODER), nunca SIN_DATOS.
+const twoPointsWide = analysisEngine.analyzeWithConditions(
+  series([10, 20]),
+  { size: 8 },
+);
+checkNot('2 puntos con ventana 8 no es SIN_DATOS', twoPointsWide.condition, 'SIN_DATOS');
+
 // Línea casi plana (micro-variaciones < ±5%): estancamiento → NO es PODER.
 check('línea plana (estancamiento)', condition([50, 52, 49, 51, 50, 52, 48, 50]), 'EMERGENCIA');
 
@@ -79,6 +87,58 @@ checkNot('serrucho+repunte: temprana no es caída', condition(repunte), 'PELIGRO
 checkNot('serrucho+repunte: tendencia ≠ temprana', trendCondition(repunte), condition(repunte));
 checkNot('serrucho+repunte: tendencia no es crecimiento', trendCondition(repunte), 'NORMAL');
 checkNot('serrucho+repunte: tendencia no es afluencia', trendCondition(repunte), 'AFLUENCIA');
+
+// ============================================================================
+// Fase 2 — Condición consolidada (analyzeConsolidated)
+// ============================================================================
+
+console.log('\nSelf-check motor — condición CONSOLIDADA (Fase 2):');
+
+// Helper: construye N semanas con claves "2026-Wxx".
+const wk = (i: number) => `2026-W${String(i + 1).padStart(2, '0')}`;
+
+// CASO CLAVE (la queja del arquitecto): una métrica en PODER sostenido debe dar
+// consolidado PODER, no EMERGENCIA. El consolidado mide NIVEL, no inclinación de totales.
+const powerMetric: ConsolidatedMetricInput[] = [
+  { metricKey: 'm1', points: [0, 1, 2, 3].map((i) => ({ week: wk(i), value: 100 + i * 8 })) },
+];
+check('una métrica en PODER → consolidado PODER',
+  analysisEngine.analyzeConsolidated(powerMetric).condition, 'PODER');
+
+// Regla dura: producción nula (todos 0) → INEXISTENCIA.
+const zeros: ConsolidatedMetricInput[] = [
+  { metricKey: 'm1', points: [{ week: wk(0), value: 0 }, { week: wk(1), value: 0 }] },
+];
+check('regla dura: producción 0 → INEXISTENCIA',
+  analysisEngine.analyzeConsolidated(zeros).condition, 'INEXISTENCIA');
+
+// Nivel: dos métricas, una PODER (10) y una EMERGENCIA (3) → promedio 6.5/10 = 0.65 →
+// AFLUENCIA (umbral afluencia 0.65). Verifica que el consolidado promedia el nivel.
+const mixed: ConsolidatedMetricInput[] = [
+  { metricKey: 'm1', points: [0, 1, 2, 3].map((i) => ({ week: wk(i), value: 100 + i * 8 })) }, // PODER
+  { metricKey: 'm2', points: [0, 1, 2, 3].map((i) => ({ week: wk(i), value: 100 })) },          // plano → EMERGENCIA
+];
+const consMixed = analysisEngine.analyzeConsolidated(mixed);
+check('dos métricas: incluye ambas contribuciones',
+  String(consMixed.metrics.length), '2');
+checkNot('nivel mixto no es INEXISTENCIA', consMixed.condition, 'INEXISTENCIA');
+
+// El motor solo cuenta las métricas que recibe (filtro producción/estudio/tracking es
+// del backend). Con una sola métrica, una sola contribución.
+const consOne = analysisEngine.analyzeConsolidated([powerMetric[0]]);
+check('motor solo cuenta las métricas recibidas',
+  String(consOne.metrics.length), '1');
+
+// Umbrales de nivel configurables: una métrica NORMAL (ratio 0.5) da NORMAL con los
+// umbrales por defecto (normal 0.45) pero EMERGENCIA con umbrales estrictos (normal 0.6).
+const normalMetric: ConsolidatedMetricInput[] = [
+  { metricKey: 'm1', points: [100, 130, 120, 140, 130, 150].map((value, i) => ({ week: wk(i), value })) },
+];
+const consDefaultLevels = analysisEngine.analyzeConsolidated(normalMetric);
+check('nivel por defecto: métrica NORMAL → NORMAL', consDefaultLevels.condition, 'NORMAL');
+const strictLevels = { poder: 0.95, afluencia: 0.8, normal: 0.6, emergencia: 0.3, peligro: 0.05 };
+const consStrict = analysisEngine.analyzeConsolidated(normalMetric, { levels: strictLevels });
+check('umbrales de nivel estrictos: misma métrica → EMERGENCIA', consStrict.condition, 'EMERGENCIA');
 
 if (failures > 0) {
   console.error(`\n❌ Self-check falló: ${failures} caso(s).`);

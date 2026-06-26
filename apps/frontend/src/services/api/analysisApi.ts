@@ -80,6 +80,23 @@ export interface TeamOverview {
   resources: OverviewResource[];
 }
 
+export interface ConsolidatedContribution {
+  metricKey: string;
+  condition: string;
+  score: number;
+}
+
+export interface ConsolidatedEvaluation {
+  resourceId: string;
+  condition: string;
+  reason: { code: string; explanation: string; threshold?: number };
+  levelRatio: number;
+  maxScore: number;
+  metrics: ConsolidatedContribution[];
+  windowUsed: number;
+  evaluatedAt: string;
+}
+
 class AnalysisApiImpl {
   private readonly basePath = '/analysis';
 
@@ -95,6 +112,14 @@ class AnalysisApiImpl {
   async getOverview(windowSize?: number): Promise<TeamOverview> {
     const qs = windowSize ? `?windowSize=${windowSize}` : '';
     return httpClient.get<TeamOverview>(`${this.basePath}/overview${qs}`);
+  }
+
+  async getConsolidated(resourceId: string, windowSize?: number): Promise<ConsolidatedEvaluation> {
+    const query = buildQueryString({
+      resourceId,
+      ...(windowSize && { windowSize }),
+    });
+    return httpClient.get<ConsolidatedEvaluation>(`${this.basePath}/consolidated${query}`);
   }
 }
 

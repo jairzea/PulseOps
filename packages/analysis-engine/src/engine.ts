@@ -27,6 +27,11 @@ import type {
   TrendDirection,
   TrendEvaluation,
   ConditionThresholds,
+  ConditionScoreTable,
+  ConsolidatedLevelThresholds,
+  ConsolidatedMetricInput,
+  ConsolidatedEvaluation,
+  ConsolidatedContribution,
 } from '@pulseops/shared-types';
 
 /**
@@ -65,6 +70,13 @@ const ZERO_THRESHOLD = 0.001;
  * Número mínimo de períodos consecutivos en Normal para considerar Poder
  */
 const POWER_MIN_PERIODS = 3;
+
+/**
+ * Mínimo de puntos para poder calcular una inclinación (par consecutivo). El
+ * `windowSize` es un TOPE (últimas N semanas a analizar), no un mínimo: si hay menos
+ * puntos que la ventana, se analizan todos los disponibles.
+ */
+const MIN_POINTS_FOR_ANALYSIS = 2;
 
 /**
  * Umbrales de inclinación para clasificación de condiciones
@@ -844,8 +856,9 @@ class TrendAnalysisEngine implements AnalysisEngine {
     const windowSize = config?.size ?? DEFAULT_WINDOW_SIZE;
     const evaluatedAt = new Date().toISOString();
 
-    // Validación: verificar que hay datos suficientes
-    if (!series.points || series.points.length < windowSize) {
+    // Validación: se requieren al menos 2 puntos para calcular inclinación. windowSize
+    // es un tope (últimas N), no un mínimo.
+    if (!series.points || series.points.length < MIN_POINTS_FOR_ANALYSIS) {
       return {
         metricId: series.metricId,
         windowUsed: series.points?.length ?? 0,
@@ -856,7 +869,7 @@ class TrendAnalysisEngine implements AnalysisEngine {
       };
     }
 
-    // Extraer los últimos N puntos según el tamaño de ventana
+    // Extraer los últimos N puntos según el tamaño de ventana (o todos si hay menos)
     const relevantPoints = series.points.slice(-windowSize);
     const windowUsed = relevantPoints.length;
 
@@ -903,8 +916,9 @@ class TrendAnalysisEngine implements AnalysisEngine {
     const windowSize = config?.size ?? DEFAULT_WINDOW_SIZE;
     const evaluatedAt = new Date().toISOString();
 
-    // Validación: verificar que hay datos suficientes
-    if (!series.points || series.points.length < windowSize) {
+    // Validación: se requieren al menos 2 puntos para calcular inclinación. windowSize
+    // es un tope (últimas N semanas a analizar), no un mínimo de puntos requeridos.
+    if (!series.points || series.points.length < MIN_POINTS_FOR_ANALYSIS) {
       return {
         metricId: series.metricId,
         windowUsed: series.points?.length ?? 0,
@@ -920,7 +934,7 @@ class TrendAnalysisEngine implements AnalysisEngine {
         condition: 'SIN_DATOS',
         reason: {
           code: 'INSUFFICIENT_DATA',
-          explanation: `Se requieren al menos ${windowSize} períodos para el análisis. Datos disponibles: ${series.points?.length ?? 0}`,
+          explanation: `Se requieren al menos ${MIN_POINTS_FOR_ANALYSIS} períodos para el análisis. Datos disponibles: ${series.points?.length ?? 0}`,
         },
         signals: [], // Sin señales por falta de datos
         evaluatedAt,
@@ -981,6 +995,152 @@ class TrendAnalysisEngine implements AnalysisEngine {
 const engineInstance = new TrendAnalysisEngine();
 
 /**
+ * Tabla de puntajes por defecto (confirmada por Laura/Merce). Configurable vía la
+ * configuración activa; este es el fallback cuando no se provee.
+ */
+const DEFAULT_SCORE_TABLE: ConditionScoreTable = {
+  PODER: 10,
+  AFLUENCIA: 7,
+  NORMAL: 5,
+  EMERGENCIA: 3,
+  PELIGRO: 1,
+  INEXISTENCIA: 0,
+  SIN_DATOS: 0,
+  CAMBIO_DE_PODER: 0,
+};
+
+/**
+ * Umbrales de nivel por defecto del consolidado. Pensados para que UNA sola métrica
+ * mapee a su propia condición (ej. PODER=10/10=1.0 → PODER; NORMAL=5/10=0.5 → NORMAL).
+ */
+const DEFAULT_CONSOLIDATED_LEVELS: ConsolidatedLevelThresholds = {
+  poder: 0.9,
+  afluencia: 0.65,
+  normal: 0.45,
+  emergencia: 0.25,
+  peligro: 0.05,
+};
+
+/**
+ * Mapea un ratio de nivel (0..1) a condición consolidada según umbrales configurables.
+ */
+function levelRatioToCondition(
+  ratio: number,
+  levels: ConsolidatedLevelThresholds,
+): HubbardCondition {
+  if (ratio >= levels.poder) return 'PODER';
+  if (ratio >= levels.afluencia) return 'AFLUENCIA';
+  if (ratio >= levels.normal) return 'NORMAL';
+  if (ratio >= levels.emergencia) return 'EMERGENCIA';
+  if (ratio >= levels.peligro) return 'PELIGRO';
+  return 'INEXISTENCIA';
+}
+
+/**
+ * Condición consolidada de producción de un recurso (Fase 2).
+ *
+ * Método (revisado 2026-06-26 — basado en NIVEL, no en inclinación de totales):
+ *  1. Cada métrica de producción se evalúa sobre la ventana → su condición actual
+ *     (analyzeWithConditions) → puntaje según scoreTable.
+ *  2. Nivel consolidado = Σ puntajes / (nº métricas × puntaje máximo). Ratio 0..1.
+ *  3. El ratio se mapea a condición vía umbrales de nivel configurables.
+ *
+ * Por qué nivel y no inclinación de totales: una métrica en NORMAL sostenido tiene
+ * puntaje plano (5,5,5); su inclinación es 0 → daría EMERGENCIA aunque la persona esté
+ * produciendo bien. El nivel refleja "qué tan bien produce", que es lo que evalúa Laura.
+ *
+ * Reglas de dominio:
+ *  - Regla dura: si TODAS las métricas de producción están en cero esta ventana
+ *    (puntaje total 0) → INEXISTENCIA.
+ *
+ * Puro y determinístico: sin I/O ni estado.
+ */
+function analyzeConsolidated(
+  metrics: ConsolidatedMetricInput[],
+  config?: {
+    size?: number;
+    thresholds?: ConditionThresholds;
+    scoreTable?: ConditionScoreTable;
+    levels?: ConsolidatedLevelThresholds;
+  },
+): ConsolidatedEvaluation {
+  const thresholds = config?.thresholds ?? DEFAULT_CONDITION_THRESHOLDS;
+  const scoreTable = config?.scoreTable ?? thresholds.scoreTable ?? DEFAULT_SCORE_TABLE;
+  const levels = config?.levels ?? thresholds.consolidatedLevels ?? DEFAULT_CONSOLIDATED_LEVELS;
+  const evaluatedAt = new Date().toISOString();
+
+  const size = config?.size;
+  const maxScore = scoreTable.PODER;
+
+  // 1. Condición actual de cada métrica sobre la ventana → puntaje.
+  const contributions: ConsolidatedContribution[] = [];
+  let windowUsed = 0;
+  for (const m of metrics) {
+    if (!m.points || m.points.length === 0) continue;
+    const series: MetricSeries = {
+      metricId: m.metricKey,
+      points: m.points.map((p) => ({ timestamp: p.week, value: p.value })),
+    };
+    const evalSize = size ?? m.points.length;
+    const evaluation = engineInstance.analyzeWithConditions(series, { size: evalSize, thresholds });
+    windowUsed = Math.max(windowUsed, evaluation.windowUsed);
+    contributions.push({
+      metricKey: m.metricKey,
+      condition: evaluation.condition,
+      score: scoreTable[evaluation.condition] ?? 0,
+    });
+  }
+
+  // Sin métricas evaluables → SIN_DATOS.
+  if (contributions.length === 0) {
+    return {
+      resourceId: '',
+      condition: 'SIN_DATOS',
+      reason: { code: 'INSUFFICIENT_DATA', explanation: 'No hay métricas de producción evaluables.' },
+      levelRatio: 0,
+      maxScore,
+      metrics: [],
+      windowUsed: 0,
+      evaluatedAt,
+    };
+  }
+
+  // 2. Nivel = puntaje promedio normalizado contra el techo (PODER).
+  const totalScore = contributions.reduce((sum, c) => sum + c.score, 0);
+  const levelRatio = maxScore > 0 ? totalScore / (contributions.length * maxScore) : 0;
+
+  // Regla dura: producción nula (todas en 0) → INEXISTENCIA.
+  let condition: HubbardCondition;
+  let reason: ConditionReason;
+  if (totalScore === 0) {
+    condition = 'INEXISTENCIA';
+    reason = {
+      code: 'ZERO_PRODUCTION',
+      explanation: 'La producción consolidada es nula. Condición de Inexistencia.',
+    };
+  } else {
+    // 3. Mapear ratio de nivel → condición.
+    condition = levelRatioToCondition(levelRatio, levels);
+    const ceiling = contributions.length * maxScore;
+    reason = {
+      code: 'CONSOLIDATED_LEVEL',
+      explanation: `Nivel ${(levelRatio * 100).toFixed(0)}% (${totalScore}/${ceiling} pts en ${contributions.length} métrica(s) de producción). Condición consolidada: ${condition}.`,
+    };
+  }
+
+  return {
+    resourceId: '',
+    condition,
+    reason,
+    levelRatio,
+    maxScore,
+    metrics: contributions,
+    windowUsed,
+    evaluatedAt,
+  };
+}
+
+/**
  * Exporta una instancia única del motor de análisis
  */
 export const analysisEngine = {
@@ -995,6 +1155,19 @@ export const analysisEngine = {
    */
   analyzeWithConditions: (series: MetricSeries, config?: AnalysisWindowConfig) =>
     engineInstance.analyzeWithConditions(series, config),
+
+  /**
+   * Condición consolidada de producción de un recurso (Fase 2)
+   */
+  analyzeConsolidated: (
+    metrics: ConsolidatedMetricInput[],
+    config?: {
+      size?: number;
+      thresholds?: ConditionThresholds;
+      scoreTable?: ConditionScoreTable;
+      levels?: ConsolidatedLevelThresholds;
+    },
+  ) => analyzeConsolidated(metrics, config),
 };
 
 /**
