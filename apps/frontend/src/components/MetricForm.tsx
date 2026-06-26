@@ -40,6 +40,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
             description: initialMetric?.description || '',
             unit: initialMetric?.unit || '',
             periodType: (initialMetric?.periodType as 'WEEK' | 'MONTH' | 'QUARTER' | 'YEAR') || 'WEEK',
+            category: (initialMetric?.category as 'PRODUCTION' | 'STUDY' | 'TRACKING') || 'PRODUCTION',
             resourceIds: [], // TODO: Obtener desde backend cuando haya soporte
         },
     });
@@ -88,6 +89,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                 description: initialMetric.description || '',
                 unit: initialMetric.unit || '',
                 periodType: (initialMetric.periodType as 'WEEK' | 'MONTH' | 'QUARTER' | 'YEAR') || 'WEEK',
+                category: (initialMetric.category as 'PRODUCTION' | 'STUDY' | 'TRACKING') || 'PRODUCTION',
                 resourceIds: initialMetric.resourceIds || [],
             });
             setSelectedResources(associatedResources);
@@ -98,6 +100,7 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                 description: '',
                 unit: '',
                 periodType: 'WEEK',
+                category: 'PRODUCTION',
                 resourceIds: [],
             });
             setSelectedResources([]);
@@ -208,6 +211,30 @@ export const MetricForm: React.FC<MetricFormProps> = ({
                         <p className="form-error">{errors.periodType.message}</p>
                     )}
                 </div>
+            </div>
+
+            {/* Categoría: producción vs estudio (Fase 2 — consolidado) */}
+            <div>
+                <label htmlFor="category" className="form-label form-label-required">
+                    Categoría
+                </label>
+                <select
+                    {...register('category')}
+                    id="category"
+                    data-testid={tid('metric-form', 'category')}
+                    className={errors.category ? 'form-select-error' : 'form-select'}
+                    disabled={loading}
+                >
+                    <option value="PRODUCTION">Producción (cuenta para el consolidado)</option>
+                    <option value="STUDY">Estudio (no cuenta para el consolidado)</option>
+                    <option value="TRACKING">Seguimiento (solo se observa, no cuenta)</option>
+                </select>
+                {errors.category && (
+                    <p className="form-error">{errors.category.message}</p>
+                )}
+                <p className="form-help">
+                    Solo las métricas de producción se suman en la condición consolidada de la persona
+                </p>
             </div>
 
             {/* Asociación de Recursos con Autocompletado */}

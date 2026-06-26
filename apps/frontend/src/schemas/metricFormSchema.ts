@@ -34,7 +34,12 @@ export const metricFormSchema = yup.object({
     .string()
     .optional()
     .oneOf(['WEEK', 'MONTH', 'QUARTER', 'YEAR'], 'Tipo de período inválido'),
-  
+
+  category: yup
+    .string()
+    .optional()
+    .oneOf(['PRODUCTION', 'STUDY', 'TRACKING'], 'Categoría inválida'),
+
   resourceIds: yup
     .array()
     .of(yup.string().required())
@@ -49,5 +54,6 @@ export interface MetricFormData {
   description?: string;
   unit?: string;
   periodType?: 'WEEK' | 'MONTH' | 'QUARTER' | 'YEAR';
+  category?: 'PRODUCTION' | 'STUDY' | 'TRACKING';
   resourceIds: string[];
 }
