@@ -47,7 +47,7 @@ function App() {
                         <Route
                             path="/overview"
                             element={
-                                <PrivateRoute>
+                                <PrivateRoute requireAdmin>
                                     <Layout>
                                         <OverviewPage />
                                     </Layout>
@@ -57,7 +57,7 @@ function App() {
                         <Route
                             path="/resources"
                             element={
-                                <PrivateRoute>
+                                <PrivateRoute requireAdmin>
                                     <Layout>
                                         <ResourcesPage />
                                     </Layout>
@@ -67,7 +67,7 @@ function App() {
                         <Route
                             path="/metrics"
                             element={
-                                <PrivateRoute>
+                                <PrivateRoute requireAdmin>
                                     <Layout>
                                         <MetricsPage />
                                     </Layout>
@@ -77,7 +77,7 @@ function App() {
                         <Route
                             path="/records"
                             element={
-                                <PrivateRoute>
+                                <PrivateRoute requireAdmin>
                                     <Layout>
                                         <RecordsPage />
                                     </Layout>
@@ -87,7 +87,7 @@ function App() {
                         <Route
                             path="/configuration"
                             element={
-                                <PrivateRoute>
+                                <PrivateRoute requireAdmin>
                                     <Layout>
                                         <ConfigurationPage />
                                     </Layout>

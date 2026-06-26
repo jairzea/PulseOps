@@ -12,6 +12,7 @@ import { analysisApi, TeamOverview } from '../services/api/analysisApi';
 import { PageHeader } from '../components/PageHeader';
 import { PulseLoader } from '../components/PulseLoader';
 import { PermissionFeedback } from '../components/PermissionFeedback';
+import { useAuth } from '../contexts/AuthContext';
 
 const ROLE_LABELS: Record<string, string> = {
   DEV: 'Desarrollador',
@@ -20,6 +21,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export function OverviewPage() {
+  const { user } = useAuth();
   const { conditions, loading: loadingMeta } = useConditionsMetadata();
   const [overview, setOverview] = useState<TeamOverview | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +51,26 @@ export function OverviewPage() {
 
   const metaFor = (condition: string) =>
     conditions.find((c) => c.condition === condition);
+
+  // Bloquear acceso para usuarios con rol 'user': el panorama es del equipo completo.
+  if (user?.role === 'user') {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <PageHeader
+            title="Panorama del Equipo"
+            description="Condición operativa de producción de cada persona"
+          />
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+            <PermissionFeedback
+              title="Acceso restringido"
+              message="No tienes permisos para acceder a este módulo. Solo los administradores pueden ver el panorama del equipo."
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">

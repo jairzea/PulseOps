@@ -1,6 +1,7 @@
 import { analysisApi, ConsolidatedEvaluation } from '../services/api/analysisApi';
 import { notificationsApi } from '../services/api/notificationsApi';
 import { configurationApi } from '../services/configurationApi';
+import { useSearchParams } from 'react-router-dom';
 import { useState, useEffect, useRef, useMemo } from 'react';
 // import { useResources } from '../hooks/useResources'; // Ya no se necesita - AutocompleteInfinite maneja los datos
 import { useMetrics } from '../hooks/useMetrics';
@@ -20,6 +21,7 @@ import { InfoTooltip } from '../components/InfoTooltip';
 import { useToast } from '../hooks/useToast';
 
 export function ResourceDashboard() {
+  const [searchParams] = useSearchParams();
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const [selectedMetricKey, setSelectedMetricKey] = useState<string | null>(null);
   const [windowSize, setWindowSize] = useState<number>(8);
@@ -91,6 +93,15 @@ export function ResourceDashboard() {
       });
     }
   }, [selectedResourceId, selectedMetricKey, lastCreatedRecord, fetchRecords]);
+
+  // Seleccionar recurso desde la URL (?resource=ID), p. ej. al venir de búsqueda o
+  // de la campana de alertas. Solo para admins (los no-admin ven su propio recurso).
+  useEffect(() => {
+    const fromUrl = searchParams.get('resource');
+    if (fromUrl && user?.role === 'admin' && fromUrl !== selectedResourceId) {
+      setSelectedResourceId(fromUrl);
+    }
+  }, [searchParams, user, selectedResourceId]);
 
   // Auto-select resource for non-admin users
   useEffect(() => {
