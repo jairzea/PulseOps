@@ -5,8 +5,10 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { ThemeSwitch } from './ThemeSwitch';
+import { HeaderNotifications } from './HeaderNotifications';
 import { useAvatarAnimation } from '../hooks/useAvatarAnimation';
 import { tid } from '../utils/testId';
+import { CommandPalette } from './CommandPalette';
 
 export const Header: React.FC = () => {
     const location = useLocation();
@@ -14,6 +16,7 @@ export const Header: React.FC = () => {
     const { user, logout } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -33,6 +36,18 @@ export const Header: React.FC = () => {
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Atajo de teclado para abrir la búsqueda (Cmd/Ctrl + K)
+    useEffect(() => {
+        const handleKey = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                setIsSearchOpen(true);
+            }
+        };
+        document.addEventListener('keydown', handleKey);
+        return () => document.removeEventListener('keydown', handleKey);
     }, []);
 
     const isActive = (path: string) => {
@@ -69,19 +84,23 @@ export const Header: React.FC = () => {
 
                     {/* Right side: Search, Notifications, Theme Toggle, Menu, Avatar */}
                     <div className="flex items-center gap-4">
-                        {/* Search Icon */}
-                        <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                            <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </button>
-
-                        {/* Notifications Icon */}
-                        <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                            <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
-                        </button>
+                        {/* Búsqueda de personas y alertas: solo admin */}
+                        {user?.role === 'admin' && (
+                            <>
+                                <button
+                                    onClick={() => setIsSearchOpen(true)}
+                                    data-testid={tid('nav', 'search')}
+                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                    title="Buscar persona (Cmd/Ctrl+K)"
+                                    aria-label="Buscar persona"
+                                >
+                                    <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </button>
+                                <HeaderNotifications />
+                            </>
+                        )}
 
                         {/* Theme Toggle Switch */}
                         <ThemeSwitch />
@@ -116,6 +135,8 @@ export const Header: React.FC = () => {
                                             </svg>
                                             Dashboard
                                         </button>
+                                        {user?.role === 'admin' && (
+                                          <>
                                         <button
                                             onClick={() => {
                                                 navigate('/overview');
@@ -188,6 +209,8 @@ export const Header: React.FC = () => {
                                             </svg>
                                             Configuración
                                         </button>
+                                          </>
+                                        )}
                                         {user?.role === 'admin' && (
                                             <button
                                                 onClick={() => {
@@ -278,6 +301,7 @@ export const Header: React.FC = () => {
                     </div>
                 </div>
             </div>
+            <CommandPalette open={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
         </header>
     );
 };
