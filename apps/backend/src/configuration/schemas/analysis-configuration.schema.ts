@@ -118,6 +118,54 @@ class SignalsThresholds {
   noise: NoiseSignalConfig;
 }
 
+/**
+ * Umbrales de nivel del consolidado (Fase 2): ratio 0..1 → condición.
+ */
+@Schema({ _id: false })
+class ConsolidatedLevels {
+  @Prop({ required: true, default: 0.9 })
+  poder: number;
+
+  @Prop({ required: true, default: 0.65 })
+  afluencia: number;
+
+  @Prop({ required: true, default: 0.45 })
+  normal: number;
+
+  @Prop({ required: true, default: 0.25 })
+  emergencia: number;
+
+  @Prop({ required: true, default: 0.05 })
+  peligro: number;
+}
+
+@Schema({ _id: false })
+class ConditionScoreTable {
+  @Prop({ required: true, default: 10 })
+  PODER: number;
+
+  @Prop({ required: true, default: 7 })
+  AFLUENCIA: number;
+
+  @Prop({ required: true, default: 5 })
+  NORMAL: number;
+
+  @Prop({ required: true, default: 3 })
+  EMERGENCIA: number;
+
+  @Prop({ required: true, default: 1 })
+  PELIGRO: number;
+
+  @Prop({ required: true, default: 0 })
+  INEXISTENCIA: number;
+
+  @Prop({ required: true, default: 0 })
+  SIN_DATOS: number;
+
+  @Prop({ required: true, default: 0 })
+  CAMBIO_DE_PODER: number;
+}
+
 @Schema({ _id: false })
 class ConditionThresholds {
   @Prop({ type: AfluenciaThresholds, required: true })
@@ -140,6 +188,18 @@ class ConditionThresholds {
 
   @Prop({ type: SignalsThresholds, required: true })
   signals: SignalsThresholds;
+
+  // Fase 2: tabla de puntajes del consolidado (opcional; default vía createDefault).
+  @Prop({ type: ConditionScoreTable, required: false })
+  scoreTable?: ConditionScoreTable;
+
+  // Fase 2: umbrales de NIVEL del consolidado (ratio 0..1 → condición). Opcional.
+  @Prop({ type: ConsolidatedLevels, required: false })
+  consolidatedLevels?: ConsolidatedLevels;
+
+  // Fase 2: ventana por defecto (semanas) para análisis y consolidado. Opcional.
+  @Prop({ required: false, default: 8 })
+  defaultWindowSize?: number;
 }
 
 /**

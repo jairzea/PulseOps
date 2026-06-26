@@ -24,6 +24,19 @@ export class Metric {
   @Prop({ default: 'WEEK' })
   periodType: string;
 
+  // Clasificación base para el consolidado (Fase 2). Default PRODUCTION.
+  // - PRODUCTION: cuenta en el consolidado de la persona.
+  // - STUDY: estudio; no cuenta en el consolidado.
+  // - TRACKING: solo seguimiento; no cuenta ni como producción ni estudio.
+  @Prop({ default: 'PRODUCTION', enum: ['PRODUCTION', 'STUDY', 'TRACKING'] })
+  category: string;
+
+  // Override de categoría por recurso: { [resourceId]: 'PRODUCTION'|'STUDY'|'TRACKING' }.
+  // Para casos donde una métrica es producción en general pero no para cierto recurso.
+  // Si no hay entrada para un recurso, aplica `category`.
+  @Prop({ type: Object, default: {} })
+  categoryByResource: Record<string, string>;
+
   @Prop({ type: [String], default: [] })
   resourceIds: string[];
 

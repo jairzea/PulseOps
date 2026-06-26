@@ -179,6 +179,55 @@ class SignalsThresholdsDto {
   noise: NoiseSignalConfigDto;
 }
 
+/**
+ * Umbrales de nivel del consolidado (Fase 2): ratio 0..1 → condición.
+ */
+class ConsolidatedLevelsDto {
+  @IsNumber()
+  poder: number;
+
+  @IsNumber()
+  afluencia: number;
+
+  @IsNumber()
+  normal: number;
+
+  @IsNumber()
+  emergencia: number;
+
+  @IsNumber()
+  peligro: number;
+}
+
+/**
+ * Tabla de puntajes del consolidado (Fase 2). Todos los campos numéricos.
+ */
+class ConditionScoreTableDto {
+  @IsNumber()
+  PODER: number;
+
+  @IsNumber()
+  AFLUENCIA: number;
+
+  @IsNumber()
+  NORMAL: number;
+
+  @IsNumber()
+  EMERGENCIA: number;
+
+  @IsNumber()
+  PELIGRO: number;
+
+  @IsNumber()
+  INEXISTENCIA: number;
+
+  @IsNumber()
+  SIN_DATOS: number;
+
+  @IsNumber()
+  CAMBIO_DE_PODER: number;
+}
+
 class ConditionThresholdsDto {
   @ValidateNested()
   @Type(() => AfluenciaThresholdsDto)
@@ -207,6 +256,20 @@ class ConditionThresholdsDto {
   @ValidateNested()
   @Type(() => SignalsThresholdsDto)
   signals: SignalsThresholdsDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ConditionScoreTableDto)
+  scoreTable?: ConditionScoreTableDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ConsolidatedLevelsDto)
+  consolidatedLevels?: ConsolidatedLevelsDto;
+
+  @IsOptional()
+  @IsNumber()
+  defaultWindowSize?: number;
 }
 
 export class CreateAnalysisConfigurationDto {
