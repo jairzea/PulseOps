@@ -99,8 +99,8 @@ de forma determinística y trazable.
 4. EL cálculo (dev) DEBERÁ aplicar las **exclusiones estándar** y excluir commits `qa()` y
    merges según el framework.
 5. LA semana DEBERÁ ser configurable; por defecto **jueves–miércoles GMT-5**.
-6. EL cálculo DEBERÁ ser determinístico (mismo repo + rango → mismo resultado) y no
-   modificar los repos (solo lectura/clonado).
+6. EL cálculo DEBERÁ ser determinístico (mismo repo + rango → mismo resultado) y solo
+   **leer** vía API (no modifica los repos, no clona).
 
 ### Requisito 4 — Persistencia como MetricRecord
 
@@ -135,9 +135,9 @@ también poder dispararla manualmente.
 ### Requisito 6 — Seguridad y privacidad
 
 #### Criterios de aceptación
-1. EL sistema DEBERÁ leer **solo metadata e historial** (conteos de líneas, autoría), nunca
-   exponer ni almacenar el código fuente del cliente más allá del clon temporal necesario.
-2. EL clon temporal DEBERÁ limpiarse tras el cálculo; no se persiste el código.
+1. EL sistema DEBERÁ leer **solo metadata e historial vía API** (conteos, autoría, blame),
+   nunca clonar ni almacenar el código fuente del cliente.
+2. NO se DEBERÁ persistir contenido de código; solo las métricas calculadas.
 3. LOS endpoints de configuración/sync DEBERÁN estar protegidos por guard y restringidos a
    admin.
 4. NO se DEBERÁN transmitir datos del proyecto a terceros fuera de la lectura de los repos

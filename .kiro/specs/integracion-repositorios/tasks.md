@@ -13,8 +13,8 @@
   - `repoIdentities`/`repoScope` en resourceProfile (sin migración) vía `UsersService.setRepoProfile`. `RepoIdentityService` (get/set/clear + `suggestMatches` por email). Endpoints CRUD admin en `RepoIntegrationController`. Módulo registrado.
   - _Requisitos: 2.1, 2.2, 2.3, 2.4, 2.5, 6.3_
 
-- [ ] 3. DevAnalyzer (clon + git blame, determinístico) — Developers/Arquitectos
-  - `RepoProvider` interface + `GithubProvider` (descubrir repos, clone URL autenticada desde env). `dev-analyzer`: clona/actualiza, corre git/blame por persona y semana → conteos brutos; exclusiones, `qa()`/merges, timezone jueves–miércoles GMT-5. Limpia el clon tras el cálculo.
+- [ ] 3. DevAnalyzer (API, sin clonar) — Developers/Arquitectos
+  - `RepoProvider` interface + `GithubProvider` (REST: repos, commits, diffs, stats/contributors; GraphQL: blame). `dev-analyzer`: arma `RawGitCounts` por persona/semana desde la API; self-churn vía blame del estado padre sobre los archivos que tocó; exclusiones, `qa()`/merges, timezone jueves–miércoles GMT-5. Alimenta `deriveDevMetrics`.
   - _Requisitos: 1.1, 1.3, 1.5, 3.1, 3.2, 3.4, 3.6, 6.1, 6.2_
 
 - [ ] 3b. QaAnalyzer (criterios de aceptación) — QA

@@ -3,16 +3,16 @@
 ## Visión general
 
 Un módulo `repo-integration` en el backend que, por cada persona vinculada y repo asignado:
-clona/actualiza el repo, corre un **analizador Git determinístico** (mismo método del skill
-`repository`: blame-based) para la(s) semana(s) objetivo, y persiste las métricas como
+consume la **API del proveedor** (GitHub REST + GraphQL; sin clonar) para obtener los datos
+crudos, corre un **analizador determinístico por rol** y persiste las métricas como
 `MetricRecord`. Un scheduler dispara la sync el miércoles 6PM (configurable) y un endpoint
 la dispara a demanda.
 
 ```
-RepoProvider (GitHub | Bitbucket)   →   listar repos / clonar / autenticar
+RepoProvider (GitHub | Bitbucket)   →   API: repos, commits, diffs, blame, contributors
         │
         ▼
-GitAnalyzer (puro, sobre un clon local)   →   NUI, Efficiency, complementarias por persona/semana
+RoleMetricAnalyzer (Dev | QA)   →   conteos crudos → derivación pura → métricas por persona/semana
         │
         ▼
 RepoSyncService   →   resuelve asociaciones, orquesta por repo/persona, upsert MetricRecord
@@ -22,69 +22,93 @@ SchedulerService   SyncController (POST /repo-integration/sync  — a demanda, a
 (miércoles 18:00)
 ```
 
-## Decisión técnica central: por qué clonar y no usar la API REST
+## Decisión técnica central: API-only (sin clonar) — revisado 2026-06-30
 
-El self-churn requiere `git blame` para saber el **origen** de cada línea eliminada — la API
-REST de GitHub/Bitbucket no expone eso. Por tanto el cálculo corre sobre un **clon local**
-(shallow donde sea posible), igual que los scripts del skill. La API del proveedor se usa
-solo para **descubrir repos** y **autenticar el clon**.
+Investigación confirmó que **NO es necesario clonar**. La API de GitHub expone todo lo
+necesario, incluido el origen de línea para el self-churn:
 
-`ponytail:` clon completo necesario para blame histórico (shallow corta el historial y
-rompe la atribución de origen). Optimización futura: cache de clones por repo + `git fetch`
-incremental en vez de clonar de cero cada vez. Marcar el clon-por-run como el ceiling.
+| Dato | Fuente API (sin clonar) |
+|---|---|
+| Gross insertions/deletions por autor y semana | REST `GET /repos/{o}/{r}/stats/contributors` |
+| Commits por autor en rango (working days, commits/día, fix ratio por mensaje) | REST `GET /repos/{o}/{r}/commits?author=&since=&until=` |
+| Líneas que borró cada commit (diff/patch) | REST `GET /repos/{o}/{r}/commits/{sha}` |
+| **Origen de cada línea (self-churn exacto)** | **GraphQL `blame(path:)` → ranges{ startingLine, endingLine, commit{ oid, author } }** |
+| QA: `N/N ACs pass` en merge commits | REST `GET /repos/{o}/{r}/commits` (subject del merge) |
+
+Ventajas vs clonar: sin disco, sin binario `git`, sin clon temporal que limpiar, sin
+historial pesado; mucho más liviano para el backend y este entorno. El cálculo deja de ser
+"correr git local" y pasa a ser "consumir API + derivación pura" (la derivación pura ya está
+hecha y verificada).
+
+`ponytail:` el self-churn exacto por GraphQL `blame` es por path → una query por archivo con
+borrados en la semana. Es más llamadas a la API (con rate limit), pero elimina clonado por
+completo. **Optimización lazy v1:** calcular self-churn solo sobre los archivos que el autor
+tocó esa semana (no todo el repo); cachear el resultado semanal. Ceiling: repos con cientos
+de archivos tocados/semana → muchas queries; mitigación = paginar y respetar rate limit, o
+aproximar self-churn (ver nota) si el volumen lo exige.
+
+Nota sobre stats endpoints: `stats/contributors`/`code_frequency` pueden devolver 202
+(GitHub computa en background) la primera vez; el cliente debe reintentar. Tope de 10k
+commits en algunos stats endpoints — para repos enormes, derivar gross/deletions desde el
+listado de commits + sus patches en vez del stats endpoint.
 
 ## A. RepoProvider (interfaz, aísla GitHub/Bitbucket)
 
 ```ts
 interface RepoProvider {
   readonly name: 'github' | 'bitbucket';
-  listRepositories(): Promise<RepoRef[]>;          // descubrimiento (API)
-  cloneUrlFor(repo: RepoRef): string;              // URL autenticada para clonar
+  listRepositories(): Promise<RepoRef[]>;                       // descubrimiento
+  listContributors(): Promise<RepoAccount[]>;                   // cuentas para match
+  // Datos crudos por autor y semana (sin clonar):
+  commitsInRange(repo, identities, week): Promise<CommitMeta[]>;     // sha, autor, msg, ins/del
+  deletedLinesByFile(repo, sha): Promise<Record<path, number[]>>;    // líneas borradas (diff)
+  blame(repo, ref, path): Promise<BlameRange[]>;                     // GraphQL: origen de línea
 }
 ```
-- `GithubProvider` primero. `BitbucketProvider` después implementa la misma interfaz.
+- `GithubProvider` primero (REST + GraphQL). `BitbucketProvider` después (misma interfaz;
+  Bitbucket tiene endpoints equivalentes de commits/diffs; el self-churn se evalúa aparte).
 - Credenciales desde `ConfigService` (env). Token de org por defecto; token por usuario
-  como override opcional (mapa en la asociación, almacenado cifrado/no expuesto).
+  como override opcional. Solo lectura.
 
 ## B. Analizadores por rol (estrategia según el rol de la persona)
 
-El cálculo se bifurca por rol detrás de una interfaz común. Ambos corren sobre el clon local
-y son determinísticos.
+El cálculo se bifurca por rol detrás de una interfaz común. Ambos consumen el `RepoProvider`
+(API, sin clonar) y alimentan la derivación pura. Determinísticos para el mismo rango.
 
 ```ts
 interface RoleMetricAnalyzer {
   appliesTo(role: ResourceRole): boolean;
-  analyze(clonePath: string, week: WeekRange, identities: Identity[]): MetricValues;
+  analyze(provider: RepoProvider, repos: RepoRef[], week: WeekRange, identities: Identity[]): MetricValues;
 }
 ```
 
-### B.1 DevAnalyzer (líneas, blame) — Developers y Arquitectos
-Reusa el método del skill `repository`:
-- **Gross Insertions** (Método B): suma de inserciones por commit del autor en el rango.
-- **Total Deletions**: suma de deletions por commit.
-- **Self-Churn**: blame del padre por archivo, cruzar líneas eliminadas → commit de origen;
-  si el origen está en scope → self-churn.
-- **Derivadas**: NUI = Gross − SelfChurn; Net Delta = Gross − TotalDeletions; Efficiency =
-  NetDelta/Gross×100; UIP/d; Self-Churn Rate; Fix Ratio; Commits/día.
+### B.1 DevAnalyzer (líneas) — Developers y Arquitectos
+Consume la API y arma los `RawGitCounts` que ya consume `deriveDevMetrics`:
+- **Gross/Deletions**: de `stats/contributors` (por autor/semana) o sumando los patches de
+  los commits del autor en el rango.
+- **Self-Churn**: para cada commit del autor, obtener las líneas que borró
+  (`deletedLinesByFile`); por cada archivo, consultar `blame` del estado padre y ver el
+  commit de origen de esas líneas; si el origen está en el scope (autor+periodo) → self-churn.
+- **Commits/working days/fix ratio**: del listado de commits (mensaje → `fix(`/`bugfix/`).
 - **Exclusiones**: generados/deps/binarios/compilados; `qa()` y merges.
 
 ### B.2 QaAnalyzer (criterios de aceptación) — QA
-NO cuenta líneas. Reglas confirmadas con el QA (2026-06-30):
-- **Criterios validados (principal):** se leen del **título del merge commit** de cada rama
-  slice/bugfix, que por convención trae `N/N ACs pass` (ej. `26/26 ACs pass`). Se cuentan
-  **en la semana del merge** (el borrado de la rama no importa). → el número de ACs que
-  pasaron es el numerador del `N/N` del título del merge.
-- **Definición de los criterios (automatizados):** los ACs viven en **documentos dentro de
-  `e2e/`**, dentro de cada bundle en los SPAs del proyecto. Sirven para trazabilidad/conteo
-  de cuántos están automatizados.
-- **Parsing:** del título del merge, patrón `N/N ACs pass` (regex sobre el subject del merge
-  commit). Ejemplo real: `qa(e2e): update checklist — 26/26 ACs pass`.
+Reglas confirmadas con el QA (2026-06-30), todo por API (sin clonar):
+- **Criterios validados (principal):** del **subject del merge commit** de cada rama
+  slice/bugfix mergeada en la semana, parsear `N/N ACs pass` (ej. `26/26 ACs pass`). Se
+  cuentan en la **semana del merge**.
+- **Definición de ACs:** documentos dentro de `e2e/` por bundle (relevante para
+  "automatizados", pospuesto a v2).
+- **Parsing:** regex sobre el subject del merge. v1 solo validados.
 
-`ponytail:` el conteo de validados se apoya en una convención de título de merge
-(`N/N ACs pass`). Es frágil si el QA cambia el formato; se aísla en una función pura
-testeable y se documenta la convención. Ceiling: el detalle por-AC (`AC-EN-01...`) y el
-conteo de "automatizados" desde los documentos `e2e/` queda como mejora posterior; el
-principal (validados) solo necesita el título del merge.
+`ponytail:` el conteo de validados se apoya en la convención de título `N/N ACs pass`. Frágil
+si cambia el formato; aislado en función pura testeable y documentado. v1 no lee los docs
+`e2e/` (automatizados = v2).
+
+### B.3 Derivación pura (compartida, verificable) — YA IMPLEMENTADA
+`metrics-derivation.ts` convierte `RawGitCounts` → métricas finales. Función pura con
+selfcheck pasando (tarea 1). El parsing de `N/N ACs pass` de QA también se aísla como función
+pura testeable.
 
 ### B.3 Derivación pura (compartida, verificable)
 La aritmética que convierte conteos brutos → métricas finales (NUI, Efficiency, ratios) se
@@ -125,9 +149,8 @@ results: [{ repo, person, status, error? }], summary }`.
 - `@nestjs/schedule` (CronModule). Cron configurable; default `0 18 * * 3` (miércoles 18:00)
   en TZ America/Bogota.
 - El cron llama a `RepoSyncService.runSync({ trigger: 'scheduled' })`.
-- El run corre en background (no bloquea requests). Respeta la regla de no lanzar procesos
-  que bloqueen el event loop: el clonado/blame se hace con procesos `git` hijos con `await`,
-  encolados por repo, no todos a la vez.
+- El run corre en background (no bloquea requests). El consumo de API se hace con `await`,
+  encolando por repo y respetando el rate limit, no todo a la vez.
 
 ## E. Backend — módulo `repo-integration`
 
@@ -135,7 +158,8 @@ results: [{ repo, person, status, error? }], summary }`.
 repo-integration/
 ├── repo-integration.module.ts
 ├── providers/ (repo-provider.interface.ts, github.provider.ts, bitbucket.provider.ts[fase 2])
-├── git-analyzer.service.ts          # clona + corre git, devuelve conteos brutos
+├── dev-analyzer.ts                  # API → RawGitCounts (gross/del/self-churn vía blame)
+├── qa-analyzer.ts                   # API → criterios validados (N/N del merge)
 ├── metrics-derivation.ts            # PURO: conteos → NUI/Efficiency/ratios (+ selfcheck)
 ├── repo-sync.service.ts             # orquesta: asociaciones → analyzer → upsert records
 ├── repo-sync.scheduler.ts           # cron miércoles 18:00
