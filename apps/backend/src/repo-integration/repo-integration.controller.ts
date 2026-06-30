@@ -10,6 +10,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { RepoIdentityService } from './repo-identity.service';
+import { RepoSyncService } from './repo-sync.service';
+import { GithubProvider } from './providers/github.provider';
 import {
   SetRepoIdentitiesDto,
   RepoProviderName,
@@ -23,7 +25,31 @@ import { UserRole } from '../users/schemas/user.schema';
 @UseGuards(DemoOrJwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
 export class RepoIntegrationController {
-  constructor(private readonly identityService: RepoIdentityService) {}
+  constructor(
+    private readonly identityService: RepoIdentityService,
+    private readonly syncService: RepoSyncService,
+    private readonly github: GithubProvider,
+  ) {}
+
+  /** Estado de la integración (proveedor configurado) y repos disponibles. */
+  @Get('status')
+  async status() {
+    const configured = this.github.isConfigured();
+    const repos = configured ? await this.github.listRepositories() : [];
+    return { provider: 'github', configured, repos };
+  }
+
+  /** Dispara la sincronización a demanda. */
+  @Post('sync')
+  sync() {
+    return this.syncService.runSync({ trigger: 'manual' });
+  }
+
+  /** Último run de sincronización (programado o a demanda). */
+  @Get('runs/last')
+  lastRun() {
+    return this.syncService.getLastRun();
+  }
 
   /** Perfil de repo (identidades + scope) de una persona. */
   @Get('identities/:resourceId')

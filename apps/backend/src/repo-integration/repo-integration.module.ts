@@ -1,17 +1,30 @@
 import { Module } from '@nestjs/common';
 import { UsersModule } from '../users/users.module';
+import { RecordsModule } from '../records/records.module';
 import { RepoIdentityService } from './repo-identity.service';
 import { RepoIntegrationController } from './repo-integration.controller';
+import { GithubProvider } from './providers/github.provider';
+import { DevAnalyzer } from './dev-analyzer';
+import { QaAnalyzer } from './qa-analyzer';
+import { RepoSyncService } from './repo-sync.service';
+import { RepoSyncScheduler } from './repo-sync.scheduler';
 
 /**
  * Integración con repositorios (GitHub primero, Bitbucket después).
- * Por ahora expone la asociación persona ↔ cuenta de repo. El analizador (DevAnalyzer /
- * QaAnalyzer), la persistencia y el scheduler se añaden en tareas posteriores.
+ * Asociación persona ↔ cuenta, analizadores por rol (Dev/QA), persistencia como MetricRecord,
+ * sincronización a demanda y programada. Todo por API — no clona repos.
  */
 @Module({
-  imports: [UsersModule],
+  imports: [UsersModule, RecordsModule],
   controllers: [RepoIntegrationController],
-  providers: [RepoIdentityService],
-  exports: [RepoIdentityService],
+  providers: [
+    RepoIdentityService,
+    GithubProvider,
+    DevAnalyzer,
+    QaAnalyzer,
+    RepoSyncService,
+    RepoSyncScheduler,
+  ],
+  exports: [RepoIdentityService, RepoSyncService],
 })
 export class RepoIntegrationModule {}
