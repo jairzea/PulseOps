@@ -6,6 +6,10 @@
 import { useEffect, useState } from 'react';
 import { showToast } from '../utils/toast';
 import { PageHeader } from '../components/PageHeader';
+import { SearchInput } from '../components/SearchInput';
+import { PaginationControls } from '../components/PaginationControls';
+import { usePagination } from '../hooks/usePagination';
+import type { PaginationMeta } from '../types/pagination';
 import { authAPI } from '../services/authService';
 import { UserWithMetadata } from '../types/auth';
 import {
@@ -36,14 +40,39 @@ interface PersonRow {
 export function IntegrationsPage() {
     const [status, setStatus] = useState<IntegrationStatus | null>(null);
     const [rows, setRows] = useState<PersonRow[]>([]);
+    const [meta, setMeta] = useState<PaginationMeta>({ page: 1, pageSize: 10, totalItems: 0, totalPages: 0 });
     const [lastRun, setLastRun] = useState<SyncRunResult | null>(null);
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
+    const pagination = usePagination(10);
 
     useEffect(() => {
-        void load();
         void handleInstallCallback();
     }, []);
+
+    // Recarga la página de personas cuando cambian paginación/búsqueda.
+    useEffect(() => {
+        void loadStatus();
+    }, []);
+
+    useEffect(() => {
+        void loadPeople();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pagination.params]);
+
+    /** Estado del proveedor + último run (no depende de la paginación). */
+    const loadStatus = async () => {
+        try {
+            const [st, run] = await Promise.all([
+                repoIntegrationApi.status(),
+                repoIntegrationApi.lastRun().catch(() => null),
+            ]);
+            setStatus(st);
+            setLastRun(run);
+        } catch {
+            showToast('No se pudo cargar el estado de la integración', 'error');
+        }
+    };
 
     /** Si GitHub redirige con ?installation_id=..., confirma la conexión y limpia la URL. */
     const handleInstallCallback = async () => {
@@ -54,7 +83,7 @@ export function IntegrationsPage() {
             await repoIntegrationApi.connect(Number(installationId));
             showToast('GitHub conectado', 'success');
             window.history.replaceState({}, '', window.location.pathname);
-            void load();
+            void loadStatus();
         } catch {
             showToast('No se pudo confirmar la conexión con GitHub', 'error');
         }
@@ -73,17 +102,11 @@ export function IntegrationsPage() {
         }
     };
 
-    const load = async () => {
+    const loadPeople = async () => {
         setLoading(true);
         try {
-            const [st, usersPage, run] = await Promise.all([
-                repoIntegrationApi.status(),
-                authAPI.getAllUsersPaginated({ page: 1, pageSize: 100 }),
-                repoIntegrationApi.lastRun().catch(() => null),
-            ]);
-            setStatus(st);
-            setLastRun(run);
-
+            const usersPage = await authAPI.getAllUsersPaginated(pagination.params);
+            setMeta(usersPage.meta);
             const people = (usersPage.data ?? []).filter(
                 (u: UserWithMetadata) => u.isActive !== false,
             );
@@ -104,7 +127,7 @@ export function IntegrationsPage() {
                 }),
             );
         } catch {
-            showToast('No se pudo cargar la integración', 'error');
+            showToast('No se pudieron cargar las personas', 'error');
         } finally {
             setLoading(false);
         }
@@ -284,6 +307,16 @@ export function IntegrationsPage() {
                     )}
                 </div>
 
+                {/* Búsqueda */}
+                <div className="mb-4">
+                    <SearchInput
+                        value={pagination.search}
+                        onChange={pagination.setSearch}
+                        placeholder="Buscar persona por nombre o email..."
+                        className="max-w-md"
+                    />
+                </div>
+
                 {/* Tabla de asociación */}
                 <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
                     <table className="w-full" data-testid={tid('integrations', 'list')}>
@@ -373,10 +406,21 @@ export function IntegrationsPage() {
                     </table>
                     {!loading && rows.length === 0 && (
                         <div className="text-center py-12 text-gray-600 dark:text-gray-400">
-                            No hay personas para asociar
+                            {pagination.search ? 'No se encontraron personas' : 'No hay personas para asociar'}
                         </div>
                     )}
                     {loading && <div className="text-center py-12 text-gray-500">Cargando…</div>}
+
+                    {!loading && rows.length > 0 && (
+                        <PaginationControls
+                            meta={meta}
+                            page={pagination.page}
+                            pageSize={pagination.pageSize}
+                            onPageSizeChange={pagination.setPageSize}
+                            onPrevPage={pagination.prevPage}
+                            onNextPage={pagination.nextPage}
+                        />
+                    )}
                 </div>
             </div>
         </div>
