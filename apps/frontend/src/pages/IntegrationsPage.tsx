@@ -29,6 +29,8 @@ interface PersonRow {
     username: string;
     identityEmail: string;
     confirmed: boolean;
+    verified?: { login: string; name: string | null; avatarUrl: string; htmlUrl: string } | null;
+    verifying?: boolean;
 }
 
 export function IntegrationsPage() {
@@ -111,7 +113,40 @@ export function IntegrationsPage() {
     const updateRow = (id: string, patch: Partial<PersonRow>) =>
         setRows((rs) => rs.map((r) => (r.resourceId === id ? { ...r, ...patch } : r)));
 
+    /** Verifica el login contra GitHub y guarda la identidad canónica en la fila. */
+    const verifyRow = async (row: PersonRow): Promise<boolean> => {
+        if (!row.username.trim()) {
+            showToast('Escribe un usuario de GitHub primero', 'info');
+            return false;
+        }
+        updateRow(row.resourceId, { verifying: true });
+        try {
+            const found = await repoIntegrationApi.verifyUser(row.username.trim());
+            updateRow(row.resourceId, { verified: found, verifying: false });
+            if (found) {
+                // Normaliza al login canónico (corrige mayúsculas/typos de caja).
+                updateRow(row.resourceId, { username: found.login });
+                showToast(`Verificado: ${found.login}${found.name ? ` (${found.name})` : ''}`, 'success');
+                return true;
+            }
+            showToast(`No existe el usuario "${row.username}" en GitHub`, 'error');
+            return false;
+        } catch {
+            updateRow(row.resourceId, { verifying: false });
+            showToast('No se pudo verificar contra GitHub', 'error');
+            return false;
+        }
+    };
+
     const saveRow = async (row: PersonRow) => {
+        // No se puede confirmar una asociación sin verificar antes el usuario en GitHub.
+        if (row.confirmed && !row.verified) {
+            const ok = await verifyRow(row);
+            if (!ok) {
+                showToast('No se guardó: verifica el usuario antes de confirmar', 'error');
+                return;
+            }
+        }
         try {
             await repoIntegrationApi.setIdentities(row.resourceId, {
                 identities: [
@@ -268,12 +303,38 @@ export function IntegrationsPage() {
                                         <div className="text-sm text-gray-500">{row.email}</div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <input
-                                            value={row.username}
-                                            onChange={(e) => updateRow(row.resourceId, { username: e.target.value })}
-                                            placeholder="login"
-                                            className="w-40 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                value={row.username}
+                                                onChange={(e) => updateRow(row.resourceId, { username: e.target.value, verified: undefined })}
+                                                placeholder="login"
+                                                className="w-40 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            />
+                                            <button
+                                                onClick={() => verifyRow(row)}
+                                                disabled={row.verifying || !row.username.trim()}
+                                                title="Verificar que el usuario existe en GitHub"
+                                                className="px-2 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded text-xs transition-colors disabled:opacity-50"
+                                            >
+                                                {row.verifying ? '…' : 'Verificar'}
+                                            </button>
+                                        </div>
+                                        {row.verified && (
+                                            <a
+                                                href={row.verified.htmlUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="mt-1 flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 hover:underline"
+                                            >
+                                                <img src={row.verified.avatarUrl} alt="" className="w-4 h-4 rounded-full" />
+                                                ✓ {row.verified.login}{row.verified.name ? ` · ${row.verified.name}` : ''}
+                                            </a>
+                                        )}
+                                        {row.verified === null && (
+                                            <span className="mt-1 block text-xs text-red-600 dark:text-red-400">
+                                                ✗ no existe en GitHub
+                                            </span>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4">
                                         <input

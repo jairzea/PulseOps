@@ -33,10 +33,20 @@ export interface PersonRepoProfile {
   scope: RepoScope;
 }
 
+export interface RepoConnection {
+  id: string;
+  provider: RepoProviderName;
+  installationId: number;
+  account: string;
+  isActive: boolean;
+}
+
 export interface IntegrationStatus {
   provider: RepoProviderName;
+  mode: 'app' | 'pat' | 'none';
   configured: boolean;
   repos: RepoRef[];
+  connections: RepoConnection[];
 }
 
 export interface SyncItemResult {
@@ -68,6 +78,18 @@ class RepoIntegrationApiImpl {
     return httpClient.get<IntegrationStatus>(`${this.base}/status`);
   }
 
+  installUrl(): Promise<{ url: string | null }> {
+    return httpClient.get<{ url: string | null }>(`${this.base}/install-url`);
+  }
+
+  connect(installationId: number): Promise<RepoConnection> {
+    return httpClient.post<RepoConnection>(`${this.base}/connections`, { installationId });
+  }
+
+  disconnect(installationId: number): Promise<void> {
+    return httpClient.delete<void>(`${this.base}/connections/${installationId}`);
+  }
+
   getProfile(resourceId: string): Promise<PersonRepoProfile> {
     return httpClient.get<PersonRepoProfile>(`${this.base}/identities/${resourceId}`);
   }
@@ -91,6 +113,15 @@ class RepoIntegrationApiImpl {
     accounts: Array<{ provider: RepoProviderName; username: string; email?: string }>,
   ): Promise<MatchSuggestion[]> {
     return httpClient.post<MatchSuggestion[]>(`${this.base}/suggest-matches`, { accounts });
+  }
+
+  verifyUser(login: string): Promise<{
+    login: string;
+    name: string | null;
+    avatarUrl: string;
+    htmlUrl: string;
+  } | null> {
+    return httpClient.get(`${this.base}/verify-user/${encodeURIComponent(login)}`);
   }
 
   sync(): Promise<SyncRunResult> {

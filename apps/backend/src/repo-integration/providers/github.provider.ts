@@ -142,6 +142,34 @@ export class GithubProvider implements RepoProvider {
     return contributors.map((c) => ({ provider: this.name, username: c.login }));
   }
 
+  /**
+   * Verifica que un login de GitHub exista y devuelve su identidad canónica (login exacto,
+   * nombre, avatar). Sirve para que el admin confirme la asociación viendo la persona real,
+   * en vez de guardar texto a ciegas. `null` si no existe (404).
+   */
+  async verifyUser(
+    login: string,
+  ): Promise<{ login: string; name: string | null; avatarUrl: string; htmlUrl: string } | null> {
+    try {
+      const u = await this.rest<{
+        login: string;
+        name: string | null;
+        avatar_url: string;
+        html_url: string;
+        type: string;
+      }>(`/users/${encodeURIComponent(login)}`);
+      if (u.type !== 'User') return null; // descarta orgs/bots
+      return {
+        login: u.login,
+        name: u.name,
+        avatarUrl: u.avatar_url,
+        htmlUrl: u.html_url,
+      };
+    } catch {
+      return null; // 404 u otro error → no verificado
+    }
+  }
+
   async commitsInRange(
     repo: RepoRef,
     identities: RepoAccount[],

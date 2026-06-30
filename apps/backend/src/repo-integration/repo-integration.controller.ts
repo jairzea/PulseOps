@@ -73,6 +73,12 @@ export class RepoIntegrationController {
     return this.connections.disconnect(Number(installationId));
   }
 
+  /** Verifica un login de GitHub y devuelve su identidad canónica (o 404→null). */
+  @Get('verify-user/:login')
+  verifyUser(@Param('login') login: string) {
+    return this.github.verifyUser(login);
+  }
+
   /** Dispara la sincronización a demanda. */
   @Post('sync')
   sync() {
