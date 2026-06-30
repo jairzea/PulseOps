@@ -33,7 +33,36 @@ export function IntegrationsPage() {
 
     useEffect(() => {
         void load();
+        void handleInstallCallback();
     }, []);
+
+    /** Si GitHub redirige con ?installation_id=..., confirma la conexión y limpia la URL. */
+    const handleInstallCallback = async () => {
+        const params = new URLSearchParams(window.location.search);
+        const installationId = params.get('installation_id');
+        if (!installationId) return;
+        try {
+            await repoIntegrationApi.connect(Number(installationId));
+            showToast('GitHub conectado', 'success');
+            window.history.replaceState({}, '', window.location.pathname);
+            void load();
+        } catch {
+            showToast('No se pudo confirmar la conexión con GitHub', 'error');
+        }
+    };
+
+    const connectGithub = async () => {
+        try {
+            const { url } = await repoIntegrationApi.installUrl();
+            if (!url) {
+                showToast('Falta GITHUB_APP_SLUG en el servidor', 'error');
+                return;
+            }
+            window.location.href = url;
+        } catch {
+            showToast('No se pudo iniciar la conexión', 'error');
+        }
+    };
 
     const load = async () => {
         setLoading(true);
@@ -159,15 +188,26 @@ export function IntegrationsPage() {
                             <span className="font-semibold">GitHub</span>
                             {status?.configured ? (
                                 <span className="px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-green-600 text-green-700 dark:text-white">
-                                    Conectado · {status.repos.length} repos
+                                    {status.mode === 'app'
+                                        ? `GitHub App · ${status.connections.length} instalación(es) · ${status.repos.length} repos`
+                                        : `Token · ${status.repos.length} repos`}
                                 </span>
                             ) : (
                                 <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 dark:bg-yellow-600 text-yellow-700 dark:text-white">
-                                    Sin token (configura GITHUB_TOKEN)
+                                    Sin conectar
                                 </span>
                             )}
                         </div>
                         <div className="flex items-center gap-3">
+                            {status && status.mode !== 'pat' && (
+                                <button
+                                    onClick={connectGithub}
+                                    data-testid={tid('integrations', 'connect')}
+                                    className="px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:opacity-90 rounded-lg transition-opacity"
+                                >
+                                    {status.connections.length > 0 ? 'Gestionar conexión' : 'Conectar GitHub'}
+                                </button>
+                            )}
                             <button
                                 onClick={suggest}
                                 disabled={!status?.configured || loading}
