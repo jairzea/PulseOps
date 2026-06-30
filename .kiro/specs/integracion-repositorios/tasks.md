@@ -5,12 +5,12 @@
 > (derivación pura + asociación + persistencia) no dependen de eso y se pueden adelantar.
 > Proveedor: GitHub primero; Bitbucket en una iteración posterior con la misma interfaz.
 
-- [ ] 1. Tipos y derivación pura de métricas (+ verificación)
-  - `metrics-derivation.ts`: función pura conteos brutos (gross, deletions, selfChurn, commits, workingDays) → { nui, devEfficiency, uipPerDay, selfChurnRate, fixRatioFreq, fixRatioVol, commitsPerDay }. Selfcheck con asserts (incluye ejemplos del documento: NUI 10000, efficiency 70%).
+- [x] 1. Tipos y derivación pura de métricas (+ verificación)
+  - `metrics-derivation.ts`: función pura conteos brutos → { nui, devEfficiency, uipPerDay, selfChurnRate, fixRatioFreq, fixRatioVol, commitsPerDay }. Selfcheck (10 asserts) pasa, incluye ejemplos del documento (NUI 10000, efficiency 58.33% sobre net delta 7000/12000).
   - _Requisitos: 3.1, 7.2_
 
-- [ ] 2. Asociación persona ↔ cuenta de repo
-  - Modelo (`repoIdentities`, `repoScope` en resourceProfile) + servicio/endpoints CRUD (asociar/desasociar) + **match sugerido por email** de empresa. Guard admin.
+- [x] 2. Asociación persona ↔ cuenta de repo
+  - `repoIdentities`/`repoScope` en resourceProfile (sin migración) vía `UsersService.setRepoProfile`. `RepoIdentityService` (get/set/clear + `suggestMatches` por email). Endpoints CRUD admin en `RepoIntegrationController`. Módulo registrado.
   - _Requisitos: 2.1, 2.2, 2.3, 2.4, 2.5, 6.3_
 
 - [ ] 3. DevAnalyzer (clon + git blame, determinístico) — Developers/Arquitectos
