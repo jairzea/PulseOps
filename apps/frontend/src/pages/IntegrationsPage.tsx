@@ -113,27 +113,28 @@ export function IntegrationsPage() {
     const updateRow = (id: string, patch: Partial<PersonRow>) =>
         setRows((rs) => rs.map((r) => (r.resourceId === id ? { ...r, ...patch } : r)));
 
-    /** Verifica el login contra GitHub y guarda la identidad canónica en la fila. */
+    /** Verifica el login contra GitHub al perder foco; pinta verde/rojo. Sin toasts ruidosos. */
     const verifyRow = async (row: PersonRow): Promise<boolean> => {
-        if (!row.username.trim()) {
-            showToast('Escribe un usuario de GitHub primero', 'info');
+        const login = row.username.trim();
+        if (!login) {
+            updateRow(row.resourceId, { verified: undefined });
             return false;
+        }
+        if (row.verified && row.verified.login.toLowerCase() === login.toLowerCase()) {
+            return true; // ya verificado, no repetir
         }
         updateRow(row.resourceId, { verifying: true });
         try {
-            const found = await repoIntegrationApi.verifyUser(row.username.trim());
-            updateRow(row.resourceId, { verified: found, verifying: false });
-            if (found) {
-                // Normaliza al login canónico (corrige mayúsculas/typos de caja).
-                updateRow(row.resourceId, { username: found.login });
-                showToast(`Verificado: ${found.login}${found.name ? ` (${found.name})` : ''}`, 'success');
-                return true;
-            }
-            showToast(`No existe el usuario "${row.username}" en GitHub`, 'error');
-            return false;
+            const found = await repoIntegrationApi.verifyUser(login);
+            updateRow(row.resourceId, {
+                verified: found,
+                verifying: false,
+                // Normaliza al login canónico (corrige mayúsculas).
+                username: found ? found.login : row.username,
+            });
+            return !!found;
         } catch {
             updateRow(row.resourceId, { verifying: false });
-            showToast('No se pudo verificar contra GitHub', 'error');
             return false;
         }
     };
@@ -143,7 +144,7 @@ export function IntegrationsPage() {
         if (row.confirmed && !row.verified) {
             const ok = await verifyRow(row);
             if (!ok) {
-                showToast('No se guardó: verifica el usuario antes de confirmar', 'error');
+                showToast('No se guardó: el usuario de GitHub no es válido', 'error');
                 return;
             }
         }
@@ -303,23 +304,22 @@ export function IntegrationsPage() {
                                         <div className="text-sm text-gray-500">{row.email}</div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                value={row.username}
-                                                onChange={(e) => updateRow(row.resourceId, { username: e.target.value, verified: undefined })}
-                                                placeholder="login"
-                                                className="w-40 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            />
-                                            <button
-                                                onClick={() => verifyRow(row)}
-                                                disabled={row.verifying || !row.username.trim()}
-                                                title="Verificar que el usuario existe en GitHub"
-                                                className="px-2 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded text-xs transition-colors disabled:opacity-50"
-                                            >
-                                                {row.verifying ? '…' : 'Verificar'}
-                                            </button>
-                                        </div>
-                                        {row.verified && (
+                                        <input
+                                            value={row.username}
+                                            onChange={(e) => updateRow(row.resourceId, { username: e.target.value, verified: undefined })}
+                                            onBlur={() => verifyRow(row)}
+                                            placeholder="login"
+                                            className={`w-44 px-3 py-1.5 bg-white dark:bg-gray-800 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${row.verified
+                                                ? 'border-green-500 dark:border-green-500'
+                                                : row.verified === null
+                                                    ? 'border-red-500 dark:border-red-500'
+                                                    : 'border-gray-300 dark:border-gray-600'
+                                                }`}
+                                        />
+                                        {row.verifying && (
+                                            <span className="mt-1 block text-xs text-gray-400">verificando…</span>
+                                        )}
+                                        {!row.verifying && row.verified && (
                                             <a
                                                 href={row.verified.htmlUrl}
                                                 target="_blank"
@@ -330,7 +330,7 @@ export function IntegrationsPage() {
                                                 ✓ {row.verified.login}{row.verified.name ? ` · ${row.verified.name}` : ''}
                                             </a>
                                         )}
-                                        {row.verified === null && (
+                                        {!row.verifying && row.verified === null && (
                                             <span className="mt-1 block text-xs text-red-600 dark:text-red-400">
                                                 ✗ no existe en GitHub
                                             </span>
