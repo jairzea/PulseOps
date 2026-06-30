@@ -4,6 +4,8 @@ import { UsersModule } from '../users/users.module';
 import { RecordsModule } from '../records/records.module';
 import { RepoIdentityService } from './repo-identity.service';
 import { RepoIntegrationController } from './repo-integration.controller';
+import { GithubOauthController } from './github-oauth.controller';
+import { GithubOauthService } from './github-oauth.service';
 import { GithubProvider } from './providers/github.provider';
 import { GithubAuth } from './providers/github-auth';
 import { DevAnalyzer } from './dev-analyzer';
@@ -29,9 +31,10 @@ import {
       { name: RepoConnection.name, schema: RepoConnectionSchema },
     ]),
   ],
-  controllers: [RepoIntegrationController],
+  controllers: [RepoIntegrationController, GithubOauthController],
   providers: [
     RepoIdentityService,
+    GithubOauthService,
     GithubAuth,
     GithubProvider,
     DevAnalyzer,

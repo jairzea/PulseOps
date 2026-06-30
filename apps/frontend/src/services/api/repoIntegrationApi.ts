@@ -124,6 +124,19 @@ class RepoIntegrationApiImpl {
     return httpClient.get(`${this.base}/verify-user/${encodeURIComponent(login)}`);
   }
 
+  /** OAuth self-service: vincular/desvincular MI propia cuenta de GitHub. */
+  oauthStart(): Promise<{ url: string; configured: boolean }> {
+    return httpClient.get(`${this.base}/oauth/github/start`);
+  }
+
+  oauthMe(): Promise<{ connected: boolean; identity: RepoIdentity | null }> {
+    return httpClient.get(`${this.base}/oauth/github/me`);
+  }
+
+  oauthDisconnect(): Promise<{ connected: boolean }> {
+    return httpClient.get(`${this.base}/oauth/github/disconnect`);
+  }
+
   sync(): Promise<SyncRunResult> {
     return httpClient.post<SyncRunResult>(`${this.base}/sync`);
   }

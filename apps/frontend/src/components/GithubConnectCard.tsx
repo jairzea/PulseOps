@@ -1,0 +1,110 @@
+/**
+ * Tarjeta de auto-vinculación de GitHub para el perfil del usuario (self-service).
+ * Cualquier usuario autenticado conecta SU propia cuenta de un clic vía OAuth; la identidad
+ * la devuelve GitHub (login canónico verificado), sin escribir nada a mano.
+ */
+import { useEffect, useState } from 'react';
+import { repoIntegrationApi, RepoIdentity } from '../services/api/repoIntegrationApi';
+import { showToast } from '../utils/toast';
+
+const GithubIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 015.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.68.8.56A10.52 10.52 0 0023.5 12C23.5 5.73 18.27.5 12 .5z" />
+    </svg>
+);
+
+export function GithubConnectCard() {
+    const [identity, setIdentity] = useState<RepoIdentity | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        void load();
+        // Feedback al volver del callback de GitHub (?github=connected|error).
+        const params = new URLSearchParams(window.location.search);
+        const result = params.get('github');
+        if (result === 'connected') {
+            showToast(`GitHub vinculado: ${params.get('login') ?? ''}`, 'success');
+            window.history.replaceState({}, '', window.location.pathname);
+        } else if (result === 'error') {
+            showToast('No se pudo vincular GitHub', 'error');
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    }, []);
+
+    const load = async () => {
+        setLoading(true);
+        try {
+            const me = await repoIntegrationApi.oauthMe();
+            setIdentity(me.identity);
+        } catch {
+            // silencioso: la tarjeta solo no muestra estado
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const connect = async () => {
+        try {
+            const { url, configured } = await repoIntegrationApi.oauthStart();
+            if (!configured || !url) {
+                showToast('La vinculación con GitHub no está configurada', 'error');
+                return;
+            }
+            window.location.href = url;
+        } catch {
+            showToast('No se pudo iniciar la vinculación', 'error');
+        }
+    };
+
+    const disconnect = async () => {
+        try {
+            await repoIntegrationApi.oauthDisconnect();
+            setIdentity(null);
+            showToast('GitHub desvinculado', 'success');
+        } catch {
+            showToast('No se pudo desvincular', 'error');
+        }
+    };
+
+    return (
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <GithubIcon className="w-5 h-5" /> Integraciones
+                </h3>
+            </div>
+
+            {loading ? (
+                <p className="text-sm text-gray-500">Cargando…</p>
+            ) : identity ? (
+                <div className="flex items-center justify-between gap-4">
+                    <div className="text-sm">
+                        <p className="text-gray-900 dark:text-white font-medium">
+                            Cuenta de GitHub vinculada
+                        </p>
+                        <p className="text-green-600 dark:text-green-400">✓ {identity.username}</p>
+                    </div>
+                    <button
+                        onClick={disconnect}
+                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors text-sm"
+                    >
+                        Desvincular
+                    </button>
+                </div>
+            ) : (
+                <div className="flex items-center justify-between gap-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Vincula tu cuenta de GitHub para que tus métricas de desarrollo se midan
+                        automáticamente.
+                    </p>
+                    <button
+                        onClick={connect}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:opacity-90 rounded-lg transition-opacity text-sm whitespace-nowrap"
+                    >
+                        <GithubIcon className="w-5 h-5" /> Conectar mi GitHub
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}

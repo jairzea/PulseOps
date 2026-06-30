@@ -4,6 +4,7 @@ import { authAPI } from '../services/authService';
 import { apiClient } from '../services/apiClient';
 import { showToast } from '../utils/toast';
 import { UserWithMetadata } from '../types/auth';
+import { GithubConnectCard } from '../components/GithubConnectCard';
 import { tid } from '../utils/testId';
 
 export function ProfilePage() {
@@ -239,6 +240,9 @@ export function ProfilePage() {
                                 </div>
                             )}
                         </div>
+
+                        {/* Integraciones (auto-vinculación de GitHub) */}
+                        <GithubConnectCard />
 
                         {/* Métricas del recurso (si aplica) */}
                         {profile?.role === 'user' && (
