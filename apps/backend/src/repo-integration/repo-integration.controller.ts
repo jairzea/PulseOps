@@ -11,7 +11,9 @@ import {
 } from '@nestjs/common';
 import { RepoIdentityService } from './repo-identity.service';
 import { RepoSyncService } from './repo-sync.service';
+import { RepoConnectionService } from './repo-connection.service';
 import { GithubProvider } from './providers/github.provider';
+import { ConfigService } from '@nestjs/config';
 import {
   SetRepoIdentitiesDto,
   RepoProviderName,
@@ -20,6 +22,7 @@ import { DemoOrJwtAuthGuard } from '../auth/guards/demo-or-jwt.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('repo-integration')
 @UseGuards(DemoOrJwtAuthGuard, RolesGuard)
@@ -28,15 +31,46 @@ export class RepoIntegrationController {
   constructor(
     private readonly identityService: RepoIdentityService,
     private readonly syncService: RepoSyncService,
+    private readonly connections: RepoConnectionService,
     private readonly github: GithubProvider,
+    private readonly config: ConfigService,
   ) {}
 
-  /** Estado de la integración (proveedor configurado) y repos disponibles. */
+  /** Estado de la integración: modo de auth, repos disponibles y conexiones (modo App). */
   @Get('status')
   async status() {
-    const configured = this.github.isConfigured();
+    const mode = this.github.authMode();
+    const configured = mode !== 'none';
     const repos = configured ? await this.github.listRepositories() : [];
-    return { provider: 'github', configured, repos };
+    const conns = mode === 'app' ? await this.connections.list() : [];
+    return { provider: 'github', mode, configured, repos, connections: conns };
+  }
+
+  /**
+   * URL para instalar la GitHub App (botón "Conectar GitHub"). El front abre esta URL; tras
+   * autorizar, GitHub redirige al front con `installation_id`, que se confirma vía POST.
+   */
+  @Get('install-url')
+  installUrl() {
+    const slug = this.config.get<string>('GITHUB_APP_SLUG');
+    return {
+      url: slug ? `https://github.com/apps/${slug}/installations/new` : null,
+    };
+  }
+
+  /** Confirma una instalación de la App (el front envía el installation_id del callback). */
+  @Post('connections')
+  connect(
+    @Body() body: { installationId: number },
+    @CurrentUser() user: { userId?: string },
+  ) {
+    return this.connections.upsertInstallation(body.installationId, user?.userId);
+  }
+
+  /** Desconecta una instalación. */
+  @Delete('connections/:installationId')
+  disconnect(@Param('installationId') installationId: string) {
+    return this.connections.disconnect(Number(installationId));
   }
 
   /** Dispara la sincronización a demanda. */

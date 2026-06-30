@@ -10,6 +10,8 @@ export interface RepoRef {
   id: string;
   owner: string;
   name: string;
+  /** Instalación de la GitHub App dueña de este repo (modo App). Ausente en modo PAT. */
+  installationId?: number;
 }
 
 export interface RepoAccount {

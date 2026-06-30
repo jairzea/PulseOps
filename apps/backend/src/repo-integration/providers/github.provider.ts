@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ServiceUnavailableException } from '../../common/exceptions/app.exception';
+import { GithubAuth } from './github-auth';
 import {
   BlameRange,
   CommitMeta,
@@ -24,30 +25,31 @@ import {
 @Injectable()
 export class GithubProvider implements RepoProvider {
   readonly name = 'github' as const;
-  private readonly logger = new Logger(GithubProvider.name);
   private readonly api = 'https://api.github.com';
   private readonly graphql = 'https://api.github.com/graphql';
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly auth: GithubAuth,
+  ) {}
 
   isConfigured(): boolean {
-    return !!this.config.get<string>('GITHUB_TOKEN');
+    return this.auth.isConfigured();
   }
 
-  private token(): string {
-    const t = this.config.get<string>('GITHUB_TOKEN');
-    if (!t) {
-      throw new ServiceUnavailableException(
-        'Integración con GitHub no configurada (falta GITHUB_TOKEN).',
-      );
-    }
-    return t;
+  /** Modo de autenticación activo (para la UI). */
+  authMode(): 'app' | 'pat' | 'none' {
+    return this.auth.mode();
   }
 
-  private async rest<T>(path: string): Promise<T> {
+  private async authHeader(installationId?: number): Promise<string> {
+    return `Bearer ${await this.auth.accessToken(installationId)}`;
+  }
+
+  private async rest<T>(path: string, installationId?: number): Promise<T> {
     const res = await fetch(`${this.api}${path}`, {
       headers: {
-        Authorization: `Bearer ${this.token()}`,
+        Authorization: await this.authHeader(installationId),
         Accept: 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28',
       },
@@ -61,11 +63,15 @@ export class GithubProvider implements RepoProvider {
     return res.json() as Promise<T>;
   }
 
-  private async gql<T>(query: string, variables: Record<string, unknown>): Promise<T> {
+  private async gql<T>(
+    query: string,
+    variables: Record<string, unknown>,
+    installationId?: number,
+  ): Promise<T> {
     const res = await fetch(this.graphql, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${this.token()}`,
+        Authorization: await this.authHeader(installationId),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ query, variables }),
@@ -88,7 +94,36 @@ export class GithubProvider implements RepoProvider {
     return this.config.get<string>('GITHUB_ORG') ?? '';
   }
 
+  /** Instalaciones de la GitHub App (modo App). Cada una expone sus repos. */
+  async listInstallations(): Promise<Array<{ id: number; account: string }>> {
+    const list = await this.rest<
+      Array<{ id: number; account?: { login?: string } }>
+    >('/app/installations?per_page=100');
+    return list.map((i) => ({ id: i.id, account: i.account?.login ?? '' }));
+  }
+
   async listRepositories(): Promise<RepoRef[]> {
+    if (this.auth.mode() === 'app') {
+      // En modo App: por cada instalación, sus repos accesibles (token de instalación).
+      const installations = await this.listInstallations();
+      const out: RepoRef[] = [];
+      for (const inst of installations) {
+        const body = await this.rest<{
+          repositories: Array<{ name: string; owner: { login: string } }>;
+        }>('/installation/repositories?per_page=100', inst.id);
+        for (const r of body.repositories ?? []) {
+          out.push({
+            id: `${r.owner.login}/${r.name}`,
+            owner: r.owner.login,
+            name: r.name,
+            installationId: inst.id,
+          });
+        }
+      }
+      return out;
+    }
+
+    // Modo PAT: repos de la org configurada o del usuario del token.
     const org = this.orgRepoOwner();
     const path = org ? `/orgs/${org}/repos?per_page=100` : `/user/repos?per_page=100`;
     const repos = await this.rest<Array<{ name: string; owner: { login: string } }>>(path);
@@ -102,6 +137,7 @@ export class GithubProvider implements RepoProvider {
   async listContributors(repo: RepoRef): Promise<RepoAccount[]> {
     const contributors = await this.rest<Array<{ login: string }>>(
       `/repos/${repo.owner}/${repo.name}/contributors?per_page=100`,
+      repo.installationId,
     );
     return contributors.map((c) => ({ provider: this.name, username: c.login }));
   }
@@ -127,6 +163,7 @@ export class GithubProvider implements RepoProvider {
       }>
     >(
       `/repos/${repo.owner}/${repo.name}/commits?since=${encodeURIComponent(week.since)}&until=${encodeURIComponent(week.until)}&per_page=100`,
+      repo.installationId,
     );
 
     // Filtrar por identidad (login o email) y enriquecer additions/deletions por commit.
@@ -140,7 +177,7 @@ export class GithubProvider implements RepoProvider {
 
       const detail = await this.rest<{
         stats?: { additions: number; deletions: number };
-      }>(`/repos/${repo.owner}/${repo.name}/commits/${c.sha}`);
+      }>(`/repos/${repo.owner}/${repo.name}/commits/${c.sha}`, repo.installationId);
 
       out.push({
         sha: c.sha,
@@ -159,7 +196,7 @@ export class GithubProvider implements RepoProvider {
   async deletedLinesForCommit(repo: RepoRef, sha: string): Promise<DeletedLine[]> {
     const detail = await this.rest<{
       files?: Array<{ filename: string; patch?: string }>;
-    }>(`/repos/${repo.owner}/${repo.name}/commits/${sha}`);
+    }>(`/repos/${repo.owner}/${repo.name}/commits/${sha}`, repo.installationId);
 
     const deleted: DeletedLine[] = [];
     for (const f of detail.files ?? []) {
@@ -209,7 +246,7 @@ export class GithubProvider implements RepoProvider {
           };
         };
       };
-    }>(query, { owner: repo.owner, name: repo.name, ref, path });
+    }>(query, { owner: repo.owner, name: repo.name, ref, path }, repo.installationId);
 
     const ranges = data.repository?.object?.blame?.ranges ?? [];
     return ranges.map((r) => ({
