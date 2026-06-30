@@ -76,7 +76,7 @@ export function IntegrationsPage() {
         try {
             const [st, usersPage, run] = await Promise.all([
                 repoIntegrationApi.status(),
-                authAPI.getAllUsersPaginated({ page: 1, pageSize: 500 }),
+                authAPI.getAllUsersPaginated({ page: 1, pageSize: 100 }),
                 repoIntegrationApi.lastRun().catch(() => null),
             ]);
             setStatus(st);
