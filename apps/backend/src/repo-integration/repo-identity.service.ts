@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
-import { UserRole } from '../users/schemas/user.schema';
 import { SetRepoIdentitiesDto, RepoProviderName } from './dto/repo-identity.dto';
 
 export interface PersonRepoProfile {
@@ -81,10 +80,9 @@ export class RepoIdentityService {
     }>
   > {
     const users = await this.usersService.findAll(false);
+    // Incluye admins (dev/arquitecto también se miden, doc Gemini), no solo role USER.
     const byEmail = new Map(
-      users
-        .filter((u) => u.role === UserRole.USER && u.email)
-        .map((u) => [u.email.toLowerCase(), u]),
+      users.filter((u) => u.email).map((u) => [u.email.toLowerCase(), u]),
     );
 
     return accounts.map((acc) => {
