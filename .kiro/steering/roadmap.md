@@ -47,6 +47,11 @@ Nota: `getDiagnostics` confirma 0 errores en los archivos tocados. `npm run type
 
 **Fase 4 (futuro, condicionado).** IA para veredicto en lenguaje natural (#5, posiblemente YAGNI), y sistema de 3 canastillas + tracking Workspace (#7, otra iniciativa).
 
+**Iniciativa — Integración con repositorios (en curso, rama `feat/integracion-repositorios`).** Spec `integracion-repositorios`. Sacar estadísticas de productividad directo del repo (GitHub primero; Bitbucket v2).
+- **Decisión clave: API-only, NO clonar.** GitHub REST (commits/diffs/stats) + GraphQL `blame` dan todo, incluido self-churn exacto, sin disco ni binario git.
+- ✅ Tareas 1–7: derivación pura (`metrics-derivation` + selfcheck), asociación persona↔cuenta en `resourceProfile` (sin migración), `RepoProvider`/`GithubProvider`, `DevAnalyzer` (NUI, efficiency, ratios, working days vía `CommitMeta.authoredDate`), `qa-parsing`+`QaAnalyzer` (`N/N ACs pass`, v1 solo validados), `RepoSyncService` (upsert MetricRecord idempotente por semana, source `github`), scheduler dependency-free (miércoles 18:00 GMT-5, env-configurable; ponytail vs `@nestjs/schedule`), endpoints `/status`/`/sync`/`/runs/last`, frontend `IntegrationsPage`. Ventana jueves–miércoles GMT-5 (`week-range` + selfcheck). Verde: getDiagnostics + typecheck backend/frontend; selfchecks de derivación/qa-parsing/week-range pasan.
+- Pendiente: validación runtime con **token de GitHub + repo real** (la provee el arquitecto, como SMTP/Ethereal en Fase 3); merge a master; Bitbucket (tarea 9, v2); "automatizados" de QA desde docs `e2e/` (v2).
+
 ## Método de trabajo
 
 - Features multi-archivo o con decisiones de dominio abiertas → formalizar como **spec** (requirements → design → tasks) antes de implementar, especialmente Fase 2.
