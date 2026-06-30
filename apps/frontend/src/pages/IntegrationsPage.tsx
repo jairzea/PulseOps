@@ -74,15 +74,17 @@ export function IntegrationsPage() {
     const load = async () => {
         setLoading(true);
         try {
-            const [st, users, run] = await Promise.all([
+            const [st, usersPage, run] = await Promise.all([
                 repoIntegrationApi.status(),
-                authAPI.getAllUsers(),
+                authAPI.getAllUsersPaginated({ page: 1, pageSize: 500 }),
                 repoIntegrationApi.lastRun().catch(() => null),
             ]);
             setStatus(st);
             setLastRun(run);
 
-            const people = users.filter((u: UserWithMetadata) => u.isActive !== false);
+            const people = (usersPage.data ?? []).filter(
+                (u: UserWithMetadata) => u.isActive !== false,
+            );
             const profiles = await Promise.all(
                 people.map((p) => repoIntegrationApi.getProfile(p.id).catch(() => null)),
             );
