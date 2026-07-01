@@ -22,6 +22,7 @@ import {
   CurrentUserData,
 } from '../auth/decorators/current-user.decorator';
 import { UserRole } from './schemas/user.schema';
+import { isMeasurableUser } from './is-measurable';
 import * as bcrypt from 'bcryptjs';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 
@@ -43,6 +44,7 @@ export class UsersController {
         name: user.name,
         role: user.role,
         isActive: user.isActive,
+        isMeasurable: isMeasurableUser(user as any),
         lastLogin: user.lastLogin,
         createdAt: user.createdAt,
       })),
@@ -117,6 +119,22 @@ export class UsersController {
       name: user.name,
       role: user.role,
       isActive: user.isActive,
+    };
+  }
+
+  @Put(':id/measurable')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async setMeasurable(
+    @Param('id') id: string,
+    @Body() body: { isMeasurable: boolean },
+  ) {
+    const user = await this.usersService.setMeasurable(id, !!body.isMeasurable);
+    return {
+      id: user._id.toString(),
+      name: user.name,
+      role: user.role,
+      isMeasurable: (user as any).resourceProfile?.isMeasurable ?? false,
     };
   }
 

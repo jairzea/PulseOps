@@ -158,6 +158,26 @@ export class UsersService {
     return updated as UserDocument;
   }
 
+  /**
+   * Marca/desmarca a un usuario como "medible" (recurso con métricas), fusionando en
+   * resourceProfile sin pisar el resto (identidades de repo, resourceType, etc.).
+   */
+  async setMeasurable(id: string, isMeasurable: boolean): Promise<UserDocument> {
+    const user = await this.userModel.findById(id).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    user.resourceProfile = {
+      ...(user.resourceProfile ?? {}),
+      isMeasurable,
+    };
+    user.markModified('resourceProfile');
+    await user.save();
+    const updated = await this.userModel.findById(id).select('-password').exec();
+    return updated as UserDocument;
+  }
+
+
   async changePassword(
     userId: string,
     changePasswordDto: ChangePasswordDto,
