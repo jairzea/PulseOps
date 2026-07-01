@@ -25,6 +25,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { ForbiddenException } from '../common/exceptions/app.exception';
 import { UserRole } from '../users/schemas/user.schema';
+import { isMeasurableUser } from '../users/is-measurable';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 
@@ -48,7 +49,7 @@ export class ResourcesController {
   @Roles(UserRole.ADMIN)
   async getStats() {
     const users = await this.usersService.findAll(false);
-    const resourceUsers = users.filter((u) => u.role === UserRole.USER);
+    const resourceUsers = users.filter((u) => isMeasurableUser(u as any));
 
     const totalResources = resourceUsers.length;
     const activeResources = resourceUsers.filter((u) => u.isActive).length;
@@ -79,15 +80,29 @@ export class ResourcesController {
   ) {
     // Si hay parámetros de paginación explícitos, usar endpoint paginado
     if (page !== undefined || pageSize !== undefined || search !== undefined) {
-      const paginationQuery: PaginationQueryDto = {
-        page: page ? parseInt(page, 10) : 1,
-        pageSize: pageSize ? parseInt(pageSize, 10) : 10,
-        search,
-      };
-      const result = await this.usersService.findAllPaginated(paginationQuery, false, UserRole.USER);
-      
-      // Mapear usuarios a formato de recursos
-      const resourceUsers = result.data.map((user) => ({
+      // ponytail: para incluir admins medibles (no solo role=USER) filtramos por
+      // isMeasurableUser en memoria y paginamos aquí. Escala pequeña (equipo). Ceiling:
+      // con miles de usuarios conviene mover el filtro a la query (role=USER OR
+      // resourceProfile.isMeasurable=true) en findAllPaginated.
+      const pageNum = page ? parseInt(page, 10) : 1;
+      const size = pageSize ? parseInt(pageSize, 10) : 10;
+      const term = (search ?? '').toLowerCase();
+
+      const all = await this.usersService.findAll(false);
+      let measurable = all.filter((u) => isMeasurableUser(u as any));
+      if (term) {
+        measurable = measurable.filter(
+          (u) =>
+            u.name.toLowerCase().includes(term) ||
+            u.email.toLowerCase().includes(term),
+        );
+      }
+
+      const totalItems = measurable.length;
+      const start = (pageNum - 1) * size;
+      const pageUsers = measurable.slice(start, start + size);
+
+      const resourceUsers = pageUsers.map((user) => ({
         id: user._id.toString(),
         name: user.name,
         email: user.email,
@@ -113,14 +128,19 @@ export class ResourcesController {
 
       return {
         data: filteredData,
-        meta: result.meta,
+        meta: {
+          page: pageNum,
+          pageSize: size,
+          totalItems,
+          totalPages: Math.max(1, Math.ceil(totalItems / size)),
+        },
       };
     }
 
     // Mantener compatibilidad: sin paginación devolver todo en formato paginado
     const users = await this.usersService.findAll(false);
     const resourceUsers = users
-      .filter((u) => u.role === UserRole.USER)
+      .filter((u) => isMeasurableUser(u as any))
       .map((user) => ({
         id: user._id.toString(),
         name: user.name,
@@ -188,7 +208,7 @@ export class ResourcesController {
     }
 
     const user = await this.usersService.findById(id);
-    if (!user || user.role !== UserRole.USER) {
+    if (!user || !isMeasurableUser(user as any)) {
       throw new NotFoundException('Resource not found');
     }
     // Obtener métricas asociadas al recurso
