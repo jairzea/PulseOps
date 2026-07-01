@@ -5,6 +5,7 @@
  */
 import { useEffect, useState } from 'react';
 import { repoIntegrationApi, RepoIdentity } from '../services/api/repoIntegrationApi';
+import { recordsApi, Record as MetricRecord } from '../services/api/recordsApi';
 import { showToast } from '../utils/toast';
 
 const GithubIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
@@ -13,8 +14,9 @@ const GithubIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
     </svg>
 );
 
-export function GithubConnectCard() {
+export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
     const [identity, setIdentity] = useState<RepoIdentity | null>(null);
+    const [records, setRecords] = useState<MetricRecord[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -36,6 +38,10 @@ export function GithubConnectCard() {
         try {
             const me = await repoIntegrationApi.oauthMe();
             setIdentity(me.identity);
+            if (resourceId) {
+                const all = await recordsApi.getAll(resourceId).catch(() => []);
+                setRecords(all.filter((r) => r.source === 'github'));
+            }
         } catch {
             // silencioso: la tarjeta solo no muestra estado
         } finally {
@@ -106,6 +112,34 @@ export function GithubConnectCard() {
                     >
                         <GithubIcon className="w-5 h-5" /> Conectar mi GitHub
                     </button>
+                </div>
+            )}
+
+            {/* Registros sincronizados desde el repo (para que el recurso confirme lo que se trajo). */}
+            {records.length > 0 && (
+                <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                        Métricas sincronizadas
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {records
+                            .sort((a, b) => (a.week < b.week ? 1 : -1))
+                            .map((r) => (
+                                <div
+                                    key={r.id}
+                                    className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-800 text-sm"
+                                >
+                                    <div>
+                                        <span className="text-gray-900 dark:text-white font-medium">{r.metricKey}</span>
+                                        <span className="text-gray-500 dark:text-gray-400 ml-2 text-xs">{r.week}</span>
+                                    </div>
+                                    <span className="text-gray-900 dark:text-white tabular-nums">{r.value}</span>
+                                </div>
+                            ))}
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        Datos traídos automáticamente desde tu repositorio (fuente: GitHub).
+                    </p>
                 </div>
             )}
         </div>

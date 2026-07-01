@@ -242,7 +242,7 @@ export function ProfilePage() {
                         </div>
 
                         {/* Integraciones (auto-vinculación de GitHub) */}
-                        <GithubConnectCard />
+                        <GithubConnectCard resourceId={profile?.id} />
 
                         {/* Métricas del recurso (si aplica) */}
                         {profile?.role === 'user' && (
