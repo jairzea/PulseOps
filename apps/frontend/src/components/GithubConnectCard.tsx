@@ -25,7 +25,14 @@ export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
         const params = new URLSearchParams(window.location.search);
         const result = params.get('github');
         if (result === 'connected') {
-            showToast(`GitHub vinculado: ${params.get('login') ?? ''}`, 'success');
+            const newLogin = params.get('login') ?? '';
+            const prev = localStorage.getItem('gh_prev_login');
+            if (prev && newLogin && prev.toLowerCase() !== newLogin.toLowerCase()) {
+                showToast(`Vinculaste "${newLogin}" (antes era "${prev}")`, 'info');
+            } else {
+                showToast(`GitHub vinculado: ${newLogin}`, 'success');
+            }
+            localStorage.removeItem('gh_prev_login');
             window.history.replaceState({}, '', window.location.pathname);
         } else if (result === 'error') {
             showToast('No se pudo vincular GitHub', 'error');
@@ -62,6 +69,8 @@ export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
                 showToast('La vinculación con GitHub no está configurada', 'error');
                 return;
             }
+            // Recordar la cuenta actual para avisar si al volver resulta distinta.
+            if (identity?.username) localStorage.setItem('gh_prev_login', identity.username);
             window.location.href = url;
         } catch {
             showToast('No se pudo iniciar la vinculación', 'error');
@@ -107,17 +116,32 @@ export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
                     </button>
                 </div>
             ) : (
-                <div className="flex items-center justify-between gap-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Vincula tu cuenta de GitHub para que tus métricas de desarrollo se midan
-                        automáticamente.
+                <div>
+                    <div className="flex items-center justify-between gap-4">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Vincula tu cuenta de GitHub para que tus métricas de desarrollo se midan
+                            automáticamente.
+                        </p>
+                        <button
+                            onClick={connect}
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:opacity-90 rounded-lg transition-opacity text-sm whitespace-nowrap"
+                        >
+                            <GithubIcon className="w-5 h-5" /> Conectar mi GitHub
+                        </button>
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        Se vinculará la cuenta con la que tengas sesión iniciada en GitHub. ¿Cuenta
+                        equivocada?{' '}
+                        <a
+                            href="https://github.com/logout"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="underline hover:text-gray-700 dark:hover:text-gray-300"
+                        >
+                            Cierra sesión en GitHub
+                        </a>{' '}
+                        y vuelve a conectar.
                     </p>
-                    <button
-                        onClick={connect}
-                        className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:opacity-90 rounded-lg transition-opacity text-sm whitespace-nowrap"
-                    >
-                        <GithubIcon className="w-5 h-5" /> Conectar mi GitHub
-                    </button>
                 </div>
             )}
 
