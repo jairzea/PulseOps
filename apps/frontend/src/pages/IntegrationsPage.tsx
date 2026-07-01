@@ -451,28 +451,26 @@ export function IntegrationsPage() {
                                         />
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-1">
                                             <button
                                                 onClick={() => saveRow(row)}
                                                 title="Guardar asociación"
                                                 aria-label="Guardar asociación"
-                                                className="flex flex-col items-center gap-0.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+                                                className="p-2 rounded text-green-600 dark:text-green-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                                             >
                                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                                                 </svg>
-                                                <span className="text-[10px] leading-none">Guardar</span>
                                             </button>
                                             <button
                                                 onClick={() => clearRow(row)}
                                                 title="Desasociar cuenta"
                                                 aria-label="Desasociar cuenta"
-                                                className="flex flex-col items-center gap-0.5 px-3 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded transition-colors"
+                                                className="p-2 rounded text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                                             >
                                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                                                 </svg>
-                                                <span className="text-[10px] leading-none">Quitar</span>
                                             </button>
                                         </div>
                                     </td>
