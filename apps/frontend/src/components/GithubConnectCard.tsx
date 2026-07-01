@@ -17,6 +17,7 @@ const GithubIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
 export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
     const [identity, setIdentity] = useState<RepoIdentity | null>(null);
     const [records, setRecords] = useState<MetricRecord[]>([]);
+    const [labels, setLabels] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -46,7 +47,15 @@ export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
             const me = await repoIntegrationApi.oauthMe();
             setIdentity(me.identity);
             if (resourceId) {
-                const all = await recordsApi.getAll(resourceId).catch(() => []);
+                const [all, catalog] = await Promise.all([
+                    recordsApi.getAll(resourceId).catch(() => []),
+                    repoIntegrationApi.metricCatalog().catch(() => []),
+                ]);
+                // También el catálogo de QA para cubrir esa métrica.
+                const qaCatalog = await repoIntegrationApi.metricCatalog('QA').catch(() => []);
+                const labelMap: Record<string, string> = {};
+                for (const c of [...catalog, ...qaCatalog]) labelMap[c.key] = c.label;
+                setLabels(labelMap);
                 // Solo fuente github y acotado a las últimas 8 semanas (evita crecer sin límite;
                 // el histórico completo vive en la vista de Records del admin).
                 const gh = all
@@ -160,8 +169,15 @@ export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
                                     className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-800 text-sm"
                                 >
                                     <div>
-                                        <span className="text-gray-900 dark:text-white font-medium">{r.metricKey}</span>
-                                        <span className="text-gray-500 dark:text-gray-400 ml-2 text-xs">{r.week}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-gray-900 dark:text-white font-mono text-xs">{r.metricKey}</span>
+                                            <span className="text-gray-500 dark:text-gray-400 text-xs">{r.week}</span>
+                                        </div>
+                                        {labels[r.metricKey] && (
+                                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                {labels[r.metricKey]}
+                                            </div>
+                                        )}
                                     </div>
                                     <span className="text-gray-900 dark:text-white tabular-nums">{r.value}</span>
                                 </div>
