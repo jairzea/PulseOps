@@ -150,7 +150,7 @@ export function IntegrationsPage() {
         }
         updateRow(resourceId, { verifying: true });
         try {
-            const found = await repoIntegrationApi.verifyUser(clean);
+            const found = (await repoIntegrationApi.verifyUser(clean)) ?? null;
             updateRow(resourceId, {
                 verified: found,
                 verifying: false,
@@ -158,7 +158,7 @@ export function IntegrationsPage() {
             });
             return !!found;
         } catch {
-            updateRow(resourceId, { verifying: false });
+            updateRow(resourceId, { verified: null, verifying: false });
             return false;
         }
     };
