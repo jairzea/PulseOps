@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createHmac, timingSafeEqual } from 'crypto';
 import { ServiceUnavailableException } from '../common/exceptions/app.exception';
 import { UsersService } from '../users/users.service';
+import { signOauthState, verifyOauthState } from './oauth-state';
 
 /**
  * OAuth de usuario con GitHub: cada persona vincula SU propia cuenta de un clic. GitHub
@@ -22,7 +22,6 @@ import { UsersService } from '../users/users.service';
 export class GithubOauthService {
   private readonly api = 'https://api.github.com';
   private readonly authBase = 'https://github.com/login/oauth';
-  private readonly stateTtlMs = 10 * 60 * 1000;
 
   constructor(
     private readonly config: ConfigService,
@@ -41,28 +40,6 @@ export class GithubOauthService {
     return this.config.get<string>('JWT_SECRET') ?? 'dev-oauth-state';
   }
 
-  private signState(userId: string): string {
-    const payload = Buffer.from(JSON.stringify({ userId, ts: Date.now() })).toString('base64url');
-    const sig = createHmac('sha256', this.secret()).update(payload).digest('base64url');
-    return `${payload}.${sig}`;
-  }
-
-  private verifyState(state: string): string | null {
-    const [payload, sig] = state.split('.');
-    if (!payload || !sig) return null;
-    const expected = createHmac('sha256', this.secret()).update(payload).digest('base64url');
-    const a = Buffer.from(sig);
-    const b = Buffer.from(expected);
-    if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
-    try {
-      const { userId, ts } = JSON.parse(Buffer.from(payload, 'base64url').toString());
-      if (Date.now() - ts > this.stateTtlMs) return null; // expirado
-      return userId;
-    } catch {
-      return null;
-    }
-  }
-
   /** URL de autorización de GitHub para vincular la cuenta del `userId`. */
   authorizeUrl(userId: string): string {
     if (!this.isConfigured()) {
@@ -72,7 +49,7 @@ export class GithubOauthService {
       client_id: this.config.get<string>('GITHUB_OAUTH_CLIENT_ID') as string,
       redirect_uri: this.config.get<string>('GITHUB_OAUTH_CALLBACK_URL') as string,
       scope: 'read:user',
-      state: this.signState(userId),
+      state: signOauthState(userId, this.secret()),
       allow_signup: 'false',
     });
     return `${this.authBase}/authorize?${params.toString()}`;
@@ -83,7 +60,7 @@ export class GithubOauthService {
    * Devuelve el login vinculado (para feedback en el front).
    */
   async handleCallback(code: string, state: string): Promise<{ login: string }> {
-    const userId = this.verifyState(state);
+    const userId = verifyOauthState(state, this.secret());
     if (!userId) {
       throw new ServiceUnavailableException('State inválido o expirado.');
     }
