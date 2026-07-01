@@ -253,52 +253,57 @@ export function IntegrationsPage() {
                 <div className="mb-6 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-5">
                     <div className="flex items-center justify-between flex-wrap gap-4">
                         <div className="flex items-center gap-3">
-                            <GithubIcon className="w-5 h-5" />
-                            <span className="font-semibold">GitHub</span>
-                            {status?.configured ? (
-                                <span className="px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-green-600 text-green-700 dark:text-white">
-                                    {status.mode === 'app'
-                                        ? `GitHub App · ${status.connections.length} instalación(es) · ${status.repos.length} repos`
-                                        : `Token · ${status.repos.length} repos`}
-                                </span>
-                            ) : (
-                                <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 dark:bg-yellow-600 text-yellow-700 dark:text-white">
-                                    Sin conectar
-                                </span>
-                            )}
-                        </div>
-                        <div className="flex items-center gap-3">
-                            {status && status.mode !== 'pat' && (() => {
-                                const connected = status.connections.length > 0;
-                                const label = connected ? 'GitHub conectado · gestionar' : 'Conectar con GitHub';
+                            {(() => {
+                                const connected = !!status && status.repos.length > 0;
+                                const clickable = !!status && status.mode !== 'pat';
+                                const label = connected
+                                    ? 'GitHub conectado · gestionar'
+                                    : clickable ? 'Conectar con GitHub' : 'GitHub';
                                 return (
                                     <div className="relative group">
                                         <button
-                                            onClick={connectGithub}
+                                            onClick={clickable ? connectGithub : undefined}
+                                            disabled={!clickable}
                                             data-testid={tid('integrations', 'connect')}
                                             aria-label={label}
-                                            className={`relative flex items-center justify-center p-2 rounded-lg transition-colors ${connected
+                                            className={`relative flex items-center justify-center w-11 h-11 rounded-full transition-colors ${connected
                                                 ? 'bg-green-600 hover:bg-green-700 text-white'
                                                 : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
-                                                }`}
+                                                } ${clickable ? 'cursor-pointer' : 'cursor-default'}`}
                                         >
-                                            <GithubIcon className="w-5 h-5" />
-                                            {/* Marquilla de estado, siempre visible */}
+                                            <GithubIcon className="w-6 h-6" />
+                                            {/* Marquilla de estado sobre el ícono, siempre visible */}
                                             <span
-                                                className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900 ${connected ? 'bg-green-400' : 'bg-gray-400'
+                                                className={`absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-gray-900 ${connected ? 'bg-green-400' : 'bg-gray-400'
                                                     }`}
+                                                title={connected ? 'Conectado' : 'Sin conectar'}
                                             />
                                         </button>
-                                        {/* Tooltip al hover/focus */}
-                                        <span
-                                            role="tooltip"
-                                            className="pointer-events-none absolute top-full right-0 mt-2 whitespace-nowrap rounded-lg bg-gray-900 text-gray-100 text-xs px-2.5 py-1.5 shadow-xl border border-gray-700 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity z-50"
-                                        >
-                                            {label}
-                                        </span>
+                                        {clickable && (
+                                            <span
+                                                role="tooltip"
+                                                className="pointer-events-none absolute top-full left-0 mt-2 whitespace-nowrap rounded-lg bg-gray-900 text-gray-100 text-xs px-2.5 py-1.5 shadow-xl border border-gray-700 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity z-50"
+                                            >
+                                                {label}
+                                            </span>
+                                        )}
                                     </div>
                                 );
                             })()}
+                            <div>
+                                <div className="font-semibold leading-tight">GitHub</div>
+                                {status?.configured ? (
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        {status.mode === 'app'
+                                            ? `App · ${status.repos.length} repos`
+                                            : `Token · ${status.repos.length} repos`}
+                                    </div>
+                                ) : (
+                                    <div className="text-xs text-yellow-600 dark:text-yellow-400">Sin conectar</div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
                             <button
                                 onClick={suggest}
                                 disabled={!status?.configured || loading}
