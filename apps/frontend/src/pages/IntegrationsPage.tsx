@@ -303,17 +303,27 @@ export function IntegrationsPage() {
                                 onClick={suggest}
                                 disabled={!status?.configured || loading}
                                 data-testid={tid('integrations', 'suggest')}
-                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50"
+                                title="Sugerir asociaciones por email"
+                                aria-label="Sugerir asociaciones por email"
+                                className="flex flex-col items-center gap-0.5 px-3 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50"
                             >
-                                Sugerir asociaciones
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+                                </svg>
+                                <span className="text-[10px] leading-none">Sugerir</span>
                             </button>
                             <button
                                 onClick={runSync}
                                 disabled={syncing || !status?.configured}
                                 data-testid={tid('integrations', 'sync')}
-                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                                title="Sincronizar métricas ahora"
+                                aria-label="Sincronizar métricas ahora"
+                                className="flex flex-col items-center gap-0.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50"
                             >
-                                {syncing ? 'Sincronizando…' : 'Sincronizar ahora'}
+                                <svg className={`w-5 h-5 ${syncing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                </svg>
+                                <span className="text-[10px] leading-none">{syncing ? 'Sincro…' : 'Sincronizar'}</span>
                             </button>
                         </div>
                     </div>
@@ -407,15 +417,25 @@ export function IntegrationsPage() {
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => saveRow(row)}
-                                                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
+                                                title="Guardar asociación"
+                                                aria-label="Guardar asociación"
+                                                className="flex flex-col items-center gap-0.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
                                             >
-                                                Guardar
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                                </svg>
+                                                <span className="text-[10px] leading-none">Guardar</span>
                                             </button>
                                             <button
                                                 onClick={() => clearRow(row)}
-                                                className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded text-sm transition-colors"
+                                                title="Desasociar cuenta"
+                                                aria-label="Desasociar cuenta"
+                                                className="flex flex-col items-center gap-0.5 px-3 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded transition-colors"
                                             >
-                                                Desasociar
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                                <span className="text-[10px] leading-none">Quitar</span>
                                             </button>
                                         </div>
                                     </td>
