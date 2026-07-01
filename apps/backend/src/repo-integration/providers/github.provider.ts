@@ -63,6 +63,24 @@ export class GithubProvider implements RepoProvider {
     return res.json() as Promise<T>;
   }
 
+  /** REST autenticado como la App (App JWT), para endpoints de nivel App como /app/installations. */
+  private async restAsApp<T>(path: string): Promise<T> {
+    const res = await fetch(`${this.api}${path}`, {
+      headers: {
+        Authorization: `Bearer ${this.auth.appJwt()}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    });
+    if (!res.ok) {
+      throw new ServiceUnavailableException('Error consultando la API de GitHub (App).', {
+        status: res.status,
+        path,
+      });
+    }
+    return res.json() as Promise<T>;
+  }
+
   private async gql<T>(
     query: string,
     variables: Record<string, unknown>,
@@ -96,7 +114,7 @@ export class GithubProvider implements RepoProvider {
 
   /** Instalaciones de la GitHub App (modo App). Cada una expone sus repos. */
   async listInstallations(): Promise<Array<{ id: number; account: string }>> {
-    const list = await this.rest<
+    const list = await this.restAsApp<
       Array<{ id: number; account?: { login?: string } }>
     >('/app/installations?per_page=100');
     return list.map((i) => ({ id: i.id, account: i.account?.login ?? '' }));
