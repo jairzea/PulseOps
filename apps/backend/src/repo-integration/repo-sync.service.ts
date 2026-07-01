@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
-import { UserRole } from '../users/schemas/user.schema';
 import { RecordsService } from '../records/records.service';
 import { GithubProvider } from './providers/github.provider';
 import { RepoAccount, RepoProvider, RepoRef } from './providers/repo-provider.interface';
@@ -69,7 +68,8 @@ export class RepoSyncService {
 
     const users = await this.usersService.findAll(false);
     for (const user of users) {
-      if (user.role !== UserRole.USER) continue;
+      // Cualquier usuario activo con identidad confirmada se sincroniza (dev/arquitecto
+      // también se miden, no solo role USER).
       const rp: any = user.resourceProfile ?? {};
       const identities: RepoAccount[] = (rp.repoIdentities ?? [])
         .filter((i: any) => i.confirmed && i.provider === provider.name)
