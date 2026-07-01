@@ -1,12 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { RecordsService } from '../records/records.service';
+import { MetricsService } from '../metrics/metrics.service';
 import { GithubProvider } from './providers/github.provider';
 import { RepoAccount, RepoProvider, RepoRef } from './providers/repo-provider.interface';
 import { DevAnalyzer } from './dev-analyzer';
 import { QaAnalyzer } from './qa-analyzer';
 import { deriveDevMetrics } from './metrics-derivation';
 import { currentWeekWindow, WeekWindow } from './week-range';
+import { metricsForRole } from './repo-metrics-catalog';
 
 export type SyncTrigger = 'scheduled' | 'manual';
 
@@ -44,6 +46,7 @@ export class RepoSyncService {
   constructor(
     private readonly usersService: UsersService,
     private readonly recordsService: RecordsService,
+    private readonly metricsService: MetricsService,
     private readonly github: GithubProvider,
     private readonly devAnalyzer: DevAnalyzer,
     private readonly qaAnalyzer: QaAnalyzer,
@@ -135,6 +138,23 @@ export class RepoSyncService {
       resourceType === 'QA'
         ? await this.qaValues(provider, repos, identities, window)
         : await this.devValues(provider, repos, identities, window);
+
+    // Autoprovisión: sembrar las métricas del rol (si no existen) y asociarlas al recurso.
+    // No pisa la categoría que el admin haya definido; solo garantiza que existan y estén
+    // asociadas para que el motor/consolidado/gráficas las vean.
+    for (const def of metricsForRole(resourceType)) {
+      await this.metricsService.ensureMetric(
+        {
+          key: def.key,
+          label: def.label,
+          description: def.description,
+          unit: def.unit,
+          category: def.defaultCategory,
+        },
+        'repo-sync',
+      );
+      await this.metricsService.associateResourceByKey(def.key, resourceId);
+    }
 
     let written = 0;
     for (const [metricKey, value] of Object.entries(values)) {

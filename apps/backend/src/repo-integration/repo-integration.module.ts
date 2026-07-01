@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from '../users/users.module';
 import { RecordsModule } from '../records/records.module';
+import { MetricsModule } from '../metrics/metrics.module';
 import { RepoIdentityService } from './repo-identity.service';
 import { RepoIntegrationController } from './repo-integration.controller';
 import { GithubOauthController } from './github-oauth.controller';
@@ -27,6 +28,7 @@ import {
   imports: [
     UsersModule,
     RecordsModule,
+    MetricsModule,
     MongooseModule.forFeature([
       { name: RepoConnection.name, schema: RepoConnectionSchema },
     ]),

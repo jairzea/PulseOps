@@ -23,6 +23,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { metricsForRole } from './repo-metrics-catalog';
 
 @Controller('repo-integration')
 @UseGuards(DemoOrJwtAuthGuard, RolesGuard)
@@ -77,6 +78,22 @@ export class RepoIntegrationController {
   @Get('verify-user/:login')
   verifyUser(@Param('login') login: string) {
     return this.github.verifyUser(login);
+  }
+
+  /**
+   * Catálogo de métricas de repo sugeridas por rol (para la sesión de métricas). Marca las
+   * `principal` (candidatas a producción). El admin decide la categoría final.
+   */
+  @Get('metric-catalog')
+  metricCatalog(@Query('role') role?: string) {
+    return metricsForRole(role).map((d) => ({
+      key: d.key,
+      label: d.label,
+      description: d.description,
+      unit: d.unit,
+      defaultCategory: d.defaultCategory,
+      principal: d.principal,
+    }));
   }
 
   /** Dispara la sincronización a demanda. */
