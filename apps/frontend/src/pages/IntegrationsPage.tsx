@@ -274,10 +274,9 @@ export function IntegrationsPage() {
                                     data-testid={tid('integrations', 'connect')}
                                     title={status.connections.length > 0 ? 'Gestionar conexión de GitHub' : 'Conectar con GitHub'}
                                     aria-label={status.connections.length > 0 ? 'Gestionar conexión de GitHub' : 'Conectar con GitHub'}
-                                    className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:opacity-90 rounded-lg transition-opacity"
+                                    className="flex items-center justify-center p-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:opacity-90 rounded-lg transition-opacity"
                                 >
                                     <GithubIcon className="w-5 h-5" />
-                                    <span>{status.connections.length > 0 ? 'Gestionar' : 'Conectar'}</span>
                                 </button>
                             )}
                             <button
