@@ -268,17 +268,37 @@ export function IntegrationsPage() {
                             )}
                         </div>
                         <div className="flex items-center gap-3">
-                            {status && status.mode !== 'pat' && (
-                                <button
-                                    onClick={connectGithub}
-                                    data-testid={tid('integrations', 'connect')}
-                                    title={status.connections.length > 0 ? 'Gestionar conexión de GitHub' : 'Conectar con GitHub'}
-                                    aria-label={status.connections.length > 0 ? 'Gestionar conexión de GitHub' : 'Conectar con GitHub'}
-                                    className="flex items-center justify-center p-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:opacity-90 rounded-lg transition-opacity"
-                                >
-                                    <GithubIcon className="w-5 h-5" />
-                                </button>
-                            )}
+                            {status && status.mode !== 'pat' && (() => {
+                                const connected = status.connections.length > 0;
+                                const label = connected ? 'GitHub conectado · gestionar' : 'Conectar con GitHub';
+                                return (
+                                    <div className="relative group">
+                                        <button
+                                            onClick={connectGithub}
+                                            data-testid={tid('integrations', 'connect')}
+                                            aria-label={label}
+                                            className={`relative flex items-center justify-center p-2 rounded-lg transition-colors ${connected
+                                                ? 'bg-green-600 hover:bg-green-700 text-white'
+                                                : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
+                                                }`}
+                                        >
+                                            <GithubIcon className="w-5 h-5" />
+                                            {/* Marquilla de estado, siempre visible */}
+                                            <span
+                                                className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900 ${connected ? 'bg-green-400' : 'bg-gray-400'
+                                                    }`}
+                                            />
+                                        </button>
+                                        {/* Tooltip al hover/focus */}
+                                        <span
+                                            role="tooltip"
+                                            className="pointer-events-none absolute top-full right-0 mt-2 whitespace-nowrap rounded-lg bg-gray-900 text-gray-100 text-xs px-2.5 py-1.5 shadow-xl border border-gray-700 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity z-50"
+                                        >
+                                            {label}
+                                        </span>
+                                    </div>
+                                );
+                            })()}
                             <button
                                 onClick={suggest}
                                 disabled={!status?.configured || loading}
