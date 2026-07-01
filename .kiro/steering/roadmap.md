@@ -47,6 +47,17 @@ Nota: `getDiagnostics` confirma 0 errores en los archivos tocados. `npm run type
 
 **Fase 4 (futuro, condicionado).** IA para veredicto en lenguaje natural (#5, posiblemente YAGNI), y sistema de 3 canastillas + tracking Workspace (#7, otra iniciativa).
 
+**Iniciativa — Integración con repositorios (COMPLETADA 2026-07-01, validada en vivo).** Spec `integracion-repositorios`. Estadísticas de productividad directo del repo (GitHub; Bitbucket v2).
+- **Decisión clave: API-only, NO clonar.** GitHub REST (commits/diffs/stats) + GraphQL `blame` dan todo, incluido self-churn exacto, sin disco ni binario git.
+- **Auth = GitHub App (estándar de la industria):** `GithubAuth` firma App JWT (RS256, `crypto` nativo) → token de instalación efímero cacheado; modo **PAT** como bootstrap/pruebas. Secretos solo en `.env` (identidad del producto); en DB solo `installationId` (`RepoConnection`). Selfchecks: `app-jwt`, `oauth-state`.
+- **Self-service OAuth (validado en vivo):** cada quien vincula SU cuenta en el Perfil (`GithubConnectCard`), state HMAC firmado, identidad canónica de GitHub (`read:user`), guardada confirmada. Ve sus métricas sincronizadas (últimas 8 semanas, label legible). Admin gestiona todo en `/integrations` (tabla paginada, verificación verde/rojo del login vía `GET /users/:login`, sugerencias por email).
+- **Motor:** `DevAnalyzer` (NUI, efficiency, ratios, working days) + `QaAnalyzer` (`N/N ACs pass`, v1 validados) → `deriveDevMetrics` → `RepoSyncService` upsert `MetricRecord` (source `github`, idempotente por semana, resiliente por repo). Ventana jueves–miércoles GMT-5. Scheduler dependency-free (mié 18:00, env-configurable).
+- **Autoprovisión + admin manda:** `repo-metrics-catalog` siembra las métricas (sin pisar la config del admin) y las asocia al recurso; el admin decide producción/estudio/seguimiento en la sesión de métricas (botón "Métricas de repositorio"). Endpoint `metric-catalog` para sugerencias.
+- **Validado en vivo (2026-07-01):** GitHub App real (`pulseops-test`), sync 1/1 OK → 8 records `github` semana W26 (nui 5405, etc.); OAuth self-service OK; verificación verde/rojo OK; help text de labels OK. Verde: getDiagnostics + selfchecks (derivación, qa-parsing, week-range, app-jwt, oauth-state). `tsc` full se cuelga por el entorno, no por errores.
+- Pendiente: **Bitbucket** (tarea 9, v2); "automatizados" de QA desde docs `e2e/` (v2); en prod la private key va a gestor de secretos, no `.env` plano.
+
+**Deuda futura destapada — Unificar Usuario/Recurso (spec aparte).** Hoy `role` mezcla permiso (admin/user) con "ser medible". Un admin que produce no puede tener métricas sin crearse un usuario-recurso redundante. Objetivo: separar permiso de recurso, que admins también sean medibles, una sola vista de Usuarios y eliminar el módulo `resources` legacy. Requiere su propia spec (migración de datos).
+
 ## Método de trabajo
 
 - Features multi-archivo o con decisiones de dominio abiertas → formalizar como **spec** (requirements → design → tasks) antes de implementar, especialmente Fase 2.

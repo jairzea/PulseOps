@@ -15,6 +15,7 @@ import { ConfigurationModule } from './configuration/configuration.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { RepoIntegrationModule } from './repo-integration/repo-integration.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     ConditionsModule,
     ConfigurationModule,
     NotificationsModule,
+    RepoIntegrationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -133,6 +133,31 @@ export class UsersService {
     return user;
   }
 
+  /**
+   * Actualiza el perfil de integración con repos (identidades + scope) dentro de
+   * resourceProfile, sin tocar el resto del perfil. Devuelve el usuario actualizado.
+   */
+  async setRepoProfile(
+    id: string,
+    repoProfile: { repoIdentities?: unknown; repoScope?: unknown },
+  ): Promise<UserDocument> {
+    const user = await this.userModel.findById(id).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    user.resourceProfile = {
+      ...(user.resourceProfile ?? {}),
+      ...repoProfile,
+    };
+    user.markModified('resourceProfile');
+    await user.save();
+    const updated = await this.userModel
+      .findById(id)
+      .select('-password')
+      .exec();
+    return updated as UserDocument;
+  }
+
   async changePassword(
     userId: string,
     changePasswordDto: ChangePasswordDto,

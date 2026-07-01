@@ -13,6 +13,7 @@ import { PageHeader } from '../components/PageHeader';
 import { PermissionFeedback } from '../components/PermissionFeedback';
 import { useAuth } from '../contexts/AuthContext';
 import { Metric, metricsApi } from '../services/apiClient';
+import { repoIntegrationApi } from '../services/api/repoIntegrationApi';
 import { useToast } from '../hooks/useToast';
 import { PaginationControls } from '../components/PaginationControls';
 import { SearchInput } from '../components/SearchInput';
@@ -45,6 +46,7 @@ export const MetricsPage: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingMetric, setEditingMetric] = useState<Metric | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [addingRepoMetrics, setAddingRepoMetrics] = useState(false);
 
     // Memorizar fetchFn para evitar re-renders innecesarios
     const fetchMetrics = useCallback((params: any) => metricsApi.getPaginated(params), []);
@@ -71,6 +73,41 @@ export const MetricsPage: React.FC = () => {
     const handleEdit = (metric: Metric) => {
         setEditingMetric(metric);
         setIsModalOpen(true);
+    };
+
+    /**
+     * Añade las métricas de repositorio sugeridas (catálogo dev por defecto) que aún no
+     * existan. Crea con la categoría por defecto del catálogo; el admin puede ajustarla luego.
+     */
+    const handleAddRepoMetrics = async () => {
+        setAddingRepoMetrics(true);
+        try {
+            const [catalog, existing] = await Promise.all([
+                repoIntegrationApi.metricCatalog('DEV'),
+                metricsApi.getAll(),
+            ]);
+            const existingKeys = new Set(existing.map((m) => m.key));
+            const missing = catalog.filter((c) => !existingKeys.has(c.key));
+            if (missing.length === 0) {
+                success('Las métricas de repositorio ya están creadas');
+                return;
+            }
+            for (const c of missing) {
+                await metricsApi.create({
+                    key: c.key,
+                    label: c.label,
+                    description: c.description,
+                    unit: c.unit,
+                    category: c.defaultCategory,
+                });
+            }
+            success(`${missing.length} métrica(s) de repositorio añadida(s)`);
+            await reload();
+        } catch {
+            showError('No se pudieron añadir las métricas de repositorio');
+        } finally {
+            setAddingRepoMetrics(false);
+        }
     };
 
     const handleCloseModal = async (shouldReload = false) => {
@@ -119,13 +156,24 @@ export const MetricsPage: React.FC = () => {
                 />
 
                 {/* Barra de búsqueda */}
-                <div className="mb-6">
+                <div className="mb-6 flex items-center gap-3">
                     <SearchInput
                         value={pagination.search}
                         onChange={pagination.setSearch}
                         placeholder="Buscar por etiqueta, clave o descripción..."
                         testId={tid('metrics', 'search')}
                     />
+                    <button
+                        onClick={handleAddRepoMetrics}
+                        disabled={addingRepoMetrics}
+                        title="Añadir las métricas derivadas de repositorios (NUI, eficiencia, etc.)"
+                        className="whitespace-nowrap px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors text-sm disabled:opacity-50 flex items-center gap-2"
+                    >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 015.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.68.8.56A10.52 10.52 0 0023.5 12C23.5 5.73 18.27.5 12 .5z" />
+                        </svg>
+                        {addingRepoMetrics ? 'Añadiendo…' : 'Métricas de repositorio'}
+                    </button>
                 </div>
 
                 {/* Tabla de métricas */}

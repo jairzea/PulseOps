@@ -227,4 +227,36 @@ export class MetricsService {
       );
     }
   }
+
+
+    /**
+     * Siembra una métrica por `key` si no existe (autoprovisionamiento). NO pisa la existente:
+     * si el admin ya la creó/ajustó (p.ej. cambió su categoría), se respeta tal cual.
+     * Devuelve la métrica (nueva o existente).
+     */
+    async ensureMetric(
+      def: { key: string; label: string; description?: string; unit?: string; category?: string },
+      createdBy: string,
+    ): Promise<Metric> {
+      const existing = await this.metricModel.findOne({ key: def.key }).exec();
+      if (existing) return existing;
+      const metric = new this.metricModel({
+        key: def.key,
+        label: def.label,
+        description: def.description,
+        unit: def.unit,
+        category: def.category ?? 'PRODUCTION',
+        resourceIds: [],
+        createdBy,
+      });
+      return metric.save();
+    }
+
+    /** Asocia un recurso a una métrica por `key` (solo añade; no quita otras asociaciones). */
+    async associateResourceByKey(key: string, resourceId: string): Promise<void> {
+      await this.metricModel
+        .updateOne({ key }, { $addToSet: { resourceIds: resourceId } })
+        .exec();
+    }
+
 }

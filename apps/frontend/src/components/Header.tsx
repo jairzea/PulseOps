@@ -227,6 +227,22 @@ export const Header: React.FC = () => {
                                                 Usuarios
                                             </button>
                                         )}
+                                        {user?.role === 'admin' && (
+                                            <button
+                                                onClick={() => {
+                                                    navigate('/integrations');
+                                                    setIsMenuOpen(false);
+                                                }}
+                                                data-testid={tid('nav', 'integrations')}
+                                                className={`w-full px-4 py-2 text-left transition-colors flex items-center gap-3 ${isActive('/integrations') ? 'bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+                                                    }`}
+                                            >
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                                </svg>
+                                                Integraciones
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             )}
