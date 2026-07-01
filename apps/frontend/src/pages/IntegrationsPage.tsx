@@ -115,19 +115,22 @@ export function IntegrationsPage() {
             const profiles = await Promise.all(
                 people.map((p) => repoIntegrationApi.getProfile(p.id).catch(() => null)),
             );
-            setRows(
-                people.map((p, i) => {
-                    const gh = profiles[i]?.identities.find((x) => x.provider === 'github');
-                    return {
-                        resourceId: p.id,
-                        name: p.name,
-                        email: p.email,
-                        username: gh?.username ?? '',
-                        identityEmail: gh?.email ?? p.email,
-                        confirmed: gh?.confirmed ?? false,
-                    };
-                }),
-            );
+            const built = people.map((p, i) => {
+                const gh = profiles[i]?.identities.find((x) => x.provider === 'github');
+                return {
+                    resourceId: p.id,
+                    name: p.name,
+                    email: p.email,
+                    username: gh?.username ?? '',
+                    identityEmail: gh?.email ?? p.email,
+                    confirmed: gh?.confirmed ?? false,
+                };
+            });
+            setRows(built);
+            // Pre-verificar (verde/rojo) las filas que ya traen username, sin bloquear el render.
+            for (const r of built) {
+                if (r.username) void verifyLogin(r.resourceId, r.username);
+            }
         } catch {
             showToast('No se pudieron cargar las personas', 'error');
         } finally {
@@ -138,7 +141,29 @@ export function IntegrationsPage() {
     const updateRow = (id: string, patch: Partial<PersonRow>) =>
         setRows((rs) => rs.map((r) => (r.resourceId === id ? { ...r, ...patch } : r)));
 
-    /** Verifica el login contra GitHub al perder foco; pinta verde/rojo. Sin toasts ruidosos. */
+    /** Verifica un login contra GitHub y actualiza el estado (verde/rojo) de la fila. */
+    const verifyLogin = async (resourceId: string, login: string): Promise<boolean> => {
+        const clean = login.trim();
+        if (!clean) {
+            updateRow(resourceId, { verified: undefined });
+            return false;
+        }
+        updateRow(resourceId, { verifying: true });
+        try {
+            const found = await repoIntegrationApi.verifyUser(clean);
+            updateRow(resourceId, {
+                verified: found,
+                verifying: false,
+                username: found ? found.login : clean, // normaliza a la caja canónica
+            });
+            return !!found;
+        } catch {
+            updateRow(resourceId, { verifying: false });
+            return false;
+        }
+    };
+
+    /** Verifica al perder foco; salta si ya está verificado ese mismo login. */
     const verifyRow = async (row: PersonRow): Promise<boolean> => {
         const login = row.username.trim();
         if (!login) {
@@ -146,22 +171,9 @@ export function IntegrationsPage() {
             return false;
         }
         if (row.verified && row.verified.login.toLowerCase() === login.toLowerCase()) {
-            return true; // ya verificado, no repetir
+            return true;
         }
-        updateRow(row.resourceId, { verifying: true });
-        try {
-            const found = await repoIntegrationApi.verifyUser(login);
-            updateRow(row.resourceId, {
-                verified: found,
-                verifying: false,
-                // Normaliza al login canónico (corrige mayúsculas).
-                username: found ? found.login : row.username,
-            });
-            return !!found;
-        } catch {
-            updateRow(row.resourceId, { verifying: false });
-            return false;
-        }
+        return verifyLogin(row.resourceId, login);
     };
 
     const saveRow = async (row: PersonRow) => {
@@ -217,13 +229,14 @@ export function IntegrationsPage() {
             let applied = 0;
             for (const m of matches) {
                 if (m.suggestedResourceId && m.account.email) {
-                    // sugerencia: prerellenar username con el local-part del email
+                    // sugerencia: usar el local-part del email como candidato y verificarlo.
                     const guess = m.account.email.split('@')[0];
                     updateRow(m.suggestedResourceId, { username: guess, confirmed: false });
+                    void verifyLogin(m.suggestedResourceId, guess); // pinta verde/rojo
                     applied += 1;
                 }
             }
-            showToast(`${applied} sugerencia(s) aplicadas (revisa y confirma)`, 'success');
+            showToast(`${applied} sugerencia(s) aplicadas (revisa el ✓ verde y confirma)`, 'success');
         } catch {
             showToast('Error al sugerir matches', 'error');
         }
