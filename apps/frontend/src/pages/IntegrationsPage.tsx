@@ -44,6 +44,7 @@ export function IntegrationsPage() {
     const [lastRun, setLastRun] = useState<SyncRunResult | null>(null);
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
+    const [ghMenuOpen, setGhMenuOpen] = useState(false);
     const pagination = usePagination(10);
 
     useEffect(() => {
@@ -89,16 +90,17 @@ export function IntegrationsPage() {
         }
     };
 
-    const connectGithub = async () => {
+    /** Abre la página de la GitHub App en una pestaña nueva (instalar o gestionar). */
+    const openGithubApp = async () => {
         try {
             const { url } = await repoIntegrationApi.installUrl();
             if (!url) {
                 showToast('Falta GITHUB_APP_SLUG en el servidor', 'error');
                 return;
             }
-            window.location.href = url;
+            window.open(url, '_blank', 'noopener,noreferrer');
         } catch {
-            showToast('No se pudo iniciar la conexión', 'error');
+            showToast('No se pudo abrir GitHub', 'error');
         }
     };
 
@@ -257,35 +259,65 @@ export function IntegrationsPage() {
                                 const connected = !!status && status.repos.length > 0;
                                 const clickable = !!status && status.mode !== 'pat';
                                 const label = connected
-                                    ? 'GitHub conectado · gestionar'
+                                    ? 'GitHub conectado'
                                     : clickable ? 'Conectar con GitHub' : 'GitHub';
+                                const onClick = () => {
+                                    if (!clickable) return;
+                                    if (connected) {
+                                        setGhMenuOpen((v) => !v); // ya conectado → menú de gestión
+                                    } else {
+                                        void openGithubApp(); // no conectado → instalar
+                                    }
+                                };
                                 return (
                                     <div className="relative group">
                                         <button
-                                            onClick={clickable ? connectGithub : undefined}
+                                            onClick={onClick}
                                             disabled={!clickable}
                                             data-testid={tid('integrations', 'connect')}
                                             aria-label={label}
+                                            aria-haspopup={connected ? 'menu' : undefined}
+                                            aria-expanded={connected ? ghMenuOpen : undefined}
                                             className={`relative flex items-center justify-center w-11 h-11 rounded-full transition-colors ${connected
                                                 ? 'bg-green-600 hover:bg-green-700 text-white'
                                                 : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
                                                 } ${clickable ? 'cursor-pointer' : 'cursor-default'}`}
                                         >
                                             <GithubIcon className="w-6 h-6" />
-                                            {/* Marquilla de estado sobre el ícono, siempre visible */}
                                             <span
                                                 className={`absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-gray-900 ${connected ? 'bg-green-400' : 'bg-gray-400'
                                                     }`}
                                                 title={connected ? 'Conectado' : 'Sin conectar'}
                                             />
                                         </button>
-                                        {clickable && (
+                                        {/* Tooltip solo cuando el menú está cerrado */}
+                                        {clickable && !ghMenuOpen && (
                                             <span
                                                 role="tooltip"
                                                 className="pointer-events-none absolute top-full left-0 mt-2 whitespace-nowrap rounded-lg bg-gray-900 text-gray-100 text-xs px-2.5 py-1.5 shadow-xl border border-gray-700 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity z-50"
                                             >
                                                 {label}
                                             </span>
+                                        )}
+                                        {/* Menú de gestión (solo conectado): abrir en GitHub + nota de desconexión */}
+                                        {connected && ghMenuOpen && (
+                                            <>
+                                                <div className="fixed inset-0 z-40" onClick={() => setGhMenuOpen(false)} />
+                                                <div className="absolute top-full left-0 mt-2 w-72 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl z-50 p-2 text-sm">
+                                                    <button
+                                                        onClick={() => { setGhMenuOpen(false); void openGithubApp(); }}
+                                                        className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white flex items-center gap-2"
+                                                    >
+                                                        <GithubIcon className="w-4 h-4" /> Administrar en GitHub ↗
+                                                    </button>
+                                                    <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 mt-1">
+                                                        La conexión de la organización se gestiona en GitHub. Para
+                                                        <span className="font-medium"> desconectar</span>, desinstala la
+                                                        App desde GitHub (Settings → Applications → Installed GitHub Apps).
+                                                        La vinculación de tu cuenta personal se maneja en tu Perfil.
+                                                    </div>
+                                                </div>
+                                            </>
                                         )}
                                     </div>
                                 );
