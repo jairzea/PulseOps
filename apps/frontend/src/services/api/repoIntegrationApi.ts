@@ -133,7 +133,7 @@ class RepoIntegrationApiImpl {
     principal: boolean;
   }>> {
     const q = role ? `?role=${encodeURIComponent(role)}` : '';
-    return httpClient.get(`${this.base}/metric-catalog${q}`);
+    return httpClient.get(`${this.base}/oauth/github/metric-catalog${q}`);
   }
 
   /** OAuth self-service: vincular/desvincular MI propia cuenta de GitHub. */

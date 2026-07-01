@@ -5,6 +5,7 @@ import { GithubOauthService } from './github-oauth.service';
 import { RepoIdentityService } from './repo-identity.service';
 import { DemoOrJwtAuthGuard } from '../auth/guards/demo-or-jwt.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { metricsForRole } from './repo-metrics-catalog';
 
 /**
  * OAuth de usuario (self-service): cualquier usuario autenticado vincula SU propia cuenta.
@@ -42,6 +43,20 @@ export class GithubOauthController {
   async disconnect(@CurrentUser() user: { userId: string }) {
     await this.identities.clearIdentities(user.userId, 'github');
     return { connected: false };
+  }
+
+  /** Catálogo de métricas de repo por rol (accesible a cualquier usuario autenticado). */
+  @Get('metric-catalog')
+  @UseGuards(DemoOrJwtAuthGuard)
+  metricCatalog(@Query('role') role?: string) {
+    return metricsForRole(role).map((d) => ({
+      key: d.key,
+      label: d.label,
+      description: d.description,
+      unit: d.unit,
+      defaultCategory: d.defaultCategory,
+      principal: d.principal,
+    }));
   }
 
   /**
