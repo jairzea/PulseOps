@@ -38,6 +38,7 @@ export interface ChangePasswordData {
 
 export interface UserWithMetadata extends User {
     isActive: boolean;
+    isMeasurable?: boolean;
     lastLogin?: string;
     createdAt?: string;
 }

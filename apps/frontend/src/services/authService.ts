@@ -162,6 +162,19 @@ class AuthAPI {
         return response.json();
     }
 
+    async setMeasurable(id: string, isMeasurable: boolean): Promise<void> {
+        const response = await fetch(`${API_URL}/users/${id}/measurable`, {
+            method: 'PUT',
+            headers: this.getHeaders(true),
+            body: JSON.stringify({ isMeasurable }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to update measurable flag');
+        }
+    }
+
     async changePassword(id: string, data: ChangePasswordData): Promise<void> {
         const response = await fetch(`${API_URL}/users/${id}/change-password`, {
             method: 'POST',
