@@ -8,6 +8,7 @@ import { ConfigurationPage } from './pages/ConfigurationPage';
 import { LoginPage } from './pages/LoginPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { UsersAdminPage } from './pages/UsersAdminPage';
+import { IntegrationsPage } from './pages/IntegrationsPage';
 import { Layout } from './components/Layout';
 import { ToastContainer } from './components/ToastContainer';
 import { AuthProvider } from './contexts/AuthContext';
@@ -110,6 +111,16 @@ function App() {
                                 <PrivateRoute requireAdmin>
                                     <Layout>
                                         <UsersAdminPage />
+                                    </Layout>
+                                </PrivateRoute>
+                            }
+                        />
+                        <Route
+                            path="/integrations"
+                            element={
+                                <PrivateRoute requireAdmin>
+                                    <Layout>
+                                        <IntegrationsPage />
                                     </Layout>
                                 </PrivateRoute>
                             }
