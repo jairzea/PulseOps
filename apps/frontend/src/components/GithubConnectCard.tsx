@@ -22,6 +22,10 @@ export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
 
     useEffect(() => {
         void load();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [resourceId]);
+
+    useEffect(() => {
         // Feedback al volver del callback de GitHub (?github=connected|error).
         const params = new URLSearchParams(window.location.search);
         const result = params.get('github');
