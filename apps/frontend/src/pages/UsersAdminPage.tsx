@@ -88,6 +88,19 @@ export function UsersAdminPage() {
         }
     };
 
+    const handleToggleMeasurable = async (userId: string, current: boolean) => {
+        try {
+            await authAPI.setMeasurable(userId, !current);
+            showToast(
+                !current ? 'Usuario marcado como medible' : 'Usuario ya no es medible',
+                'success'
+            );
+            loadUsers();
+        } catch (error: any) {
+            showToast(error.message || 'Error al actualizar', 'error');
+        }
+    };
+
     const handleDeleteUser = async (userId: string) => {
         if (!confirm('¿Estás seguro de que deseas eliminar este usuario? Esta acción eliminará al usuario permanentemente.')) return;
 
@@ -143,6 +156,9 @@ export function UsersAdminPage() {
                                         Estado
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                                        Medible
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                                         Último acceso
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
@@ -183,6 +199,18 @@ export function UsersAdminPage() {
                                             >
                                                 {user.isActive ? 'Activo' : 'Inactivo'}
                                             </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <button
+                                                onClick={() => handleToggleMeasurable(user.id, !!user.isMeasurable)}
+                                                title={user.isMeasurable ? 'Medible: cuenta con métricas. Clic para desactivar.' : 'No medible. Clic para activar.'}
+                                                className={`px-2 py-1 text-xs rounded-full transition-colors ${user.isMeasurable
+                                                    ? 'bg-green-100 dark:bg-green-600 text-green-700 dark:text-white'
+                                                    : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
+                                                    }`}
+                                            >
+                                                {user.isMeasurable ? '✓ Medible' : 'No medible'}
+                                            </button>
                                         </td>
                                         <td className="px-6 py-4 text-gray-600 dark:text-gray-300 text-sm">
                                             {user.lastLogin
