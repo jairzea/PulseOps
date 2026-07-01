@@ -67,8 +67,49 @@ interface RepoProvider {
 ```
 - `GithubProvider` primero (REST + GraphQL). `BitbucketProvider` después (misma interfaz;
   Bitbucket tiene endpoints equivalentes de commits/diffs; el self-churn se evalúa aparte).
-- Credenciales desde `ConfigService` (env). Token de org por defecto; token por usuario
-  como override opcional. Solo lectura.
+- Credenciales vía `GithubAuth` (ver sección A.1). Modo App (producción) o PAT (bootstrap/pruebas).
+
+## A.1 Autenticación — GitHub App (estándar de la industria) — añadido 2026-06-30
+
+Decisión: la integración se autentica con una **GitHub App**, no con un PAT en `.env`. Es el
+patrón que usan Vercel/Linear/CircleCI para integrarse con repos de clientes y resuelve el
+acoplamiento de "un token de persona en config": multi-org, multi-proyecto, conectar desde la
+UI, tokens efímeros y permisos finos de solo lectura.
+
+**Dos modos detrás de `GithubAuth`** (estrategia; el provider no sabe cuál se usa):
+- **App** (producción): `GITHUB_APP_ID` + `GITHUB_APP_PRIVATE_KEY` (+ `GITHUB_APP_SLUG`).
+  `GithubAuth` firma un **App JWT** (RS256 con `crypto` nativo, `app-jwt.ts`, sin librería de
+  JWT) y acuña un **token de instalación efímero (~1h)** por `installationId`, cacheado.
+- **PAT** (bootstrap / pruebas Nivel 0): solo `GITHUB_TOKEN`. Sirve para validar el motor
+  contra repos personales sin registrar App. Si hay App configurada, tiene prioridad.
+
+**Qué es secreto y dónde vive (rompe el acoplamiento que preocupaba):**
+- En `.env`: la **identidad del producto** (App ID + private key + slug). No cambia por cliente.
+- En DB (`repo_connections`): solo el **`installationId` + cuenta** — **no es un secreto**,
+  solo dice "dónde se instaló la App". El token se acuña en runtime. Acordado: nada de
+  secretos en Mongo (una sola org, menos superficie de seguridad).
+
+**Flujo de conexión (amigable, sin copiar tokens):** admin → "Conectar GitHub" → instala/edita
+la App en GitHub → GitHub redirige al front con `installation_id` → el front confirma vía
+`POST /repo-integration/connections`. `RepoRef.installationId` se propaga a cada llamada.
+
+`ponytail:` firma de JWT manual (solo RS256, lo único que GitHub Apps acepta) y token de
+instalación cacheado en memoria por proceso. Ceiling: varias instancias acuñan cada una su
+token (GitHub lo permite); webhooks de instalación/borrado → futuro (hoy se confirma desde la UI).
+
+## A.2 RepoProvider (interfaz original)
+
+```ts
+interface RepoProvider {
+  readonly name: 'github' | 'bitbucket';
+  listRepositories(): Promise<RepoRef[]>;                       // descubrimiento
+  listContributors(): Promise<RepoAccount[]>;                   // cuentas para match
+  // Datos crudos por autor y semana (sin clonar):
+  commitsInRange(repo, identities, week): Promise<CommitMeta[]>;     // sha, autor, msg, ins/del
+  deletedLinesByFile(repo, sha): Promise<Record<path, number[]>>;    // líneas borradas (diff)
+  blame(repo, ref, path): Promise<BlameRange[]>;                     // GraphQL: origen de línea
+}
+```
 
 ## B. Analizadores por rol (estrategia según el rol de la persona)
 
