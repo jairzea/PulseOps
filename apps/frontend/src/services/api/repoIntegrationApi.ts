@@ -124,6 +124,18 @@ class RepoIntegrationApiImpl {
     return httpClient.get(`${this.base}/verify-user/${encodeURIComponent(login)}`);
   }
 
+  metricCatalog(role?: string): Promise<Array<{
+    key: string;
+    label: string;
+    description: string;
+    unit: string;
+    defaultCategory: 'PRODUCTION' | 'STUDY' | 'TRACKING';
+    principal: boolean;
+  }>> {
+    const q = role ? `?role=${encodeURIComponent(role)}` : '';
+    return httpClient.get(`${this.base}/metric-catalog${q}`);
+  }
+
   /** OAuth self-service: vincular/desvincular MI propia cuenta de GitHub. */
   oauthStart(): Promise<{ url: string; configured: boolean }> {
     return httpClient.get(`${this.base}/oauth/github/start`);

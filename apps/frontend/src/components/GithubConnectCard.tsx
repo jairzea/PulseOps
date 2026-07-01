@@ -40,7 +40,13 @@ export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
             setIdentity(me.identity);
             if (resourceId) {
                 const all = await recordsApi.getAll(resourceId).catch(() => []);
-                setRecords(all.filter((r) => r.source === 'github'));
+                // Solo fuente github y acotado a las últimas 8 semanas (evita crecer sin límite;
+                // el histórico completo vive en la vista de Records del admin).
+                const gh = all
+                    .filter((r) => r.source === 'github')
+                    .sort((a, b) => (a.week < b.week ? 1 : -1));
+                const recentWeeks = [...new Set(gh.map((r) => r.week))].slice(0, 8);
+                setRecords(gh.filter((r) => recentWeeks.includes(r.week)));
             }
         } catch {
             // silencioso: la tarjeta solo no muestra estado
@@ -119,7 +125,7 @@ export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
             {records.length > 0 && (
                 <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
                     <p className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                        Métricas sincronizadas
+                        Métricas sincronizadas <span className="text-xs font-normal text-gray-500">· últimas semanas</span>
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {records
