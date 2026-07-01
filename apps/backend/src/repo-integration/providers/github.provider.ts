@@ -169,13 +169,22 @@ export class GithubProvider implements RepoProvider {
     login: string,
   ): Promise<{ login: string; name: string | null; avatarUrl: string; htmlUrl: string } | null> {
     try {
+      const path = `/users/${encodeURIComponent(login)}`;
+      // /users/{login} necesita token de instalación (App) o PAT — NO el App JWT.
+      // En modo App tomamos la primera instalación disponible para acuñar el token.
+      let installationId: number | undefined;
+      if (this.auth.mode() === 'app') {
+        const installs = await this.listInstallations();
+        installationId = installs[0]?.id;
+        if (!installationId) return null;
+      }
       const u = await this.rest<{
         login: string;
         name: string | null;
         avatar_url: string;
         html_url: string;
         type: string;
-      }>(`/users/${encodeURIComponent(login)}`);
+      }>(path, installationId);
       if (u.type !== 'User') return null; // descarta orgs/bots
       return {
         login: u.login,
