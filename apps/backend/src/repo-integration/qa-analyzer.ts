@@ -32,9 +32,14 @@ export class QaAnalyzer {
   ): Promise<RawQaCounts> {
     const subjects: string[] = [];
     for (const repo of repos) {
-      const commits = await provider.commitsInRange(repo, identities, week);
-      for (const c of commits) {
-        subjects.push(c.message.split('\n')[0]);
+      // Aislar por repo: uno vacío/inaccesible no debe tumbar la sync de QA.
+      try {
+        const commits = await provider.commitsInRange(repo, identities, week);
+        for (const c of commits) {
+          subjects.push(c.message.split('\n')[0]);
+        }
+      } catch {
+        continue;
       }
     }
     return { validatedAcs: sumValidatedAcs(subjects) };

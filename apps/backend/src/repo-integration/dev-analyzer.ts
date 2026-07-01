@@ -46,7 +46,13 @@ export class DevAnalyzer {
     const days = new Set<string>();
 
     for (const repo of repos) {
-      const commits = await provider.commitsInRange(repo, identities, week);
+      // Aislar por repo: uno vacío/inaccesible (409/404/etc.) no debe tumbar toda la sync.
+      let commits: Awaited<ReturnType<typeof provider.commitsInRange>>;
+      try {
+        commits = await provider.commitsInRange(repo, identities, week);
+      } catch {
+        continue; // ponytail: se salta el repo problemático; ceiling = no reporta cuáles.
+      }
       for (const c of commits) {
         if (c.isMerge) continue; // merges no cuentan (framework)
         if (/^qa\(/.test(c.message)) continue; // qa() no es trabajo de dev
@@ -62,7 +68,11 @@ export class DevAnalyzer {
 
         // Self-churn: líneas borradas por este commit cuyo origen está en el scope.
         if (c.deletions > 0) {
-          selfChurn += await this.selfChurnForCommit(provider, repo, c.sha, inScope);
+          try {
+            selfChurn += await this.selfChurnForCommit(provider, repo, c.sha, inScope);
+          } catch {
+            // blame de un archivo puede fallar (renombrado, binario); no cuenta churn.
+          }
         }
       }
     }
