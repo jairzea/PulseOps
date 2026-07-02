@@ -21,6 +21,8 @@ export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
     const [loading, setLoading] = useState(true);
     // Filtro + paginación de las métricas sincronizadas (server-side, para que escale).
     const [metricFilter, setMetricFilter] = useState<string>('');
+    const [weekFilter, setWeekFilter] = useState<string>('');
+    const [weeks, setWeeks] = useState<string[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
@@ -35,7 +37,7 @@ export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
     useEffect(() => {
         void loadRecords();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [resourceId, metricFilter, page]);
+    }, [resourceId, metricFilter, weekFilter, page]);
 
     useEffect(() => {
         // Feedback al volver del callback de GitHub (?github=connected|error).
@@ -69,6 +71,10 @@ export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
             const labelMap: Record<string, string> = {};
             for (const c of [...catalog, ...qaCatalog]) labelMap[c.key] = c.label;
             setLabels(labelMap);
+            if (resourceId) {
+                const w = await recordsApi.getWeeks(resourceId, 'github').catch(() => []);
+                setWeeks(w);
+            }
         } catch {
             // silencioso
         } finally {
@@ -84,6 +90,8 @@ export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
                 resourceId,
                 source: 'github',
                 metricKey: metricFilter || undefined,
+                fromWeek: weekFilter || undefined,
+                toWeek: weekFilter || undefined,
                 page,
                 pageSize,
                 sortBy: 'week',
@@ -181,23 +189,35 @@ export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
             )}
 
             {/* Registros sincronizados desde el repo (para que el recurso confirme lo que se trajo). */}
-            {(totalItems > 0 || metricFilter) && (
+            {(totalItems > 0 || metricFilter || weekFilter) && (
                 <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
                     <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
                             Métricas sincronizadas{' '}
                             <span className="text-xs font-normal text-gray-500">· {totalItems} registros</span>
                         </p>
-                        <select
-                            value={metricFilter}
-                            onChange={(e) => { setPage(1); setMetricFilter(e.target.value); }}
-                            className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="">Todas las métricas</option>
-                            {Object.entries(labels).map(([key, label]) => (
-                                <option key={key} value={key}>{label}</option>
-                            ))}
-                        </select>
+                        <div className="flex items-center gap-2">
+                            <select
+                                value={weekFilter}
+                                onChange={(e) => { setPage(1); setWeekFilter(e.target.value); }}
+                                className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">Todas las semanas</option>
+                                {weeks.map((w) => (
+                                    <option key={w} value={w}>{w}</option>
+                                ))}
+                            </select>
+                            <select
+                                value={metricFilter}
+                                onChange={(e) => { setPage(1); setMetricFilter(e.target.value); }}
+                                className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">Todas las métricas</option>
+                                {Object.entries(labels).map(([key, label]) => (
+                                    <option key={key} value={key}>{label}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {records.map((r) => (

@@ -119,4 +119,12 @@ export class RecordsService {
   async findByResource(resourceId: string): Promise<MetricRecord[]> {
     return this.recordModel.find({ resourceId }).exec();
   }
+
+  /** Semanas distintas (desc) de un recurso, opcionalmente por source. Liviano para selects. */
+  async distinctWeeks(resourceId: string, source?: string): Promise<string[]> {
+    const query: any = { resourceId };
+    if (source) query.source = source;
+    const weeks: string[] = await this.recordModel.distinct('week', query).exec();
+    return weeks.sort((a, b) => (a < b ? 1 : -1)); // desc
+  }
 }
