@@ -19,11 +19,23 @@ export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
     const [records, setRecords] = useState<MetricRecord[]>([]);
     const [labels, setLabels] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
+    // Filtro + paginación de las métricas sincronizadas (server-side, para que escale).
+    const [metricFilter, setMetricFilter] = useState<string>('');
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const pageSize = 8;
 
     useEffect(() => {
-        void load();
+        void loadIdentityAndLabels();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [resourceId]);
+
+    // Recarga la página de métricas cuando cambian filtro/página/recurso.
+    useEffect(() => {
+        void loadRecords();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [resourceId, metricFilter, page]);
 
     useEffect(() => {
         // Feedback al volver del callback de GitHub (?github=connected|error).
@@ -45,33 +57,43 @@ export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
         }
     }, []);
 
-    const load = async () => {
+    const loadIdentityAndLabels = async () => {
         setLoading(true);
         try {
             const me = await repoIntegrationApi.oauthMe();
             setIdentity(me.identity);
-            if (resourceId) {
-                const [all, catalog] = await Promise.all([
-                    recordsApi.getAll(resourceId).catch(() => []),
-                    repoIntegrationApi.metricCatalog().catch(() => []),
-                ]);
-                // También el catálogo de QA para cubrir esa métrica.
-                const qaCatalog = await repoIntegrationApi.metricCatalog('QA').catch(() => []);
-                const labelMap: Record<string, string> = {};
-                for (const c of [...catalog, ...qaCatalog]) labelMap[c.key] = c.label;
-                setLabels(labelMap);
-                // Solo fuente github y acotado a las últimas 8 semanas (evita crecer sin límite;
-                // el histórico completo vive en la vista de Records del admin).
-                const gh = all
-                    .filter((r) => r.source === 'github')
-                    .sort((a, b) => (a.week < b.week ? 1 : -1));
-                const recentWeeks = [...new Set(gh.map((r) => r.week))].slice(0, 8);
-                setRecords(gh.filter((r) => recentWeeks.includes(r.week)));
-            }
+            const [catalog, qaCatalog] = await Promise.all([
+                repoIntegrationApi.metricCatalog().catch(() => []),
+                repoIntegrationApi.metricCatalog('QA').catch(() => []),
+            ]);
+            const labelMap: Record<string, string> = {};
+            for (const c of [...catalog, ...qaCatalog]) labelMap[c.key] = c.label;
+            setLabels(labelMap);
         } catch {
-            // silencioso: la tarjeta solo no muestra estado
+            // silencioso
         } finally {
             setLoading(false);
+        }
+    };
+
+    /** Trae una página de métricas sincronizadas (source github) del recurso, server-side. */
+    const loadRecords = async () => {
+        if (!resourceId) return;
+        try {
+            const res = await recordsApi.getPaginated({
+                resourceId,
+                source: 'github',
+                metricKey: metricFilter || undefined,
+                page,
+                pageSize,
+                sortBy: 'week',
+                sortDir: 'desc',
+            });
+            setRecords(res.data);
+            setTotalPages(res.meta.totalPages || 1);
+            setTotalItems(res.meta.totalItems || 0);
+        } catch {
+            setRecords([]);
         }
     };
 
@@ -159,34 +181,72 @@ export function GithubConnectCard({ resourceId }: { resourceId?: string }) {
             )}
 
             {/* Registros sincronizados desde el repo (para que el recurso confirme lo que se trajo). */}
-            {records.length > 0 && (
+            {(totalItems > 0 || metricFilter) && (
                 <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                        Métricas sincronizadas <span className="text-xs font-normal text-gray-500">· últimas semanas</span>
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {records
-                            .sort((a, b) => (a.week < b.week ? 1 : -1))
-                            .map((r) => (
-                                <div
-                                    key={r.id}
-                                    className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-800 text-sm"
-                                >
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-gray-900 dark:text-white font-mono text-xs">{r.metricKey}</span>
-                                            <span className="text-gray-500 dark:text-gray-400 text-xs">{r.week}</span>
-                                        </div>
-                                        {labels[r.metricKey] && (
-                                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                                {labels[r.metricKey]}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <span className="text-gray-900 dark:text-white tabular-nums">{r.value}</span>
-                                </div>
+                    <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            Métricas sincronizadas{' '}
+                            <span className="text-xs font-normal text-gray-500">· {totalItems} registros</span>
+                        </p>
+                        <select
+                            value={metricFilter}
+                            onChange={(e) => { setPage(1); setMetricFilter(e.target.value); }}
+                            className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">Todas las métricas</option>
+                            {Object.entries(labels).map(([key, label]) => (
+                                <option key={key} value={key}>{label}</option>
                             ))}
+                        </select>
                     </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {records.map((r) => (
+                            <div
+                                key={r.id}
+                                className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-800 text-sm"
+                            >
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-gray-900 dark:text-white font-mono text-xs">{r.metricKey}</span>
+                                        <span className="text-gray-500 dark:text-gray-400 text-xs">{r.week}</span>
+                                    </div>
+                                    {labels[r.metricKey] && (
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                            {labels[r.metricKey]}
+                                        </div>
+                                    )}
+                                </div>
+                                <span className="text-gray-900 dark:text-white tabular-nums">{r.value}</span>
+                            </div>
+                        ))}
+                    </div>
+                    {records.length === 0 && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 py-2">
+                            Sin registros para el filtro seleccionado.
+                        </p>
+                    )}
+                    {/* Paginación */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-between mt-3 text-xs text-gray-600 dark:text-gray-400">
+                            <span>Página {page} de {totalPages}</span>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                    disabled={page <= 1}
+                                    className="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                >
+                                    Anterior
+                                </button>
+                                <button
+                                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                                    disabled={page >= totalPages}
+                                    className="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                >
+                                    Siguiente
+                                </button>
+                            </div>
+                        </div>
+                    )}
                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                         Datos traídos automáticamente desde tu repositorio (fuente: GitHub).
                     </p>

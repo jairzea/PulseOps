@@ -55,6 +55,7 @@ export class RecordsController {
       metricKey: (query as any).metricKey,
       fromWeek: (query as any).fromWeek,
       toWeek: (query as any).toWeek,
+      source: (query as any).source,
     };
 
     // Si hay parámetros de paginación, usar endpoint paginado

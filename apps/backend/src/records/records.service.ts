@@ -39,11 +39,13 @@ export class RecordsService {
     metricKey?: string;
     fromWeek?: string;
     toWeek?: string;
+    source?: string;
   }): Promise<MetricRecord[]> {
     const query: any = {};
 
     if (filters.resourceId) query.resourceId = filters.resourceId;
     if (filters.metricKey) query.metricKey = filters.metricKey;
+    if (filters.source) query.source = filters.source;
 
     if (filters.fromWeek || filters.toWeek) {
       query.week = {};
@@ -67,6 +69,7 @@ export class RecordsService {
       metricKey?: string;
       fromWeek?: string;
       toWeek?: string;
+      source?: string;
     } = {},
   ): Promise<PaginatedResponse<MetricRecord>> {
     const { page = 1, pageSize = 10, search, sortBy = 'timestamp', sortDir = 'desc' } = paginationQuery;
@@ -75,6 +78,7 @@ export class RecordsService {
     const query: any = {};
     if (filters.resourceId) query.resourceId = filters.resourceId;
     if (filters.metricKey) query.metricKey = filters.metricKey;
+    if (filters.source) query.source = filters.source;
     
     if (filters.fromWeek || filters.toWeek) {
       query.week = {};
