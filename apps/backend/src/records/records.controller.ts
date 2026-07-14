@@ -55,6 +55,7 @@ export class RecordsController {
       metricKey: (query as any).metricKey,
       fromWeek: (query as any).fromWeek,
       toWeek: (query as any).toWeek,
+      source: (query as any).source,
     };
 
     // Si hay parámetros de paginación, usar endpoint paginado
@@ -73,6 +74,20 @@ export class RecordsController {
         totalPages: 1,
       },
     };
+  }
+
+  @Get('weeks')
+  async weeks(
+    @Query('resourceId') resourceId: string,
+    @Query('source') source: string | undefined,
+    @CurrentUser() user?: User,
+  ) {
+    const isAdmin = user?.role === UserRole.ADMIN;
+    const isOwner = user?.id === resourceId;
+    if (!resourceId || (!isAdmin && !isOwner)) {
+      throw new ForbiddenException('Forbidden resource');
+    }
+    return this.recordsService.distinctWeeks(resourceId, source);
   }
 
   @Delete(':id')

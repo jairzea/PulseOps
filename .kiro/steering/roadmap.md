@@ -58,6 +58,18 @@ Nota: `getDiagnostics` confirma 0 errores en los archivos tocados. `npm run type
 
 **Deuda futura destapada — Unificar Usuario/Recurso (spec aparte).** Hoy `role` mezcla permiso (admin/user) con "ser medible". Un admin que produce no puede tener métricas sin crearse un usuario-recurso redundante. Objetivo: separar permiso de recurso, que admins también sean medibles, una sola vista de Usuarios y eliminar el módulo `resources` legacy. Requiere su propia spec (migración de datos).
 
+**Iniciativa — Migración a arquitectura Webi.AI (CONFIRMADA, repo nuevo).** Unlimitech definió que
+PulseOps debe migrar por completo a su arquitectura estandarizada (SST + Pulumi + Bun + AWS; ver
+`.kiro/steering/webiai-infra.md`, R01–R16). La migración se hace en un **repositorio nuevo**.
+- **Fase de planificación (en curso):** documento maestro de handoff `docs/migracion-webiai/00-handoff-pulseops.md`
+  (dominio, módulos, endpoints, modelo de datos, packages, frontend, auth, integraciones, seeds,
+  testing) + gap analysis y preguntas en `docs/alineacion-webiai.md`.
+- **Decisiones 🔴 pendientes con arquitectura** (bloquean estimación): runtime Node vs Bun,
+  MongoDB vs persistencia AWS, JWT propio vs Cognito, alcance del framework de app, taxonomías.
+- **Oportunidad:** saldar deudas en la migración (unificar Usuario/Recurso, eliminar `resources`
+  legacy, consolidar umbrales por defecto). Los packages puros (`analysis-engine`, `shared-types`)
+  migran primero como `library` (bajo riesgo; los selfchecks del motor preservan el comportamiento).
+
 ## Método de trabajo
 
 - Features multi-archivo o con decisiones de dominio abiertas → formalizar como **spec** (requirements → design → tasks) antes de implementar, especialmente Fase 2.
