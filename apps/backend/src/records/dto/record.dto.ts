@@ -37,4 +37,8 @@ export class QueryRecordsDto {
   @IsOptional()
   @IsString()
   toWeek?: string;
+
+  @IsOptional()
+  @IsString()
+  source?: string;
 }

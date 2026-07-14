@@ -35,9 +35,18 @@ export interface UpdateRecordDto {
 /**
  * Interface para el servicio de registros
  */
+export interface RecordFilters {
+  resourceId?: string;
+  metricKey?: string;
+  source?: string;
+  fromWeek?: string;
+  toWeek?: string;
+}
+
 export interface RecordsApi {
   getAll(resourceId?: string, metricKey?: string): Promise<Record[]>;
-  getPaginated(params: PaginationParams & { resourceId?: string; metricKey?: string }): Promise<PaginatedResponse<Record>>;
+  getPaginated(params: PaginationParams & RecordFilters): Promise<PaginatedResponse<Record>>;
+  getWeeks(resourceId: string, source?: string): Promise<string[]>;
   getById(id: string): Promise<Record>;
   create(data: CreateRecordDto): Promise<Record>;
   update(id: string, data: UpdateRecordDto): Promise<Record>;
@@ -61,9 +70,14 @@ class RecordsApiImpl implements RecordsApi {
     return response.data;
   }
 
-  async getPaginated(params: PaginationParams & { resourceId?: string; metricKey?: string }): Promise<PaginatedResponse<Record>> {
+  async getPaginated(params: PaginationParams & RecordFilters): Promise<PaginatedResponse<Record>> {
     const query = buildQueryString(params);
     return httpClient.get<PaginatedResponse<Record>>(`${this.basePath}${query}`);
+  }
+
+  async getWeeks(resourceId: string, source?: string): Promise<string[]> {
+    const query = buildQueryString({ resourceId, source });
+    return httpClient.get<string[]>(`${this.basePath}/weeks${query}`);
   }
 
   async getById(id: string): Promise<Record> {
